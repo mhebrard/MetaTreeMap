@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+	<title>Feedback</title>
+  </head>
+  <body>
+	<h1>MetaTreeMap - Feedback</h1>
+	<form enctype="multipart/form-data" action="post.php" method="post">
+		<table><tr><td>Name:</td><td><input type="text" name="name" placeholder="Your full name"/></td></tr>
+			<tr><td>Email:</td>	<td><input type="text" name="email" placeholder="Your email address"/></td></tr>
+			<tr><td>Type:</td><td><select name="type">
+				<option value="">--select category--</option>
+				<option value="bug">Bug</option>
+				<option value="suggestion">Suggestion</option>
+				<option value="support">Support</option>
+				<option value="other">Other</option></select>
+				</td></tr>
+			<tr><td>Subject</td><td><input type="text" name="subject" value="[MTM]" size="50"/></td></tr>
+			<tr><td>Message</td><td><textarea name="message" placeholder="Write your feedback here. If applicable, please let us know which device (laptop, iPad, etc.), operating system &amp; version (Windows, Mac, Linux), and browser (Chrome, Firefox, etc.) you are using." cols="50" rows="8" ></textarea></td></tr>
+			<tr><td colspan="2" style="text-align:center"><input name="submit" value="Submit" type="submit"/></td></tr>
+		</table>
+	</form>
+  </body>
+</html>
