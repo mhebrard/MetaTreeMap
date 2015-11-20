@@ -246,27 +246,31 @@
 			<li>size: norm | hits | nodes (see <a href="#size">Size parameter</a> for additinal information)</li>
 		</ul></li>
 	</ul>
-	The file must be in JSON format, with .config extention. The default configuration file (mtm.config) is :
-	<div class="code">{"layout":{"treemap":{"show":"yes","width":"800","height":"600","option":"yes","place":"left"},"table":{"show":"yes","width":"600","height":"600","option":"no","place":"right"},"options":{"show":"no","width":"800","option":"no","place":"bottom"}},"mtm":{"pattern":"{#N}","group":"taxon","labels":"on","upper":"off","font":"14","palette":"20","background":"black","size":"norm"}}</div>
+	The file must be in JSON format. The default configuration file (mtm-config.json) is :
+	<div class="code">{"layout":{"treemap":{"show":"yes","width":"800","height":"600","option":"yes","place":"left"},"table":{"show":"yes","width":"600","height":"600","option":"no","place":"right"},"options":{"show":"no","width":"800","option":"no","place":"bottom"}},"mtm":{"pattern":"#N","group":"taxon","labels":"on","upper":"on","font":"14","palette":"12","background":"black","size":"norm"}}</div>
 	<br/><a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	
 	<h2 id="treemap">Treemap View</h2>
-	<p>The treemap view display each node of the tree as a rectangle. The area of the rectangle is proportional to the number of hits assigned to this node. By construction, a branch of the tree is also a rectangle with its area proportional to the number of hits that composed the branch.</p>
+	<p>All examples use a set of 3 artificial samples:
+		<ol><li>160 hits</li>
+			<li>174 hits</li>
+			<li>1600 hits</li>
+		</ol>
+	<br/>The treemap view display each node of the tree as a rectangle. The area of the rectangle is proportional to the number of hits assigned to this node. By construction, a branch of the tree is also a rectangle with its area proportional to the number of hits that composed the branch.</p>
 	<img src="../img/guide-2.0.png" alt="treemap"/>
-	<p>The example display two samples in the same treemap.</p>
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	
 	<h3 id="orientation">Orientation</h3>
 	<img src="../img/guide-2.1.png" alt="orientation"/>
-	<p>By default, the label of each rectangle is display horizontally (see Bacteria*). 
-	<br/>If the rectangle is too thin, the label is display vertically (see cellular organisms*). 
-	<br/>If the rectangle is too thin and too small then the label is not display (see purple rectangle).</p>
+	<p>If the rectangle is more wide than tall, the label is display horizontally (see grey rectangle). 
+	<br/>If the rectangle is more tall than wide, the label is display vertically (see pink rectangles).  
+	<br/>If the label overflow the rectangle, it is truncated. (see pink rectangles)</p>
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	
 	<h3 id="name">Name and Name*</h3>
 	<img src="../img/guide-2.2.png" alt="proteobacteria"/>
-	<p>The hits assigned to a taxon without children (leaf) are represented by a rectangle labelled by the "[taxon name]". 
-	<br/>If one ancestor (internal node) has assigned hits, it is represented by a rectangle labelled by "[taxon name]*"<br/>In the example, the orange rectangle "Escherichia coli" is a leaf of the tree. The red rectangle "Proteobacteria*" represents the hits assigned to the internal node Proteobacteria. The branch of all the proteobacteria is composed by the two red rectangles, the blue one and the two orange. (The branch ends also as a rectangle shape with area proportional to the sum of the hits in the branch).</p>
+	<p>The hits assigned to a taxon without children (leaf) are represented by a rectangle labelled by the "[taxon name]".
+	<br/>If one ancestor (internal node) has assigned hits, it is represented by a rectangle labelled by "[taxon name]*" (taxon star)<br/>In the example, the dark green rectangle "Not assigned" is a leaf of the tree. The purple rectangle "Bacteria*" represents the hits assigned to the internal node Bacteria. The branch of all the bacteria is composed by the two purple rectangles, and all the rectangles at its right (proteobacteria, Escherichia, Mycobacterium...)</p>
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	
 	<h3 id="mouseover">Mouseover</h3>
@@ -275,7 +279,7 @@
 	</p>
 	
 	<h4 id="selection">Selection</h4>
-	<p>On mouseover a rectangle, the node is selected (see darked Proteobacteria*).</p>
+	<p>On mouseover a rectangle, the node is selected (see darked Bacteria*).</p>
 	
 	<h4 id="tooltip">Tooltip</h4>
 	<p>A tooltip displayed additional information about the selected node.
@@ -303,12 +307,16 @@
 		<li>Click on the header will zoom out at the parent node.</li>
 	</ul>
 	We notice that zoom action in treemap view modify table view (see section <a href="#focus">Focus</a> for additional information).</p>
-	<p>In addition, we can emphasise the distinction between branch and internal node (see section <a href="#name">Name and Name*</a> for additional information). In the example you see that Proteobacteria (the branch) is compose of 36 hits rather than Proteobacteria* of sample 2 (the node) represent 8 hits.
+	<p>In addition, we can emphasise the distinction between branch and internal node (see section <a href="#name">Name and Name*</a> for additional information). In the example you see that Bacteria (the branch) is compose of 859 hits rather than Bacteria* of sample 3 (the node) represent 210 hits.
 	</p>
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	
 	<h2 id="table">Table View</h2>
-	<p>The table view display each node as a line of a table. The hierarchy of the nodes is represented by the indentation of taxa name. Information displayed are :
+	<p>All examples use a set of 2 artificial samples:
+		<ol><li>160 hits</li>
+			<li>174 hits</li>
+		</ol>
+	<br/>The table view display each node as a line of a table. The hierarchy of the nodes is represented by the indentation of taxa name. Information displayed are :
 	<ul><li>Taxon name</li>
 		<li>Taxon ID (see <a href="http://www.ncbi.nlm.nih.gov/taxonomy" target="_blank">NCBI taxonomy</a>)</li>
 		<li>Number of assigned hits. For internal node, it is the number of hits in the branch starting at this node. For leaf node, it is the number of hits assigned to this node. (see section <a href="#name">Name and Name*</a> for additional information)</li>
@@ -348,6 +356,12 @@
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
   
 	<h2 id="options">Options</h2>
+	<p>All examples use a set of 3 artificial samples:
+		<ol><li>160 hits</li>
+			<li>174 hits</li>
+			<li>1600 hits</li>
+		</ol>
+	</p>
 	<img src="../img/guide-4.0.png" alt="options"/>
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	
@@ -359,7 +373,7 @@
 	<img src="../img/guide-4.1.1.png" alt="by taxon"/>
 	<p>Each taxon define one color. (default)</p>
 	<img src="../img/guide-4.1.1.1.png" alt="map by taxon"/><img src="../img/guide-4.1.1.2.png" alt="table by taxon"/>
-	<p>The two "Proteobacteria*" are red. The added nodes for rank kingdom, subkingdom and superphylum under Bacteria are also red.
+	<p>The tree "Proteobacteria*" are red. The added nodes for rank kingdom, subkingdom and superphylum under Bacteria are also red.
 	</p>
 	
 	<h4 id="byrank">By rank</h4>
@@ -379,7 +393,7 @@
 	<img src="../img/guide-4.1.4.png" alt="majority"/>
 	<p>For each node, all the sample are colored according to the sample with the higher number of reads.</p>
 	<img src="../img/guide-4.1.4.1.png" alt="map majority"/><img src="../img/guide-4.1.4.2.png" alt="table majority"/>
-	<p>The two "Proteobacteria*" are green because sample 2 have more reads than sample 1. The nodes added to fulfil the hierarchy have a different color.
+	<p>The tree "Proteobacteria*" are pink because sample 3 have more reads than sample 1 and 2. The nodes added to fulfil the hierarchy have a different color.
 	</p>
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	
@@ -501,16 +515,17 @@
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	
 	<h3 id="pattern">Pattern</h3>
-	<p>By default, the rectangles of The <a href="#treemap">treemap view</a> are labelled by taxon name. This can be customize using a pattern (see 5). Fields are indicated by "# Code".</p>
+	<p>By default, the rectangles of the <a href="#treemap">treemap view</a> are labelled by taxon name. This can be customize using a pattern (see 5). Fields are indicated by "# Code".</p>
 	<ul><li>#N for taxon name,</li>
 		<li>#I for taxon id,</li>
 		<li>#H for assigned hits,</li>
-		<li>#P for percentages of hits according to the current view (see the section <a href="#zoom">Zoom</a> for additional information),</li>
 		<li>#R for Phylogenic rank,</li>
 		<li>#S for sample number.</li>
+		<li>#P for percentages of hits according to the sample (see the section <a href="#zoom">Zoom</a> for additional information),</li>
+		<li>#V for percentages of hits according to the current view (see the section <a href="#size">Size parameter</a> for additional information),</li>
 	</ul>
-	<p>Each line is delimited by "{" and "}". Other character can be added without restriction.</p>
-	<div class="code">{#N}{#H (#P%)}</div>
+	<p>Other character can be added without restriction.</p>
+	<div class="code">#N-##S</div>
 	<p>
 	<img src="../img/guide-5.5.png" alt="pattern"/>
 	</p>
