@@ -47,15 +47,15 @@
 	<h1>MetaTreeMap</h1>
 	<div style="display:inline-block">
 		<div>
-			<button class="off" onclick="menu('layout',this)">Layout</button>
 			<button class="on" onclick="menu('import',this)">Import</button>
+			<button class="off" onclick="menu('config',this)">Config</button>
 			<button class="off" onclick="menu('export',this)">Export</button>
 			<a href="html/feedback.htm" target="feedback"><button class="off">Feedback</button></a>
-			<a href="html/documentation.htm" target="documentation"><button class="off">User Guide</button></a>
+			<a href="html/documentation.htm" target="mtm-doc"><button class="off">User Guide</button></a>
 			<button class="off" onclick="menu('about',this)">About</button>
 			<button class="off" onclick="menu('none',this)"><span class="fa fa-times"></span></button>
 		</div>
-		<div id="layout" class="options">
+<!--		<div id="layout" class="options">
 			<table><tr><th>Modules</th>
 					<th>Show</th>
 					<th>Width</th>
@@ -117,11 +117,12 @@
 				<tr><td colspan="6" style="text-align:center"><input type="button" value="Update View" onclick="update()"/></td></tr>
 			</table>
 		</div>
+-->
 		<div id="import" class="options">
 			Current samples:
 			<div id="samples"></div>
-			Upload MetaBin output files (.json): <input type="file" name="inputFiles[]" id="input" multiple/>
-			<br/>Upload MTM.config file (optional): <input type="file" name="config"/>
+			Upload data files (.json): <input type="file" name="dataFiles[]" id="data" multiple/>
+			<br/>Upload config file (optional): <input type="file" name="confFile" id="conf"/>
 			<br/><input type="button" value="Update View" onclick="update()"/>
 			<br/>
 			<br/>Or convert from other format <span class="fa fa-caret-square-o-right" onclick="toggle(this,'convertor')" style="cursor:pointer"></span>
@@ -135,6 +136,7 @@
 				[<a href="http://www.ncbi.nlm.nih.gov/pubmed/17916580" target="_blank" title="see article on PubMed">citation</a>] - [<a href="http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3" target="_blank" title="see data on MG-RAST">data</a>] - [<a href="./data/HuFU.json" target="_blank" title="download json file">json</a>]
 			</div>
 		</div>
+		<div id="config" class="options"></div>
 		<div id="export" class="options">
 			Export data: <select name="export" onchange="mtm.save(this.value)">
 				<option value="null">--choose a file--</option>
@@ -174,7 +176,7 @@
 -->
 <!--Dev -->
 	<script type="text/javascript" src="./js/d3.min.js"></script>
-	<script type="text/javascript" src="./js/d3.tip.v0.6.3.js"></script>
+	<!--<script type="text/javascript" src="./js/d3.tip.v0.6.3.js"></script>-->
 	<script type="text/javascript" src="./js/d3-transform.js"></script>
 	<script type="text/javascript" src="./js/mtm.js"></script>
 	<script type="text/javascript" src="./js/log4javascript.js"></script>
@@ -220,8 +222,36 @@ console.log("mtm",mtm.version);
 		}
 		
 		function update() { //Load config file call init//
+			//Manage data files
+			var files = document.getElementById("data").files;
+			var data = [];
+			var filenames = "<ol>";
+			for(var i=0; i<files.length; i++) {
+				data.push(URL.createObjectURL(files[i]));
+				filenames += "<li>"+files[i].name+"</li>";
+			}
+			
+			if(data.length==0) { 
+				filenames += "<li>HuFS.json</li><li>HuFU.json</li>";
+				data=["data/HuFS.json","data/HuFU.json"]; 
+			}
+			else { mtm.load(data); }
+			
+			filenames+="</ol>"
+			document.getElementById("samples").innerHTML=filenames;
+		
+			//manage config
+			var conf="";
+			if(document.getElementById("conf").files[0]) {
+				conf = document.getElementById("conf").files[0];
+			}
+			
+			//call
+			mtm.load(data,conf);
+		}
+		
 			//Config file
-			var confFile = document.getElementsByName("config")[0].files;
+/*			var confFile = document.getElementsByName("config")[0].files;
 			if(confFile.length>0) {
 				d3.json(URL.createObjectURL(confFile[0]),function(config){
 					//set pattern and options
@@ -332,6 +362,7 @@ console.log("mtm",mtm.version);
 							}
 						}
 					}
+
 					//call modules
 					call(config);
 					
@@ -346,8 +377,8 @@ console.log("mtm",mtm.version);
 				call();
 			}
 		}
-	
-		function call(conf) {
+*/	
+/*		function call(conf) {
 			//Delete previous views
 			var c = document.getElementsByClassName("container");
 			for (var i = 0; i < c.length; i++) {
@@ -406,8 +437,8 @@ console.log("mtm",mtm.version);
 			if(conf) { mtm.config(conf);}
 
 		}
-
-		function check(e) { //form constraint//
+*/
+/*		function check(e) { //form constraint//
 			if(e.checked) { //enable
 				document.getElementsByName(e.id+"w")[0].disabled="";
 				document.getElementsByName(e.id+"h")[0].disabled="";
@@ -432,6 +463,7 @@ console.log("mtm",mtm.version);
 			//menu radio always enable
 			document.getElementById("optm").disabled="";
 		}
+*/
 
 		function toggle(e,id) {
 			var div = document.getElementById(id);

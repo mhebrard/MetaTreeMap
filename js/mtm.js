@@ -8,40 +8,36 @@
 	var colorbrewer = {Set3: { 12: ["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f"]
 	}};
 	
-	//displayed modules
-	var hasMenu=false, //menu manager
-	map=false, //display treemap
-	table=false; //display table
-	
-	var root; //object root (all tree)
-	var out; //output tree
-	var touched=""; //node for touch event
-	
 	//need to compute json
-	//functions completeTree, relatives, sumHits
-	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"],
-	bkeys, //list of keys for bridges
+	//functions completeTree, relatives, sumHits, merge
+	var config; //object configuration
+	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"];
+	var root; //object root (all tree)
+	var bkeys, //list of keys for bridges
 	bobjs; //list of node -object- for bridge
 	
-	//layout init
-	var color="", //color set for leaves
-	treemap, //d3 layout
-	w=1,h=1, //treemap dimensions, needed for compute json tree
-	barh=31, //height of menu bar
-	node; //current node displayed
+	//neet to initiate layout
+	//function setLayout
+	var node; //current node displayed
+	var color=""; //color set for leaves
+	var d3layout, //d3 layout
+	w=1,h=1; //treemap dimensions
 	
-	//global variable for Treemap
-	var kx=1, //treemap width ratio
-	ky=1, //treemap height ratio
-	tags, //treemap labels format 
-	tip; //treemap tooltip
+	//need to layout
+	var x,y; //scales
+	var kx=1,ky=2; //zoom ratio
+	
+	var touched=""; //node for touch event
+	
+	var tags; //treemap labels format 
+	//tip; //treemap tooltip
 	
 	
 	//init font and pixel ratio.
 	var font=14;
 	
 	//METHODS//
-	mtm.treemap = function(location,width,height,menu,labels) {
+/*	mtm.treemap = function(location,width,height,menu,labels) {
 		map=true; //activate treemap
 		//default menu is true 
 		menu==false ? menu=false : menu=true;
@@ -144,8 +140,8 @@
 			.attr("dy", ".75em")
 			.text("Please load json file (add mtm.load('data/yourFile.json');)");
 	}//end function treemap
-		
-	mtm.table = function(location,width,height,menu) {
+*/		
+/*	mtm.table = function(location,width,height,menu) {
 		table=true; //activate table
 		//if(map){no menu} else{menu} by default:false.
 		if(menu==false || hasMenu) { menu=false; }
@@ -194,15 +190,20 @@
 			.classed("mtm-labels",true)
 			.style("table-layout","fixed")
 	}
-	
-	mtm.load = function(files) {
+*/	
+	mtm.load = function(files,conf) {
 if(verbose){console.time("load");}
-		hasMenu=false;
-		map=table=false;
+		//hasMenu=false;
+		//map=table=false;
 		//root init.
 		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
 		bobjs = [root]; //list of node -object-
+		
+		//loading config file
+		if(conf) { d3.json(URL.createObjectURL(conf),function(c) {config=c;}); }
+		else if (!config) { d3.json("./mtm-config.json",function(c) {config=c;});}
+		
 		//Loading input files
 		var queue = files.length; //counter
 		var hundreds = []; //samples total reads
@@ -215,14 +216,14 @@ if(verbose){console.time("load");}
 if(verbose){console.time("completeTree");}
 					completeTree(root,hundreds); //Add 1 node by rank + sum hits
 if(verbose){console.timeEnd("completeTree");}
-					layout(); //compute treemap
+					setLayout();
 				} 
 			});
 		}
 if(verbose){console.timeEnd("load");}
 	}   
 
-	mtm.config = function(conf) {
+/*	mtm.config = function(conf) {
 		if(conf.mtm){
 			if(conf.mtm.group) {
 				d3.select("#mtm-group").node().value=conf.mtm.group;
@@ -268,8 +269,8 @@ if(verbose){console.timeEnd("load");}
 			}
 		}
 	}
-	
-	mtm.toggle = function toggle(nid) {
+*/	
+/*	mtm.toggle = function toggle(nid) {
 		var sel = d3.select(".mtm-table").select(".t"+nid);
 		var span = sel.select(".fa");
 		var d = sel.datum();
@@ -292,8 +293,8 @@ if(verbose){console.timeEnd("load");}
 			}
 		}
 	}
-		
-	mtm.menu = function(location,width) {
+*/		
+/*	mtm.menu = function(location,width) {
 		hasMenu=true; //activate menu
 			
 		//create menu bar//
@@ -491,8 +492,8 @@ if(verbose){console.timeEnd("load");}
 		}
 		s.selectAll("option[value='14']").property("selected","true")
 	}
-
-	mtm.save = function(mode) {
+*/
+/*	mtm.save = function(mode) {
 		
 		if(mode=="json") {
 			copy(root); //format tree for output
@@ -586,7 +587,7 @@ if(verbose){console.timeEnd("load");}
 			ddl("mtm-config.json",url);
 		}
 	}
-	
+*/	
 	mtm.convertor = function(location) {
 		//CONTAINER//
 		var container = d3.select("#"+location) //container div
@@ -813,10 +814,47 @@ if(verbose){console.timeEnd("load");}
 	}
 	
 	//VIEW CREATION//
-	function layout() {
+	function setLayout() {
 if(verbose){console.time("layout");}
+
+		node=root;
+		
+		//style
+		d3.select("head").append("style").text(
+		"#mtm-tip{position:absolute;z-index:10;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}"		
+		);
+		
+		//set color palette
 		if(color==""){ color = d3.scale.ordinal().range(colorbrewer.Set3[12]); }
-		//compute final json tree
+		
+		//hidden div
+		d3.select("body").append("div").attr("id","mtm-tip");
+		d3.select("body").append("div").attr("id","mtm-canvas").style("display","none");
+
+		//Delete previous views
+		d3.selectAll(".mtm-container").html("");
+		param={};
+		
+		//build d3.layout
+		computeLayout();
+		
+		//build views
+		if(config.bar && config.bar.display) {
+			bar(config.bar);
+		}
+		if(config.configuration && config.configuration.display) {
+			configuration(config.configuration);
+		}
+		if(config.table && config.table.display) {
+			param.table={};
+			table(config.table,param.table);
+		}
+		if(config.treemap && config.treemap.display) {
+			param.treemap={};
+			treemap(config.treemap,param.treemap);
+		}
+		
+/*		//compute final json tree
 		treemap = d3.layout.treemap() //array of all nodes
 				.size([w, h]) //size of map
 				.round(false) //round the value (for scale)
@@ -833,13 +871,13 @@ if(verbose){console.time("layout");}
 			treemap.value(sizeNodes).nodes(root);
 		}	
 		var nodes = treemap.nodes(root);
-
-if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
+*/
+//if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
 
 		//current zoom
-		node = root;
+//		node = root;
 		
-		//search list//
+/*		//search list//
 		var slist=d3.select("#mtm-slist").append("ul");
 		for (i in nodes) {
 			slist.append("li")
@@ -851,8 +889,8 @@ if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){r
 				})
 				.text(function(d){ return "."+d.name; });
 		}
-			
-		//check menu
+*/			
+/*		//check menu
 		if(!hasMenu) { 
 			d3.select("body").append("div")
 				.style("display","none")
@@ -860,8 +898,8 @@ if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){r
 			mtm.menu("mtm-content-menu");	
 			console.log("No menu container define !")
 		}
-
-		//header
+*/
+/*		//header
 		if(map) {
 			d3.select(".mtm-map").select(".mtm-header")
 			.datum(node)
@@ -871,10 +909,10 @@ if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){r
 			.select("text")
 				.text(function(d) { return d.name; });
 		}
-					
+*/					
 		//create DOM elements
-		if(map){ growMap(); }
-		if(table){ growTable(); }
+//		if(map){ growMap(); }
+//		if(table){ growTable(); }
 
 		//update
 		updateColor();
@@ -884,7 +922,505 @@ if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){r
 if(verbose){console.timeEnd("layout");}
 	}
 	
-	function growMap() {
+	function computeLayout() {
+		if(config.treemap.display) {
+			h = config.treemap.height - 20;  //margin top
+			w = config.treemap.width - 1; //margin left
+			if(config.treemap.menu) { h = h-31; }  //menu
+		}
+
+		//compute final json tree
+		d3layout = d3.layout.treemap() //array of all nodes
+			.size([w, h]) //size of map
+			.round(false) //round the value (for scale)
+			.sticky(true) //keep child position when transform
+			.value(setMode(config.options.mode));
+		var nodes = d3layout.nodes(root);
+if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
+	}
+	
+	//LAYOUTS//
+	function bar(c,location) {
+		//create menu bar//
+		var menu;
+		if(location) { menu = d3.select("#"+location); }
+		else { menu = d3.select("body"); }
+		
+		menu = menu.classed("mtm-container",true)
+			.append("div")
+			.classed("mtm-menu",true)
+			.classed("mtm",true);
+		if(!location) { menu.style("width",c.width + "px"); }
+		
+		menu.append("span").attr("class","button")
+			.append("span").attr("class","fa fa-link")
+			.attr("title","Group by...")
+			.append("select").attr("id","mtm-group");
+		menu.append("span").attr("class","button")
+			.append("select").attr("id","mtm-phylogeny");
+		menu.append("button").attr("id","mtm-label")
+			.append("span").attr("class","fa fa-tag");
+		menu.append("button").attr("id","mtm-upper")
+			.append("span").attr("class","fa fa-sitemap");
+		
+		menu.append("button").attr("id","mtm-root")
+			.append("span").attr("class","fa fa-home");
+		menu.append("span").attr("class","button")
+			.append("span").attr("class","fa fa-text-height")
+			.append("select").attr("id","mtm-font");
+		menu.append("button").attr("id","mtm-color")
+			.append("span").attr("class","fa fa-eyedropper");
+		menu.append("button").attr("id","mtm-background")
+			.append("span").attr("class","fa fa-adjust");
+			
+		menu.append("span").attr("class","button")
+			.append("span").attr("class","fa fa-th")
+			.attr("title","Size mode")
+			.append("select").attr("id","mtm-size")
+			.attr("title","Samples normalized")
+
+		//search bar//
+		var search = menu.append("span").attr("class","button")
+			.append("span").attr("class","fa fa-search")
+			.attr("title","Search a name")
+		search.append("input").attr("type","text").attr("id","mtm-search")
+			.on("input",function() {
+				if (this.value){
+					var re= new RegExp(this.value,"i");
+					d3.select("#mtm-slist").selectAll("li")
+						.style("display","none")
+						.filter(function(d) { return d.name.match(re); })
+						.style("display","block");
+				}
+				else {
+					d3.select("#mtm-slist").selectAll("li")
+						.style("display","none");
+				}
+			})
+		//searchbox//
+		var box = d3.select("#mtm-search").node().getBoundingClientRect();
+		search.append("div").attr("id","mtm-slist")
+			.style("width",box.width+"px")
+				
+		// MENU EVENT //
+		//rank select//
+		var s = d3.select("#mtm-phylogeny")
+			.on("change",function() {
+				if(d3.select("#mtm-group").node().value=="rank") {
+					updateColor(root);
+				}
+				if(d3.select("#mtm-label").node().className=="off") {
+					updateLabel();
+					zoom(node);
+				}
+			});
+		s.append("option")
+			.attr("value","init")
+			.text("--Phylogenic rank--");
+		for (var k in ranks) {
+			s.append("option")
+				.attr("value",k)
+				.text(ranks[k]);
+		}
+	
+		//gray upper ranks//
+		d3.select("#mtm-upper") 
+			.attr("class","on")
+			.attr("title","Grayed or colored upper ranks")
+			.on("click", function() {
+				if(this.className=="off" ) {
+					this.className="on";
+				}
+				else {
+					this.className="off";
+				}
+				updateColor(root);
+			});
+		
+		//group by Color option//
+		//rank select//
+		var s = d3.select("#mtm-group")
+			.attr("title","Group by ...")
+			.on("change",function() {
+				updateColor();
+			});
+		s.append("option").attr("value","taxon").text("by taxon");
+		s.append("option").attr("value","rank").text("by rank");
+		s.append("option").attr("value","sample").text("by sample");
+		s.append("option").attr("value","max").text("majority");
+			
+		//labels//
+		d3.select("#mtm-label") 
+			.attr("class","on")
+			.attr("title","Labelling leaves or ranks")
+			.on("click", function() {
+				if(this.className=="off" ) {this.className="on";}
+				else {this.className="off";}
+				updateLabel();
+				zoom(node);
+			});
+
+		//size//
+		var s = d3.select("#mtm-size")
+			.on("change",function() {
+				if(this.value=="norm") { 
+					treemap.value(sizeNorm).nodes(root);
+					this.title="Samples normalized";
+				}
+				else if(this.value=="hits") { 
+					treemap.value(sizeHits).nodes(root);
+					this.title="Number of hits (not normalized)";
+				}
+				else if(this.value=="nodes") { 
+					treemap.value(sizeNodes).nodes(root);
+					this.title="All nodes same size";
+				}
+				zoom(node);
+			});
+			s.append("option").attr("value","norm").text("norm");
+			s.append("option").attr("value","hits").text("hits");
+			s.append("option").attr("value","nodes").text("nodes");
+
+		//root//
+		d3.select("#mtm-root")
+			.attr("class","on")
+			.attr("title","Back to root")
+			.on("click", function() { 
+				this.className="on";
+				zoom(root);
+			});
+		
+		//color range//
+		d3.select("#mtm-color")
+			.attr("class","on")
+			.attr("title","Switch from 12 to 20 colors")
+			.on("click", function() {
+				if(this.className=="off" ) {
+					this.className="on";
+					color = d3.scale.ordinal().range(colorbrewer.Set3[12]);
+				}
+				else {
+					this.className="off";
+					color = d3.scale.category20c();
+				}
+				updateColor();
+			});	
+			
+		//background color//
+		d3.select("#mtm-background")
+			.attr("class","on")
+			.attr("title","Background black or white")
+			.on("click", function() {
+				if(this.className=="off" ) {
+					this.className="on";
+					d3.selectAll(".mtm").style("background-color","#000");
+					d3.selectAll(".mtm-header rect").style("stroke","#000");
+					d3.selectAll(".mtm-bg").style("fill","#000");	
+				}
+				else {
+					this.className="off";
+					d3.selectAll(".mtm").style("background-color","#fff");
+					d3.selectAll(".mtm-header rect").style("stroke","#fff");
+					d3.selectAll(".mtm-bg").style("fill","#fff");
+				}
+			});
+
+		//font size//
+		var s = d3.select("#mtm-font") 
+			.attr("title","Font size")
+			.on("change",function() {
+				font=this.value;
+				updateLabel();
+				zoom(node);
+			}); 
+		for (var i=8; i<40; i=i+2) {
+			s.append("option")
+				.attr("value",i)
+				.text(i);
+		}
+		s.selectAll("option[value='14']").property("selected","true")
+	}
+	
+	function configuration(c) {
+		var loc = d3.select("#"+c.location).classed("mtm-container",true);
+		for (var i in config) {
+			var part=loc.append("div").style("display","inline-block").style("vertical-align","top").append("table")
+			part.append("tr").append("th").attr("colspan",2).text(i)
+			if(config[i].hasOwnProperty("display")) {
+				var row = part.append("tr")
+				row.append("td").text("display")
+				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_display").on("change",function(){return configChange(this);});
+				if(config[i].display) {e.property("checked",true);}
+			}
+			if(config[i].hasOwnProperty("location")) {
+				var row = part.append("tr")
+				row.append("td").text("location")
+				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_location").style("width","120px").on("change",function(){return configChange(this);});
+				e.attr("value",config[i].location);
+			}
+			if(config[i].hasOwnProperty("width")) {
+				var row = part.append("tr")
+				row.append("td").text("width")
+				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_width").style("width","64px").on("change",function(){return configChange(this);});
+				e.attr("value",config[i].width);
+			}
+			if(config[i].hasOwnProperty("height")) {
+				var row = part.append("tr")
+				row.append("td").text("height")
+				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_height").style("width","64px").on("change",function(){return configChange(this);});
+				e.attr("value",config[i].height);
+			}
+			if(config[i].hasOwnProperty("mode")) {
+				var row = part.append("tr")
+				row.append("td").text("mode")
+				var e = row.append("td").append("select").attr("id",i+"_mode").style("width","70px").on("change",function(){return configChange(this);});
+				e.append("option").attr("value","norm").text("norm");
+				e.append("option").attr("value","hits").text("hits");
+				e.append("option").attr("value","nodes").text("nodes");
+				e.node().value=config[i].mode;
+			}
+			if(config[i].hasOwnProperty("rank")) {
+				var row = part.append("tr")
+				row.append("td").text("rank")
+				var e = row.append("td").append("select").attr("id",i+"_rank").on("change",function(){return configChange(this);});
+				e.append("option").attr("value",29).text("--empty--");
+				for (var k in ranks) { e.append("option").attr("value",k).text(ranks[k]);}
+				e.node().value=ranks.indexOf(config[i].rank);
+			}
+			if(config[i].hasOwnProperty("color")) {
+				var row = part.append("tr")
+				row.append("td").text("color by")
+				var e = row.append("td").append("select").attr("id",i+"_color").style("width","70px").on("change",function(){return configChange(this);});
+				e.append("option").attr("value","taxon").text("taxon");
+				e.append("option").attr("value","rank").text("rank");
+				e.append("option").attr("value","sample").text("sample");
+				e.node().value=config[i].color;
+			}
+			if(config[i].hasOwnProperty("label")) {
+				var row = part.append("tr")
+				row.append("td").text("labeling")
+				var e = row.append("td").append("select").attr("id",i+"_label").style("width","70px").on("change",function(){return configChange(this);});
+				e.append("option").attr("value","taxon").text("taxon");
+				e.append("option").attr("value","rank").text("rank");
+				e.append("option").attr("value","none").text("none");
+				e.node().value=config[i].label;
+			}
+		}
+		loc.append("input").attr("type","button").attr("value","Update view").on("click",function(){return layout();});
+	}
+	
+	function treemap(c,p) {
+		//CONTAINER//
+		//create container div//
+		var container = d3.select("#"+c.location) //container div
+			.classed("mtm-container",true)
+			//.classed("mtm",true)
+			.style("width",c.width + "px")
+			//.style("height",c.height + "px")
+			
+		//SVG//
+		var svg;
+		if(c.menu) { //with menu bar
+			container.insert("div").attr("id","mtm-treemap-menu");
+			bar(config.bar,"mtm-treemap-menu");
+			svg = container.append("svg") //general SVG
+				.attr("id","mtm-treemap")
+				.attr("height", c.height - 31) //height - menu
+				.attr("width", c.width)
+				.style("display","inline-block")//disable bottom padding
+			
+		}
+		else { //without menu bar
+			svg = container.append("svg") //general SVG
+				.attr("id","mtm-treemap")
+				.attr("height", c.height)
+				.attr("width", c.width)
+				.style("display","inline-block")//disable bottom padding
+		}
+		
+		//VARIABLES//
+		x = d3.scale.linear().range([0, w]); //x scale from data to map
+		y = d3.scale.linear().range([0, h]); //y scale from data to map	
+		
+/*		//TOOLTIP//
+		tip = d3.tip()
+			.attr('id', 'd3-tip')
+			.direction(function(d) {
+				var pos="";//switch est/west at half + limit of 1/4 each side
+				(d.y<node.y+node.dy/2) ? ( (d.y+d.dy > (node.y+node.dy)*3/4) ? pos=pos : pos=pos+"s" ) : pos=pos+"n";
+				(d.x<node.x+node.dx/2) ? ( (d.x+d.dx > (node.x+node.dx)*3/4) ? pos=pos : pos=pos+"e" ) : pos=pos+"w";
+				return pos ? pos : "s"; //for header: "s"
+			})
+			.html(function(d) {		
+				return d.name+"<br/>Taxonomy ID: "+(+d.id > 0 ? d.id :"")
+					+"<br/>Rank: "+d.data.rank
+					+"<br/>"+d.data.hits+" hits"
+					+"<br/>"+d.data.percent.toFixed(2)
+					+"% of sample "+d.data.sample
+					+"<br/>"+(d.value*100/node.value).toFixed(2) 
+					+"% of the view";				
+			})
+*/		
+		//backgroung
+		svg.append("rect")
+			.attr("width","100%")
+			.attr("height","100%")
+			.attr("fill","#000")
+			.attr("class","mtm-bg");
+				
+//		var svg = content.append("g")//general group
+//			.attr("transform", "translate(" + margin.left + "," + (margin.top) + ")")
+//			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace");
+		
+		//group for visual elements
+		var view = svg.append("g")
+			.attr("transform", "translate(1,20)") //margin left, top
+			.classed("mtm-view",true)
+			//.call(tip); //call tooltip
+		
+		//visual elements
+		var leaves = d3layout.nodes().filter(function(d) { return !d.children; });
+		view.datum(root).selectAll("rect")
+			.data(leaves)
+			.enter().append("rect")
+			.attr("class",function(d){ return "v"+d.id+"-"+d.data.sample;},true)
+			.on("click", function(d) {
+				if(touched=="") {//mouse click or 2nd touch
+					highlightMap(d,false);
+					//tip.hide(d);
+					zoom(node != d.parent ? d.parent : root)
+					tip("hide",d);
+					//zoomSkip(d);
+				}
+			})
+			.on('mouseover', function(d){
+					highlightMap(d,true);
+					tip("show",d);
+				})
+			.on('mouseout', function(d){
+					highlightMap(d,false);
+					tip("hide",d);
+				})
+			.on("touchstart", handleTouch)
+			//.on('mouseover', function(d){ tip("show",d); })
+			.on("mousemove", function(d) { tip("move"); })
+			//.on("mouseout", function(d){ tip("hide"); })
+			
+		//group for labels//
+		svg.append("g")
+			.attr("transform", "translate(1,20)") //margin left, top
+			.classed("mtm-labels",true)
+			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace");			
+			
+		//group for header (current zoom)//
+		var header = svg.append("g")
+			.attr("transform", "translate(1,20)") //margin left, top
+			.classed("mtm-header",true)
+		//create visual element rect
+		header.append("rect")
+			.datum(node)
+			.attr("y", -20) //child of root g, moved on margin.top
+			.attr("width", c.width - 1)
+			.attr("height", 20-1) //border-bottom
+			.style("fill","#888").style("stroke","black")
+			.on('mouseover', function(d){ tip("show",d); })
+			.on('mouseout', function(d){ tip("hide",d); })
+			.on("touchstart", handleTouch)
+			.on("mousemove", function(d) { tip("move"); })
+		//create text element
+		header.append("text")
+			.attr("x", 6)
+			.attr("y", -18)
+			.attr("dy", ".75em")
+			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")
+			.text("Please load json file (add mtm.load('data/yourFile.json');)");	
+
+		//rect for highlight//
+		svg.append("rect")
+			.classed("mtm-hl",true)
+			.style("stroke","#000")
+			.style("stroke-width","5")
+			.style("fill","none")
+			.style("pointer-events","none");
+	}
+	
+	function table(c,p) {
+		
+		var container = d3.select("#"+c.location) //container div
+			.classed("mtm-container",true)
+			.append("div")
+			.classed("mtm",true)
+			.classed("mtm-table",true)
+			.style("width", c.width-2 + "px") //border left|right 1px
+			
+		//manage menu
+		var rowsh; //height of mtm-content
+		//create menu bar//	
+		if(c.menu) {
+			container.insert("div").attr("id","mtm-table-menu");
+			bar(config.bar,"mtm-table-menu");
+			rowsh = height-2-d3.select("#mtm-table-menu").node().offsetHeight;
+		}
+		else {rowsh = c.height-2;} //border up|down 1px
+		
+		var rows = container.append("div")
+			.classed("mtm-content",true)
+			.style("height",rowsh)
+			.style("overflow","auto")
+		
+		//thead
+		var thead = rows.append("div")
+			.append("table")
+			.append("tr")
+			.classed("mtm-header",true);
+		thead.append("th").text("Node");
+		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID");
+		thead.append("th").style("width","60px").style("text-align","right").text("Hits");
+		thead.append("th").style("width","60px").style("text-align","right").text("%/View");
+		thead.append("th").style("width","80px").style("text-align","right").html("%/Sample&nbsp;");
+		thead.append("th").style("width","130px").style("text-align","left").text("Rank");
+		thead.append("th").style("width","15px").text("");//scroll bar
+
+		//tbody
+		rows.append("div")
+			.style("height",(rowsh-thead.node().offsetHeight)+"px")
+			.style("overflow","auto")
+			.attr("class","mtm-scrollable")
+			.append("table")
+			.classed("mtm-view",true)
+			.classed("mtm-labels",true)
+			.style("table-layout","fixed")
+			
+		growTable();
+	}
+	
+	function tip(state,d) {
+		if(state=="show") {
+			d3.select("#mtm-tip")
+				.datum(d)
+				.style("opacity",1)
+				.html(function(d) {
+					return d.name+"<br/>Taxonomy ID: "+(+d.id > 0 ? d.id :"")
+						+"<br/>Rank: "+d.data.rank
+						+"<br/>"+d.data.hits+" hits"
+						+"<br/>"+d.data.percent.toFixed(2)
+						+"% of sample "+d.data.sample
+						+"<br/>"+(d.value*100/node.value).toFixed(2) 
+						+"% of the view";
+				});
+			highlightMap(d,true);
+		}
+		else if(state=="hide") {
+			d3.select("#mtm-tip").style("opacity",0);
+			highlightMap(d,false);
+		}
+		else { // move
+			d3.select("#mtm-tip").style("top", (d3.event.pageY-10)+"px")
+            .style("left", (d3.event.pageX+10)+"px");
+		}
+	}
+	
+/*	function growMap() {
 if(verbose){console.time("growMap");}
 		//leaves		
 		var leaves = treemap.nodes().filter(function(d) { return !d.children; });
@@ -910,7 +1446,7 @@ if(verbose){console.time("growMap");}
 				
 if(verbose){console.timeEnd("growMap");}
 	}
-	
+*/	
 	function handleTouch(d) { touched==d ? touched="": touched=d; }
 	
 	function growTable() {
@@ -918,7 +1454,7 @@ if(verbose){console.time("growTable");}
 		//100%
 		var hundread = root.data.hits;
 		var view = d3.select(".mtm-table").select(".mtm-view");
-		var nodes = treemap.nodes();
+		var nodes = d3layout.nodes();
 		
 		//create tr and td
 		d3.select(".mtm-table").select(".mtm-view")
@@ -997,14 +1533,14 @@ if(verbose){console.time("updateColor");}
 		upper = d3.select("#mtm-upper").attr("class")=="off" ? false : true; //option upper nodes
 		group = d3.select("#mtm-group").property("value"); //Color mode
 		
-		if(map) { setColorMap(rank,upper,group); }
-		if(table) {	setColorTable(rank,upper,group); }
+		if(config.treemap.display) { setColorMap(rank,upper,group); }
+		if(config.table.display) {	setColorTable(rank,upper,group); }
 if(verbose){console.timeEnd("updateColor");}
 	}
 
 	function setColorMap(rank,upper,group) {
 if(verbose){console.time("setColorMap");}
-		var rects = d3.select(".mtm-map").select(".mtm-view").selectAll("rect");
+		var rects = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect");
 		if(group=="taxon") {
 			rects.style("fill",function(d){return color(d.parent.name);});
 		}
@@ -1139,13 +1675,13 @@ if(verbose){console.time("updateLabel");}
 		var rank = d3.select("#mtm-phylogeny").property("value"); // selected rank 
 		var label = d3.select("#mtm-label").attr("class")=="off" ? false : true;
 		
-		if(map) {
+		if(config.treemap.display) {
 			//font size
-			d3.select(".mtm-map").select(".mtm-labels").style("font-size",font+"px");
-			tip.style("font-size",font+"px");
+			d3.select("#mtm-treemap").select(".mtm-labels").style("font-size",font+"px");
+			d3.select("#mtm-tip").style("font-size",font+"px");
 			setLabelMap(rank,label);
 		}
-		if(table) { 
+		if(config.table.display) { 
 			d3.select(".mtm-table").selectAll(".name").style("font-size",font+"px");
 			setLabelTable(rank,label);
 		}
@@ -1155,7 +1691,7 @@ if(verbose){console.timeEnd("updateLabel");}
 	function setLabelMap(rank,label) {
 if(verbose){console.time("setLabelMap");}
 		//delete previous labels
-		var labels = d3.select(".mtm-map").select(".mtm-labels").html("");
+		var labels = d3.select("#mtm-treemap").select(".mtm-labels").html("");
 		
 		//select
 		var labelled;
@@ -1165,7 +1701,7 @@ if(verbose){console.time("setLabelMap");}
 			});
 		}
 		else { //label for each tags
-			labelled=treemap.nodes(root).filter(function(d){return !d.children;});
+			labelled=d3layout.nodes(root).filter(function(d){return !d.children;});
 		}
 		
 		//guides
@@ -1187,7 +1723,7 @@ if(verbose){console.time("setLabelMap");}
 				.append("textPath")
 				.attr("xlink:href",function(d){return "#map"+d.id+d.data.sample;})
 				.html(function(d){
-					var tag = tags;
+					var tag = config.options.pattern;
 					//replace
 					tag = tag.replace(/#N/g,d.name);
 					tag = tag.replace(/#I/g,d.id);
@@ -1228,11 +1764,11 @@ if(verbose){console.timeEnd("setLabelTable");}
 	}
 	
 	function highlightMap(n,toggle) {
-		if(toggle){ //mouseover
+		if(toggle && n.parent){ //mouseover
 			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity",".7");
 			d3.selectAll(".mtm-hl")
-				.attr("x",x(n.parent.x)+2) 
-				.attr("y",y(n.parent.y)+2)
+				.attr("x",x(n.parent.x)+1+2) 
+				.attr("y",y(n.parent.y)+20+2) //+header
 				.attr("width",(kx*n.parent.dx)-5)
 				.attr("height",(ky*n.parent.dy)-5);
 			//highlight stroke  = 5px >  x|y +2 = inside
@@ -1251,7 +1787,7 @@ if(verbose){console.timeEnd("setLabelTable");}
 	function highlightTable(n,toggle) {
 		if(toggle){ 
 			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity",".7");
-			if(map) { 
+			if(config.treemap.display) { 
 				if(n.children) { //skeleton
 					d3.selectAll(".mtm-hl")
 						.attr("x",x(n.x)+2) 
@@ -1270,7 +1806,7 @@ if(verbose){console.timeEnd("setLabelTable");}
 		}
 		else {
 			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity","1");
-			if(map) { 
+			if(config.treemap.display) { 
 				d3.selectAll(".mtm-hl")
 					.attr("x",0) 
 					.attr("y",0)
@@ -1310,7 +1846,7 @@ if(verbose){console.time("zoom");}
 		else { d3.select("#mtm-root").attr("class","off"); }
 		
 		//update header
-		d3.select(".mtm-map").select(".mtm-header")
+		d3.select("#mtm-treemap").select(".mtm-header")
 			.datum(n)
 			.on("click", function(d) { 
 				return zoom(node != d.parent ? d.parent : root); 
@@ -1319,7 +1855,7 @@ if(verbose){console.time("zoom");}
 					d3.event.preventDefault();
 					if(touched==d) { //second touch
 						touched="";		
-						tip.hide(d);
+						tip("hide",d);
 						return zoom(node != d.parent ? d.parent : root);
 					}
 					else { //first touched
@@ -1328,14 +1864,14 @@ if(verbose){console.time("zoom");}
 							highlightMap(touched,false);
 						}
 						touched=d;
-						tip.show(d);
+						tip("show",d);
 					}
 				})
 			.select("text")
 				.text(function(d) { return d.name; });
 		
 		//update map	
-		if(map) {
+		if(config.treemap.display) {
 if(verbose){console.time("zoomMap");}			
 			kx = w / n.dx, ky = h / n.dy;
 			x.domain([n.x, n.x + n.dx]);
@@ -1345,7 +1881,7 @@ if(verbose){console.time("zoomMap");}
 			var rectTranslate = d3.svg.transform()
 				.translate(function(d) { return [x(d.x), y(d.y)] });
 				
-			d3.select(".mtm-map").select(".mtm-view").selectAll("rect")
+			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
 				.transition()
 				.duration(1500)
 				.attr("transform", rectTranslate)
@@ -1390,7 +1926,7 @@ if(verbose){console.time("zoomMap");}
 			}
 			
 			//labels positions
-			var labels = d3.select(".mtm-map").select(".mtm-labels")
+			var labels = d3.select("#mtm-treemap").select(".mtm-labels")
 			labels.selectAll("path")
 				.transition().duration(1500)
 				.attr("d",function(d) {return line(d); })			
@@ -1399,7 +1935,7 @@ if(verbose){console.timeEnd("zoomMap");}
 		}
 		
 		//update table
-		if(table) {
+		if(config.table.display) {
 if(verbose){console.time("zoomTable");}
 			//clear %
 			d3.select(".mtm-table").select(".mtm-labels")
@@ -1417,7 +1953,7 @@ if(verbose){console.time("zoomTable");}
 				);
 
 			//map call updateLabel() else it is needed
-			if(!map) {updateLabel();} 
+			if(!config.treemap.display) {updateLabel();} 
 if(verbose){console.timeEnd("zoomTable");}
 		}
 		
@@ -1439,6 +1975,15 @@ if(verbose){console.timeEnd("zoom");}
 	}
 	
 	//accessors for treemap size parameter
+	function setMode(confMode) {
+		var mode;
+		if(confMode=="norm") { mode=sizeNorm; }
+		else if(confMode=="hits") { mode=sizeHits; }
+		else if(confMode=="nodes") { mode=sizeNodes;}
+		else {console.log("ERROR: unvalide size mode"); mode=sizeNorm; }
+		return mode;
+	}
+	
 	function sizeNorm(d) { return d.data.percent; }
 	function sizeHits(d) { return d.data.hits; } 
 	function sizeNodes(d) { return 1; }
