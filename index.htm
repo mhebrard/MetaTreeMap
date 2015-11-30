@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 	<title>MetaTreeMap</title>
 <!--Prod -->
-    <link rel="stylesheet" type="text/css" href="mtm.css"  />
+<!--    <link rel="stylesheet" type="text/css" href="mtm.css"  />-->
 	<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:600' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
@@ -13,26 +13,6 @@
 
 	<style type="text/css">
 <!--
-	.on {
-		color:#000;
-		background-color: #fff;
-		border: 3px solid #000;
-		border-radius: .2em;
-		margin: 1px;
-		padding: 2px ;
-		font-size: 14px;
-		font-weight: bold;
-	}
-	.off {
-		color:#888;
-		background-color: #fff;
-		border: 3px solid #888;
-		border-radius: .2em;
-		margin: 1px;
-		padding: 2px ;
-		font-size: 14px;
-		font-weight: bold;
-	}
 	.options {
 		display:inline-table;
 		border: 3px solid #000;
@@ -47,13 +27,13 @@
 	<h1>MetaTreeMap</h1>
 	<div style="display:inline-block">
 		<div>
-			<button class="on" onclick="menu('import',this)">Import</button>
-			<button class="off" onclick="menu('config',this)">Config</button>
-			<button class="off" onclick="menu('export',this)">Export</button>
-			<a href="html/feedback.htm" target="feedback"><button class="off">Feedback</button></a>
-			<a href="html/documentation.htm" target="mtm-doc"><button class="off">User Guide</button></a>
-			<button class="off" onclick="menu('about',this)">About</button>
-			<button class="off" onclick="menu('none',this)"><span class="fa fa-times"></span></button>
+			<button class="idx button on" onclick="menu('import',this)">Import</button>
+			<button class="idx button off" onclick="menu('config',this)">Config</button>
+			<button class="idx button off" onclick="menu('export',this)">Export</button>
+			<a href="html/feedback.htm" target="feedback"><button class="idx button off">Feedback</button></a>
+			<a href="html/documentation.htm" target="mtm-doc"><button class="idx button off">User Guide</button></a>
+			<button class="idx button off" onclick="menu('about',this)">About</button>
+			<button class="idx button off" onclick="menu('none',this)"><span class="fa fa-times"></span></button>
 		</div>
 <!--		<div id="layout" class="options">
 			<table><tr><th>Modules</th>
@@ -211,12 +191,12 @@ console.log("mtm",mtm.version);
 			// button
 			if(button) {
 				//turn buttons off
-				var bs = document.getElementsByClassName("on");
+				var bs = document.getElementsByClassName("idx button on");
 				for (var i = 0; i < bs.length; i++) {
-					bs[i].className="off";
+					bs[i].className="idx button off";
 				}
 				//turn button on
-				button.className="on"
+				button.className="idx button on"
 			}
 			
 		}

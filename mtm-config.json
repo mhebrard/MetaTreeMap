@@ -1,8 +1,7 @@
 {
 "bar":{
 	"display":true,
-	"location":"bottom",
-	"width":800
+	"location":"bottom"
 },
 "configuration":{
 	"display":true,
@@ -22,12 +21,12 @@
 	"height":700
 },
 "options":{
+	"color":"taxon",
+	"rank":"null",
 	"pattern":"#N",
 	"mode":"norm",
-	"rank":"null",
 	"label":"taxon",
-	"color":"taxon",
-	"upper":"on",
+	"upper":"color",
 	"font":"14",
 	"palette":"12",
 	"background":"black"
