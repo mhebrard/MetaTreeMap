@@ -1,7 +1,8 @@
 {
 "bar":{
 	"display":true,
-	"location":"bottom"
+	"location":"bottom",
+	"width":600
 },
 "configuration":{
 	"display":true,
@@ -12,13 +13,14 @@
 	"location":"left",
 	"width":800,
 	"height":600,
-	"menu":true
+	"options":true
 },
 "table":{
-	"display":true,
+	"display":false,
 	"location":"right",
 	"width":500,
-	"height":700
+	"height":700,
+	"options":true
 },
 "options":{
 	"color":"taxon",
