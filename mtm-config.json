@@ -16,11 +16,11 @@
 	"options":true
 },
 "table":{
-	"display":false,
+	"display":true,
 	"location":"right",
-	"width":500,
-	"height":700,
-	"options":true
+	"width":600,
+	"height":600,
+	"options":false
 },
 "options":{
 	"color":"taxon",
