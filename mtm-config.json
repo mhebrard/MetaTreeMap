@@ -25,12 +25,12 @@
 "options":{
 	"color":"taxon",
 	"rank":"null",
-	"pattern":"#N",
-	"mode":"norm",
 	"label":"taxon",
 	"upper":"color",
 	"font":"14",
 	"palette":"12",
-	"background":"black"
+	"background":"black",
+	"mode":"norm",
+	"pattern":"#N"
 }
 }

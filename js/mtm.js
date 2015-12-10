@@ -1,7 +1,7 @@
 !(function() {
 
 	var mtm = { version: "2.3.3" };
-	var verbose=true;
+	var verbose=false;
 
 	//VARIABLES//
 	//this product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
@@ -32,8 +32,6 @@
 	//CONSTRUCTORS//
 	mtm.load = function(files,conf) {
 if(verbose){console.time("load");}
-		//hasMenu=false;
-		//map=table=false;
 		//root init.
 		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
@@ -133,10 +131,8 @@ if(verbose){console.timeEnd("load");}
 	}
 	
 	//UTILITIES//
-	mtm.toggle = function toggle(nid) {
-		var sel = d3.select("#mtm-table").select(".v"+nid);
-		var span = sel.select(".fa");
-		var d = sel.datum();
+	function toggle(d) {
+		var span = d3.select("#mtm-table").select(".v"+d.id+"-"+d.data.sample).select(".fa");
 		if(span.classed("fa-minus-square-o")) {
 			span.attr("class","fa fa-plus-square-o");
 			//hide children 
@@ -156,7 +152,6 @@ if(verbose){console.timeEnd("load");}
 			}
 		}
 	}
-	
 	
 	//SUB FUNCTIONS//
 	//DATA STRUCTURE//
@@ -445,8 +440,8 @@ if(verbose){console.time("bar");}
 			s.property("value",config.options.color)
 			s.on("change",function() { 
 				//change all button
-				d3.selectAll(".mtm-color").property('value',this.value);
 				config.options.color=this.value;
+				d3.selectAll(".mtm-color").property('value',this.value);
 				d3.select("#options_color").property('value',this.value);
 				//action
 				updateColor();
@@ -458,20 +453,19 @@ if(verbose){console.time("bar");}
 			//options//
 			s.append("option").attr("value","init").text("--Phylogenic rank--");
 			for (var k in ranks) {
-				s.append("option").attr("value",k).text(ranks[k]);
+				s.append("option").attr("value",ranks[k]).text(ranks[k]);
 			}
 			//value//
 			s.property("value",config.options.rank)
 			s.on("change",function() {
 				//change all button
-				d3.selectAll(".mtm-phylogeny").property('value',this.value);
 				config.options.rank=this.value;
+				d3.selectAll(".mtm-phylogeny").property('value',this.value);
 				d3.select("#options_rank").property('value',this.value);
 				//action
-				if(d3.select(".mtm-color").node().value=="rank") {
-					updateColor();
-				}
-				if(d3.select(".mtm-label").classed("mtm-off")) {
+//console.log(config.options.rank,config.options.color,config.options.label);
+				if(config.options.color=="rank") { updateColor(); }
+				if(config.options.label=="rank") {
 					updateLabel();
 					zoom(node);
 				}
@@ -483,18 +477,11 @@ if(verbose){console.time("bar");}
 			.classed("mtm-on",function() { return config.options.label=="taxon"; })
 			.classed("mtm-off",function() { return config.options.label=="rank"; })
 			.on("click", function() {
-				if(d3.select(this).classed("mtm-on")) { //turn off = rank
-					d3.selectAll(".mtm-label").classed("mtm-on",false);
-					d3.selectAll(".mtm-label").classed("mtm-off",true);
-					config.options.label="rank";
-					d3.select("#options_label").property('value',"rank");
-				}
-				else { //turn on = taxon
-					d3.selectAll(".mtm-label").classed("mtm-on",true);
-					d3.selectAll(".mtm-label").classed("mtm-off",false);
-					config.options.label="taxon";
-					d3.select("#options_label").property('value',"taxon");
-				}
+				config.options.label=config.options.label=="taxon"?"rank":"taxon";
+				d3.selectAll(".mtm-label")
+					.classed("mtm-on",function() { return config.options.label=="taxon"; })
+					.classed("mtm-off",function() { return config.options.label=="rank"; })
+				d3.select("#options_label").property('value',config.options.label);
 				updateLabel();
 				zoom(node);
 			});
@@ -505,18 +492,11 @@ if(verbose){console.time("bar");}
 			.classed("mtm-on",function() { return config.options.upper=="color"; })
 			.classed("mtm-off",function() { return config.options.upper=="gray"; })
 			.on("click", function() {
-				if(d3.select(this).classed("mtm-on")) { //turn off = gray
-					d3.selectAll(".mtm-upper").classed("mtm-on",false);
-					d3.selectAll(".mtm-upper").classed("mtm-off",true);
-					config.options.upper="gray";
-					d3.select("#options_upper").property('value',"gray");
-				}
-				else { //turn on = taxon
-					d3.selectAll(".mtm-upper").classed("mtm-on",true);
-					d3.selectAll(".mtm-upper").classed("mtm-off",false);
-					config.options.upper="color";
-					d3.select("#options_upper").property('value',"color");
-				}
+				config.options.upper=config.options.upper=="color"?"gray":"color";
+				d3.selectAll(".mtm-upper")
+					.classed("mtm-on",function() { return config.options.upper=="color"; })
+					.classed("mtm-off",function() { return config.options.upper=="gray"; })
+				d3.select("#options_upper").property('value',config.options.upper);
 				updateColor();
 			});
 			
@@ -542,8 +522,8 @@ if(verbose){console.time("bar");}
 			s.property("value",config.options.font)
 			s.on("change",function() { 
 				//change all button
-				d3.selectAll(".mtm-font").property('value',this.value);
 				config.options.font=this.value;
+				d3.selectAll(".mtm-font").property('value',this.value);
 				d3.select("#options_font").property('value',this.value);
 				//action
 				updateLabel();
@@ -556,47 +536,31 @@ if(verbose){console.time("bar");}
 			.classed("mtm-on",function() { return config.options.palette=="12"; })
 			.classed("mtm-off",function() { return config.options.palette=="20"; })
 			.on("click", function() {
-				if(d3.select(this).classed("mtm-on")) { //turn off = 20
-					d3.selectAll(".mtm-palette").classed("mtm-on",false);
-					d3.selectAll(".mtm-palette").classed("mtm-off",true);
-					config.options.palette="20";
-					d3.select("#options_palette").property('value',"20");
-					color = d3.scale.category20c();
-				}
-				else { //turn on = 12
-					d3.selectAll(".mtm-palette").classed("mtm-on",true);
-					d3.selectAll(".mtm-palette").classed("mtm-off",false);
-					config.options.palette="12";
-					d3.select("#options_palette").property('value',"12");
-					color = d3.scale.ordinal().range(colorbrewer.Set3[12]);
-				}
+				config.options.palette=config.options.palette=="20"?"12":"20";
+				d3.selectAll(".mtm-palette")
+					.classed("mtm-on",function() { return config.options.palette=="12"; })
+					.classed("mtm-off",function() { return config.options.palette=="20"; })
+				d3.select("#options_palette").property('value',config.options.palette);
+				//action
+				color=config.options.palette=="20"?d3.scale.category20c():d3.scale.ordinal().range(colorbrewer.Set3[12]);
 				updateColor();
 			});	
 			
 		//Background//
 		menu.append("span").attr("class","mtm-button fa fa-adjust mtm-background")
-			.attr("title","Switch from 12 to 20 colors")
+			.attr("title","Background black or white")
 			.classed("mtm-on",function() { return config.options.background=="black"; })
 			.classed("mtm-off",function() { return config.options.background=="white"; })
 			.on("click", function() {
-				if(d3.select(this).classed("mtm-on")) { //turn off = white
-					d3.selectAll(".mtm-background").classed("mtm-on",false);
-					d3.selectAll(".mtm-background").classed("mtm-off",true);
-					config.options.background="white";
-					d3.select("#options_background").property('value',"white");
-					d3.selectAll(".mtm-bg").attr("fill","#fff");
-					d3.selectAll(".mtm-header rect").style("stroke","#fff");
-					d3.select("#mtm-table").style("background-color","#fff");
-				}
-				else { //turn on = black
-					d3.selectAll(".mtm-background").classed("mtm-on",true);
-					d3.selectAll(".mtm-background").classed("mtm-off",false);
-					config.options.palette="black";
-					d3.select("#options_background").property('value',"black");
-					d3.selectAll(".mtm-bg").attr("fill","#000");
-					d3.selectAll(".mtm-header rect").style("stroke","#000");
-					d3.select("#mtm-table").style("background-color","#000");
-				}
+				config.options.background=config.options.background=="black"?"white":"black";
+				d3.selectAll(".mtm-background")
+					.classed("mtm-on",function() { return config.options.background=="black"; })
+					.classed("mtm-off",function() { return config.options.background=="white"; })
+				d3.select("#options_background").property('value',config.options.background);
+				//action
+				d3.selectAll(".mtm-bg").attr("fill",config.options.background);
+				d3.selectAll(".mtm-header rect").style("stroke",config.options.background);
+				d3.select("#mtm-table").style("background-color",config.options.background);
 			});
 			
 		//Mode//
@@ -612,8 +576,8 @@ if(verbose){console.time("bar");}
 			s.property("value",config.options.mode)
 			s.on("change",function() { 
 				//change all button
-				d3.selectAll(".mtm-mode").property('value',this.value);
 				config.options.mode=this.value;
+				d3.selectAll(".mtm-mode").property('value',this.value);
 				d3.select("#options_mode").property('value',this.value);
 				//action
 				d3layout.value(setMode(config.options.mode));
@@ -718,9 +682,9 @@ if(verbose){console.time("config");}
 				var row = part.append("tr")
 				row.append("td").text("rank")
 				var e = row.append("td").append("select").attr("id",i+"_rank").on("change",function(){return configChange(this);});
-				e.append("option").attr("value",29).text("--empty--");
-				for (var k in ranks) { e.append("option").attr("value",k).text(ranks[k]);}
-				e.node().value=ranks.indexOf(config[i].rank);
+				e.append("option").attr("value","null").text("--empty--");
+				for (var k in ranks) { e.append("option").attr("value",ranks[k]).text(ranks[k]);}
+				e.node().value=config[i].rank;
 			}
 			if(config[i].hasOwnProperty("label")) {
 				var row = part.append("tr")
@@ -756,6 +720,14 @@ if(verbose){console.time("config");}
 				e.append("option").attr("value","20").text("20");
 				e.node().value=config[i].palette;
 			}
+			if(config[i].hasOwnProperty("background")) {
+				var row = part.append("tr")
+				row.append("td").text("background")
+				var e = row.append("td").append("select").attr("id",i+"_background").style("width","70px").on("change",function(){return configChange(this);});
+				e.append("option").attr("value","black").text("black");
+				e.append("option").attr("value","white").text("white");
+				e.node().value=config[i].background;
+			}
 			if(config[i].hasOwnProperty("mode")) {
 				var row = part.append("tr")
 				row.append("td").text("mode")
@@ -778,9 +750,6 @@ if(verbose){console.time("treemap");}
 		//create container div//
 		var container = d3.select("#"+c.location) //container div
 			.classed("mtm-container",true)
-			//.classed("mtm",true)
-			//.style("width",c.width + "px")
-			//.style("height",c.height + "px")
 			
 		//Menu//
 		if(c.options) {
@@ -805,7 +774,6 @@ if(verbose){console.time("treemap");}
 		var view = svg.append("g")
 			.attr("transform", "translate(1,20)") //margin left, top
 			.classed("mtm-view",true)
-			//.call(tip); //call tooltip
 		
 		//visual elements
 		var leaves = d3layout.nodes().filter(function(d) { return !d.children; });
@@ -876,11 +844,6 @@ if(verbose){console.timeEnd("treemap");}
 if(verbose){console.time("table");}		
 		var container = d3.select("#"+c.location) //container div
 			.classed("mtm-container",true)
-			//.style("width",c.width + "px")
-			//.append("div")
-			//.classed("mtm",true)
-			//.classed("mtm-table",true)
-			//.style("width", c.width-2 + "px") //border left|right 1px
 		
 		//Menu//
 		if(c.options) {
@@ -922,7 +885,6 @@ if(verbose){console.time("table");}
 			.classed("mtm-view",true)
 			.classed("mtm-labels",true)
 			.style("table-layout","fixed")
-			//.style("width","100%")
 
 		//Fill table
 if(verbose){console.time("growTable");}
@@ -932,7 +894,6 @@ if(verbose){console.time("growTable");}
 		//create tr and td
 		view.selectAll("tr").data(nodes).enter().append("tr")
 				.attr("class",function(d){return "v"+d.id+"-"+d.data.sample;})
-				//.attr("title",function(d){return d.name;})
 				.on("mouseover",function(d) { 
 					highlight(d,true);
 					tip("show",d);
@@ -982,7 +943,8 @@ if(verbose){console.time("growTable");}
 		view.selectAll(".sample").data(nodes)
 				.style("width","80px").style("text-align","right")
 				.append("span").html(function(d){
-				return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";})
+					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
+				})
 		//fill rank
 		view.selectAll(".rank").data(nodes)
 				.style("width","130px")
@@ -992,7 +954,7 @@ if(verbose){console.time("growTable");}
 		view.selectAll("tr")
 			.filter(function(d){return d.children;})
 			.select(".fa")
-			.attr("onclick",function(d){ return "mtm.toggle('"+d.id+"-"+d.data.sample+"')"; });
+			.on("click",function(d){ return toggle(d); });
 				
 if(verbose){console.timeEnd("table");}				
 	}
@@ -1011,11 +973,9 @@ if(verbose){console.timeEnd("table");}
 						+"<br/>"+(d.value*100/node.value).toFixed(2) 
 						+"% of the view";
 				});
-//			highlightMap(d,true);
 		}
 		else if(state=="hide") {
 			d3.select("#mtm-tip").style("opacity",0);
-//			highlightMap(d,false);
 		}
 		else { // move
 			d3.select("#mtm-tip").style("top", (d3.event.pageY+10)+"px")
@@ -1029,10 +989,10 @@ if(verbose){console.timeEnd("table");}
 			if(elem.checked){ config[vals[0]][vals[1]]=true; }
 			else { config[vals[0]][vals[1]]=false; }
 		}
-		else if(vals[1]=="rank") {
-			if(elem.value==29) {config[vals[0]][vals[1]]="null";}
-			else {config[vals[0]][vals[1]]=ranks[elem.value];}
-		}
+		//else if(vals[1]=="rank") {
+		//	if(elem.value==29) {config[vals[0]][vals[1]]="null";}
+		//	else {config[vals[0]][vals[1]]=ranks[elem.value];}
+		//}
 		else { config[vals[0]][vals[1]]=elem.value; }
 	}
 	
@@ -1041,34 +1001,37 @@ if(verbose){console.timeEnd("table");}
 	//VIEW UPDATE//
 	function updateColor() {
 if(verbose){console.time("updateColor");}
-		rank = d3.select(".mtm-phylogeny").property("value"), //selected rank
-		upper = d3.select(".mtm-upper").classed("mtm-on"); //option upper nodes
-		group = d3.select(".mtm-color").property("value"); //Color mode
-		
-		if(config.treemap.display) { setColorMap(rank,upper,group); }
-		if(config.table.display) {	setColorTable(rank,upper,group); }
+		rank = ranks.indexOf(config.options.rank) //selected rank
+		if(config.treemap.display) { setColorMap(rank); }
+		if(config.table.display) {	setColorTable(rank); }
 if(verbose){console.timeEnd("updateColor");}
 	}
 
-	function setColorMap(rank,upper,group) {
+	function setColorMap(rank) {
 if(verbose){console.time("setColorMap");}
+//console.log("MAP",rank,config.options.rank,config.options.color,config.options.label);
 		var rects = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect");
-		if(group=="taxon") {
+		if(config.options.color=="taxon") {
+//console.log("color=taxon");
 			rects.style("fill",function(d){return color(d.parent.name);});
 		}
-		else if(group=="rank") {
+		else if(config.options.color=="rank") {
+//console.log("color=rank");
 			//upper color
 			rects.style("fill",function(d){return color(d.parent.name);});
 			//list of node on the selected rank
-			d3layout.nodes().filter(function(d){return d.data.rank == ranks[+rank] && d.children})
+			d3layout.nodes().filter(function(d){
+//console.log(d.data.rank,rank);
+				return d.data.rank == ranks[rank] && d.children})
 				.forEach(function(d) {
+//console.log("node at rank",d);
 					//list of leaves for each subtree
 					var subleaves = getSubtree(d,[]).filter(function(d){return !d.children});
 					rects.data(subleaves,function(d){return "v"+d.id+"-"+d.data.sample;})
 						.style("fill",color(d.name));				
 				});
 		}
-		else if(group=="sample") {
+		else if(config.options.color=="sample") {
 			rects.style("fill",function(d){return color(d.data.sample);});
 		}
 		else { //if(group=="max")
@@ -1084,19 +1047,19 @@ if(verbose){console.time("setColorMap");}
 		}
 		
 		// gray upper
-		if(!upper) {
+		if(config.options.upper=="gray") {
 			rects.filter(function(d){return rank>=d.depth})
 				.style("fill","#888");
 		}
 if(verbose){console.timeEnd("setColorMap");}
 	}
 	
-	function setColorTable(rank,upper,group) {
+	function setColorTable(rank) {
 if(verbose){console.time("setColorTable");}
 		var pcol,phits; //previous color and sum
 		var lines = d3.select("#mtm-table").select(".mtm-view").selectAll("tr");
 		var subs = []; //list of descendant.
-		if(group=="taxon") {
+		if(config.options.color=="taxon") {
 			// bottom > up
 			for (var i=lines[0].length;i>0;i--){
 				d3.select(lines[0][i]).style("background-color",function(d){
@@ -1112,7 +1075,7 @@ if(verbose){console.time("setColorTable");}
 				});
 			}//end bottom > up					
 		}
-		else if(group=="rank") {
+		else if(config.options.color=="rank") {
 			// bottom > up
 			for (var i=lines[0].length;i>0;i--){
 				d3.select(lines[0][i]).style("background-color",function(d){
@@ -1146,7 +1109,7 @@ if(verbose){console.time("setColorTable");}
 				});
 			}//end bottom > up
 		}
-		else if(group=="sample"){
+		else if(config.options.color=="sample"){
 			lines.style("background-color",function(d){ return color(d.data.sample); });
 		}
 		else { // if(group=="max"){
@@ -1175,7 +1138,7 @@ if(verbose){console.time("setColorTable");}
 		//root
 		d3.select(lines[0][0]).style("background-color","#888");
 		// gray upper
-		if(!upper) {
+		if(config.options.upper=="gray") {
 			lines.filter(function(d){return rank>=d.depth})
 				.style("background-color","#888");
 		}
@@ -1185,29 +1148,28 @@ if(verbose){console.timeEnd("setColorTable");}
 	function updateLabel() {
 if(verbose){console.time("updateLabel");}
 
-		var rank = d3.select(".mtm-phylogeny").property("value"); // selected rank 
-		var label = d3.select(".mtm-label").classed("mtm-on");
+		rank = ranks.indexOf(config.options.rank) //selected rank
+		//font size
 		if(config.treemap.display) {
-			//font size
 			d3.select("#mtm-treemap").select(".mtm-labels").style("font-size",config.options.font+"px");
 			d3.select("#mtm-tip").style("font-size",config.options.font+"px");
-			setLabelMap(rank,label);
+			setLabelMap(rank);
 		}
 		if(config.table.display) { 
 			d3.select(".mtm-table").selectAll(".name").style("font-size",config.options.font+"px");
-			setLabelTable(rank,label);
+			setLabelTable(rank);
 		}
 if(verbose){console.timeEnd("updateLabel");}
 	}
 
-	function setLabelMap(rank,label) {
+	function setLabelMap(rank) {
 if(verbose){console.time("setLabelMap");}
 		//delete previous labels
 		var labels = d3.select("#mtm-treemap").select(".mtm-labels").html("");
 		
 		//select
 		var labelled;
-		if(!label) { //show selected group || upper leaves
+		if(config.options.label=="rank") { //show selected group || upper leaves
 			labelled=d3layout.nodes(root).filter(function(d){
 				return (rank == +d.depth-1) || (!d.children && rank > +d.depth)
 			});
@@ -1249,10 +1211,10 @@ if(verbose){console.time("setLabelMap");}
 if(verbose){console.timeEnd("setLabelMap");}
 	}
 
-	function setLabelTable(rank,label) {
+	function setLabelTable(rank) {
 if(verbose){console.time("setLabelTable");}
 		var lines = d3.select("#mtm-table").select(".mtm-labels").selectAll("tr");	
-		if(!label && rank!="init"){
+		if(config.options.label=="rank" && rank!=-1){
 			//collapse rank
 			lines.filter(function(d){return rank == +d.depth-1;})
 				.style("display","table-row")
