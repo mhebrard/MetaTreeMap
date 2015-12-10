@@ -60,10 +60,79 @@ if(verbose){console.timeEnd("completeTree");}
 if(verbose){console.timeEnd("load");}
 	}   
 	
+	mtm.save = function(mode) {
+		//delete previous
+		d3.select("#mtm-canvas").html("");
+		
+		if(mode=="json") {
+			copy(root); //format tree for output
+			//create file
+			var url = 'data:text/json;charset=utf8;filename=output.json,' + encodeURIComponent(JSON.stringify(out));
+			//Direct DownLoad call
+			ddl("merge.json",url);
+		}
+		else if(mode=="svg") {
+			var svg = d3.select("svg");		
+			//add svg header
+			var html = d3.select("svg")
+				.attr("version", 1.1)
+				.attr("xmlns", "http://www.w3.org/2000/svg")
+				.node().parentNode.innerHTML;
+				
+			var url = 'data:image/svg+xml;charset=utf8;filename=treemap.svg,' + encodeURIComponent(html);
+			//Direct DownLoad call
+			ddl("treemap.svg",url);
+		}
+		else if(mode=="png") {
+			var svg = d3.select("svg");		
+			//create canvas
+			var canvas = d3.select("body").append("canvas")
+				.attr("width",svg.attr("width"))
+				.attr("height",svg.attr("height"))
+				.style("display","none")
+				.node();
+			var context = canvas.getContext("2d");
+			
+			//add svg header
+			var html = svg.attr("version", 1.1)
+				.attr("xmlns", "http://www.w3.org/2000/svg")
+				.attr(":xmlns:xlink","http://www.w3.org/1999/xlink")
+				.node().outerHTML;
+				
+			//img tag
+			var image = new Image;
+			image.onload = function() {
+				//create file
+				context.drawImage(image, 0, 0);
+				var url = canvas.toDataURL().replace("image/png","application/octet-stream");
+				//Direct DownLoad call
+				ddl("treemap.png",url);
+			};
+			image.src = 'data:image/svg+xml;base64,'+ btoa(html);
+		}
+		else if(mode=="txt") {
+			//header
+			var string =  "Name\tTaxonomyID\tHits\tPercentage\tSample\tRank\n";
+			//concatenate data 
+			string = string + exportTab(root);
+			//create file
+			var url = 'data:text/tab-separated-values;charset=utf8;filename=table.txt,' + encodeURIComponent(string);
+			//Direct DownLoad call
+			ddl("table.txt",url);
+		}
+		else if(mode=="config") {
+			//create file
+			var url = 'data:text/json;charset=utf8;filename=mtm-config.json,' + encodeURIComponent(JSON.stringify(config));
+			//Direct DownLoad call
+			ddl("mtm-config.json",url);
+		}
+	}
+	
 	mtm.convertor = function(location) {
 		//CONTAINER//
 		var container = d3.select("#"+location) //container div
 			.append("table");
+		/*Upload data files (.json): <input type="file" name="dataFiles[]" id="data" multiple/>*/
 		var row = container.append("tr");
 		row.append("td")
 			.text("Other.json")
@@ -80,6 +149,15 @@ if(verbose){console.timeEnd("load");}
 			.attr("name","mtm-format")
 			.attr("value","tab")
 			.on("click",function(){format(this);})
+		row = container.append("tr");
+		row.append("td")
+			.text("data file:")
+		row.append("td")
+			.append("input")
+			.attr("type","file")
+			.attr("name","mtm-convertFile")
+			.attr("id","mtm-convert")
+			.style("width","155px")
 		row = container.append("tr");
 		row.append("th")
 			.text("Fields")
@@ -128,29 +206,6 @@ if(verbose){console.timeEnd("load");}
 			.attr("name","convert")
 			.attr("value","Convert")
 			.on("click",function(){convert();})
-	}
-	
-	//UTILITIES//
-	function toggle(d) {
-		var span = d3.select("#mtm-table").select(".v"+d.id+"-"+d.data.sample).select(".fa");
-		if(span.classed("fa-minus-square-o")) {
-			span.attr("class","fa fa-plus-square-o");
-			//hide children 
-			if (d.children) {
-				for (var i in d.children) {
-					hide(d.children[i]);
-				}
-			}
-		}
-		else {
-			span.attr("class","fa fa-minus-square-o");
-			//show children
-			if (d.children) {
-				for (var i in d.children) {
-					show(d.children[i]);
-				}
-			}
-		}
 	}
 	
 	//SUB FUNCTIONS//
@@ -1255,29 +1310,6 @@ if(verbose){console.timeEnd("setLabelTable");}
 		}
 	}
 
-	function hide(n) {
-		//hide current raw and recursive
-		d3.select("#mtm-table").selectAll(".v"+n.id+"-"+n.data.sample)
-			.style("display","none");
-		//recursive call
-		if (n.children) {
-			for (var i in n.children) {
-				hide(n.children[i]);
-			}
-		}		
-	}
-		
-	function show(n) {
-		//show current raw and recursive
-		var t = d3.select("#mtm-table").select(".v"+n.id+"-"+n.data.sample)
-					.style("display","table-row");
-		if(t.select(".fa").classed("fa-minus-square-o") && n.children) {
-			for (var i in n.children) {
-				show(n.children[i]);
-			}
-		}
-	}
-	
 	function zoomSkip(d) {
 	//skip node if same hits (bridge)
 		if(d==node){ //zoom out
@@ -1440,6 +1472,50 @@ if(verbose){console.timeEnd("zoom");}
 		return ns;
 	}
 	
+	function toggle(d) {
+		var span = d3.select("#mtm-table").select(".v"+d.id+"-"+d.data.sample).select(".fa");
+		if(span.classed("fa-minus-square-o")) {
+			span.attr("class","fa fa-plus-square-o");
+			//hide children 
+			if (d.children) {
+				for (var i in d.children) {
+					hide(d.children[i]);
+				}
+			}
+		}
+		else {
+			span.attr("class","fa fa-minus-square-o");
+			//show children
+			if (d.children) {
+				for (var i in d.children) {
+					show(d.children[i]);
+				}
+			}
+		}
+	}
+	
+	function hide(n) {
+		//hide current raw and recursive
+		d3.select("#mtm-table").selectAll(".v"+n.id+"-"+n.data.sample)
+			.style("display","none");
+		//recursive call
+		if (n.children) {
+			for (var i in n.children) {
+				hide(n.children[i]);
+			}
+		}		
+	}
+		
+	function show(n) {
+		//show current raw and recursive
+		var t = d3.select("#mtm-table").select(".v"+n.id+"-"+n.data.sample)
+					.style("display","table-row");
+		if(t.select(".fa").classed("fa-minus-square-o") && n.children) {
+			for (var i in n.children) {
+				show(n.children[i]);
+			}
+		}
+	}
 	
 	//OUTPUT//
 	function copy(n,p) {
@@ -1472,7 +1548,7 @@ if(verbose){console.timeEnd("zoom");}
 	
 	function ddl(name,url) {
 		//hidden link to call DDL
-		d3.select("body").append("a")
+		d3.select("#mtm-canvas").append("a")
 			.attr("download",name)
 			.attr("href",url)
 			.node()
@@ -1515,7 +1591,7 @@ if(verbose){console.timeEnd("zoom");}
 	
 	function convert() {
 		var format = d3.select("[name=mtm-format]:checked").node().value;
-		var file=d3.select("#input").node().files[0];
+		var file=d3.select("#mtm-convert").node().files[0];
 		
 		//root init.
 		root={"name":"root","children":[],"data":{"assigned":0,"rank":"no rank"},"id":1}; //skeleton tree

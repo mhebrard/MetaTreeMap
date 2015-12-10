@@ -4,7 +4,6 @@
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 	<title>MetaTreeMap</title>
 <!--Prod -->
-<!--    <link rel="stylesheet" type="text/css" href="mtm.css"  />-->
 	<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:600' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
@@ -35,69 +34,6 @@
 			<button class="idx mtm-button mtm-off" onclick="menu('about',this)">About</button>
 			<button class="idx mtm-button mtm-off" onclick="menu('none',this)"><span class="fa fa-times"></span></button>
 		</div>
-<!--		<div id="layout" class="options">
-			<table><tr><th>Modules</th>
-					<th>Show</th>
-					<th>Width</th>
-					<th>Height</th>
-					<th>Options</th>
-					<th>Place</th>
-				</tr>
-				<tr><td>Treemap</td>
-					<td><input id="tree" type="checkbox" name="views" value="treemap" onclick="check(this)" checked /></td>
-					<td><input type="number" name="treew" style="width:50px" value="800"/></td>
-					<td><input type="number" name="treeh" style="width:50px" value="600"/></td>
-					<td><input id="treem" type="radio" name="option" value="treem" checked /></td>
-					<td><select name="treep">
-							<option value="top">top</option>
-							<option value="left" selected >left</option>
-							<option value="center">center</option>
-							<option value="right">right</option>
-							<option value="bottom">bottom</option>
-						</select>
-					</td>
-				</tr>
-				<tr><td>Table</td>
-					<td><input id="table" type="checkbox" name="views" value="table" onclick="check(this)" checked /></td>
-					<td><input type="number" name="tablew" style="width:50px" value="600"/></td>
-					<td><input type="number" name="tableh" style="width:50px" value="600"/></td>
-					<td><input id="tablem" type="radio" name="option" value="tablem" /></td>
-					<td><select name="tablep">
-							<option value="top">top</option>
-							<option value="left">left</option>
-							<option value="center">center</option>
-							<option value="right" selected >right</option>
-							<option value="bottom">bottom</option>
-						</select>
-					</td>
-				</tr>
-				<tr><td>Options</td>
-					<td><input id="opt" type="checkbox" name="views" value="options" onclick="check(this)"/></td>
-					<td><input type="number" name="optw" style="width:50px" value="800"/></td>
-					<td><input type="number" name="opth" style="width:50px;display:none"/></td>
-					<td><input id="optm" type="radio" name="option" value="optm" /></td>
-					<td><select name="optp">
-							<option value="top">top</option>
-							<option value="left">left</option>
-							<option value="center">center</option>
-							<option value="right">right</option>
-							<option value="bottom" selected >bottom</option>
-						</select>
-					</td>
-				</tr>
-				<tr><td>Pattern</td>
-					<td colspan="5"><input type="text" name="pattern" value="#N" size=43/></td>
-				</tr>
-				<tr><td></td>
-					<td colspan="5">#N: name, #I: id, #H: hits, #R: rank, #S: sample,</td>
-				</tr>
-				<tr><td></td>
-					<td colspan="5">#P: % by sample, #V: % of view.</td>
-				</tr>
-				<tr><td colspan="6" style="text-align:center"><input type="button" value="Update View" onclick="update()"/></td></tr>
-			</table>
-		</div>
--->
 		<div id="import" class="options">
 			Current samples:
 			<div id="samples"></div>
@@ -156,7 +92,6 @@
 -->
 <!--Dev -->
 	<script type="text/javascript" src="./js/d3.min.js"></script>
-	<!--<script type="text/javascript" src="./js/d3.tip.v0.6.3.js"></script>-->
 	<script type="text/javascript" src="./js/d3-transform.js"></script>
 	<script type="text/javascript" src="./js/mtm.js"></script>
 	<script type="text/javascript" src="./js/log4javascript.js"></script>
@@ -165,7 +100,6 @@
 	<script type="text/javascript">// MTM //
 //test libs
 console.log("d3",d3.version);
-console.log("d3.tip",d3.tip);
 console.log("mtm",mtm.version);
 
 		//print version
@@ -229,224 +163,8 @@ console.log("mtm",mtm.version);
 			//call
 			mtm.load(data,conf);
 		}
-		
-			//Config file
-/*			var confFile = document.getElementsByName("config")[0].files;
-			if(confFile.length>0) {
-				d3.json(URL.createObjectURL(confFile[0]),function(config){
-					//set pattern and options
-					if(config.mtm) {
-						if(config.mtm.pattern) {
-							document.getElementsByName("pattern")[0].value = config.mtm.pattern;
-						}
-					}
-					//set layout
-					if(config.layout){
-						//treemap
-						if(config.layout.treemap){
-							if(config.layout.treemap.show) {
-								if(config.layout.treemap.show=="yes") {
-									document.getElementById("tree").checked = true;
-									//width
-									document.getElementsByName("treew")[0].disabled="";
-									if(config.layout.treemap.width) {
-										document.getElementsByName("treew")[0].value = config.layout.treemap.width;
-									}
-									//height
-									document.getElementsByName("treeh")[0].disabled="";
-									if(config.layout.treemap.height) {
-										document.getElementsByName("treeh")[0].value = config.layout.treemap.height;
-									}
-									//option
-									document.getElementById("treem").disabled="";
-									if(config.layout.treemap.option=="yes") {
-										document.getElementById("treem").checked = true;
-									}
-									//place
-									document.getElementsByName("treep")[0].disabled="";
-									if(config.layout.treemap.place) {
-										document.getElementsByName("treep")[0].value = config.layout.treemap.place;									
-									}
-								}
-								else {
-									document.getElementById("tree").checked = false;
-									document.getElementsByName("treew")[0].disabled=true
-									document.getElementsByName("treeh")[0].disabled=true
-									document.getElementById("treem").disabled=true
-									document.getElementsByName("treep")[0].disabled=true
-								}
-							}
-						}
-						//table
-						if(config.layout.table){
-							if(config.layout.table.show) {
-								if(config.layout.table.show=="yes") {
-									document.getElementById("table").checked = true;
-									//width
-									document.getElementsByName("tablew")[0].disabled="";
-									if(config.layout.table.width) {
-										document.getElementsByName("tablew")[0].value = config.layout.table.width;
-									}
-									//height
-									document.getElementsByName("tableh")[0].disabled="";
-									if(config.layout.table.height) {
-										document.getElementsByName("tableh")[0].value = config.layout.table.height;
-									}
-									//option
-									document.getElementById("tablem").disabled="";
-									if(config.layout.table.option=="yes") {
-										document.getElementById("tablem").checked = true;
-									}
-									//place
-									document.getElementsByName("tablep").disabled="";
-									if(config.layout.table.place) {
-										document.getElementsByName("tablep")[0].value = config.layout.table.place;									
-									}
-								}
-								else {
-									document.getElementById("table").checked = false;
-									document.getElementsByName("tablew")[0].disabled=true
-									document.getElementsByName("tableh")[0].disabled=true
-									document.getElementById("tablem").disabled=true
-									document.getElementsByName("tablep")[0].disabled=true
-								}
-							}
-						}
-						//options
-						if(config.layout.options){
-							if(config.layout.options.show) {
-								if(config.layout.options.show=="yes") {
-									document.getElementById("opt").checked = true;
-									//width
-									document.getElementsByName("optw")[0].disabled="";
-									if(config.layout.options.width) {
-										document.getElementsByName("optw")[0].value = config.layout.options.width;
-									}
-									//option
-									document.getElementById("optm").disabled="";
-									if(config.layout.options.option=="yes") {
-										document.getElementById("optm").checked = true;
-									}
-									//place
-									document.getElementsByName("optp").disabled="";
-									if(config.layout.options.place) {
-										document.getElementsByName("optp")[0].value = config.layout.options.place;									
-									}
-								}
-								else {
-									document.getElementById("opt").checked = false;
-									document.getElementsByName("optw")[0].disabled=true
-									document.getElementById("optm").disabled=true
-									document.getElementsByName("optp")[0].disabled=true
-								}
-							}
-						}
-					}
-
-					//call modules
-					call(config);
-					
-				});//end d3.json
-				
-				//reset form field
-				document.getElementsByName("config")[0].value="";
-				
-			}//end if confFile
-			else {
-				//call modules
-				call();
-			}
-		}
-*/	
-/*		function call(conf) {
-			//Delete previous views
-			var c = document.getElementsByClassName("container");
-			for (var i = 0; i < c.length; i++) {
-				while (c[i].firstChild) { 
-					c[i].removeChild(c[i].firstChild); 
-				}
-			}
-			//delete tooltip
-			c = document.getElementById("d3-tip");
-			if(c) {c.parentNode.removeChild(c);}
-			
-			//Load file
-			var files = document.getElementById("input").files;
-			var input = [];
-			var filenames = "<ol>";
-			for(var i=0; i<files.length; i++) {
-				input.push(URL.createObjectURL(files[i]));
-				filenames += "<li>"+files[i].name+"</li>";
-			}
-			filenames+="</ol>"
-
-			if(input.length==0) { 
-				document.getElementById("samples").innerHTML="<ol><li>HuFS.json</li><li>HuFU.json</li></ol>";
-				mtm.load(["data/HuFS.json","data/HuFU.json"]); 
-			}
-			else { 
-				document.getElementById("samples").innerHTML=filenames;
-				mtm.load(input); 
-			}
-			
-			//Call modules
-			//treemap
-			if(document.getElementById("tree").checked) {
-				mtm.treemap(document.getElementsByName("treep")[0].value,
-					document.getElementsByName("treew")[0].value,
-					document.getElementsByName("treeh")[0].value,
-					document.getElementById("treem").checked,
-					document.getElementsByName("pattern")[0].value
-				);
-			}
-			//table
-			if(document.getElementById("table").checked) {
-				mtm.table(document.getElementsByName("tablep")[0].value,
-					document.getElementsByName("tablew")[0].value,
-					document.getElementsByName("tableh")[0].value,
-					document.getElementById("tablem").checked
-				);
-			}
-			//options
-			if(document.getElementById("opt").checked) {
-				mtm.menu(document.getElementsByName("optp")[0].value,
-					document.getElementsByName("optw")[0].value);
-			}
-			
-			//config
-			if(conf) { mtm.config(conf);}
-
-		}
-*/
-/*		function check(e) { //form constraint//
-			if(e.checked) { //enable
-				document.getElementsByName(e.id+"w")[0].disabled="";
-				document.getElementsByName(e.id+"h")[0].disabled="";
-				document.getElementById(e.id+"m").disabled="";
-				document.getElementsByName(e.id+"p")[0].disabled="";
-				if(e.id=="opt") { //manage menu radio
-					document.getElementById("treem").checked="";
-					document.getElementById("tablem").checked="";
-					document.getElementById("optm").checked=true;
-				}
-			}
-			else { //disable
-				document.getElementsByName(e.id+"w")[0].disabled=true;
-				document.getElementsByName(e.id+"h")[0].disabled=true;
-				document.getElementById(e.id+"m").disabled=true;
-				document.getElementsByName(e.id+"p")[0].disabled=true;
-				if(document.getElementById(e.id+"m").checked) { // manage menu radio
-					document.getElementById(e.id+"m").checked = false;
-					document.getElementById("optm").checked = true;
-				}
-			}
-			//menu radio always enable
-			document.getElementById("optm").disabled="";
-		}
-*/
 
 		function toggle(e,id) {
-console.log("INDEX");
 			var div = document.getElementById(id);
 			div.style.display = (div.style.display=="block" ? "none" : "block");
 			e.className = (e.className=="fa fa-caret-square-o-right" ? "fa fa-caret-square-o-down" : "fa fa-caret-square-o-right");
