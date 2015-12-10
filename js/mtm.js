@@ -617,7 +617,7 @@ if(verbose){console.time("bar");}
 						d3.selectAll('.mtm-searchbox').select('ul')
 							.selectAll("li").remove()
 						tip("hide",d);
-						zoom(d); 
+						zoomSkip(d); 
 					})
 					.on('mouseover', function(d){ tip("show",d); })
 					.on('mouseout', function(d){ tip("hide",d); })
@@ -785,8 +785,7 @@ if(verbose){console.time("treemap");}
 				if(touched=="") {//mouse click or 2nd touch
 					highlight(d,false);
 					tip("hide",d);
-					zoom(node != d.parent ? d.parent : root);
-					//zoomSkip(d);
+					zoomSkip(d);
 				}
 			})
 			.on('mouseover', function(d){
@@ -918,7 +917,7 @@ if(verbose){console.time("growTable");}
 				.append("span")
 					.on("click", function(d){  
 						highlight(d,false);
-						return zoom(node != d ? d : root);
+						return zoomSkip(d);
 					})
 					.text(function(d){return d.name;});
 		//fill id
@@ -989,10 +988,6 @@ if(verbose){console.timeEnd("table");}
 			if(elem.checked){ config[vals[0]][vals[1]]=true; }
 			else { config[vals[0]][vals[1]]=false; }
 		}
-		//else if(vals[1]=="rank") {
-		//	if(elem.value==29) {config[vals[0]][vals[1]]="null";}
-		//	else {config[vals[0]][vals[1]]=ranks[elem.value];}
-		//}
 		else { config[vals[0]][vals[1]]=elem.value; }
 	}
 	
@@ -1009,22 +1004,17 @@ if(verbose){console.timeEnd("updateColor");}
 
 	function setColorMap(rank) {
 if(verbose){console.time("setColorMap");}
-//console.log("MAP",rank,config.options.rank,config.options.color,config.options.label);
 		var rects = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect");
 		if(config.options.color=="taxon") {
-//console.log("color=taxon");
 			rects.style("fill",function(d){return color(d.parent.name);});
 		}
 		else if(config.options.color=="rank") {
-//console.log("color=rank");
 			//upper color
 			rects.style("fill",function(d){return color(d.parent.name);});
 			//list of node on the selected rank
 			d3layout.nodes().filter(function(d){
-//console.log(d.data.rank,rank);
 				return d.data.rank == ranks[rank] && d.children})
 				.forEach(function(d) {
-//console.log("node at rank",d);
 					//list of leaves for each subtree
 					var subleaves = getSubtree(d,[]).filter(function(d){return !d.children});
 					rects.data(subleaves,function(d){return "v"+d.id+"-"+d.data.sample;})
@@ -1288,6 +1278,29 @@ if(verbose){console.timeEnd("setLabelTable");}
 		}
 	}
 	
+	function zoomSkip(d) {
+	//skip node if same hits (bridge)
+		if(d==node){ //zoom out
+			if(d.parent){ //no root
+				if(d.parent.data.hits==d.data.hits) { //same hits
+					node=d.parent;
+					zoomSkip(d.parent);
+				}
+				else { zoom(d.parent); } //more hits
+			}
+			else {} //root 
+		}
+		else { //zoom in
+			if(d.children) { //no leaf
+				if (d.children[0].data.hits==d.data.hits) { //same hits
+					zoomSkip(d.children[0]);
+				}
+				else { zoom(d); } //less hits
+			}
+			else { zoom(d.parent); } //leaf
+		}
+	}
+	
 	function zoom(n) {
 if(verbose){console.time("zoom");}
 		//button root switch
@@ -1303,15 +1316,13 @@ if(verbose){console.time("zoom");}
 		//update header
 		d3.select("#mtm-treemap").select(".mtm-header")
 			.datum(n)
-			.on("click", function(d) { 
-				return zoom(node != d.parent ? d.parent : root); 
-			})
+			.on("click", function(d) { return zoomSkip(d); })
 			.on('touchstart', function(d) {
 					d3.event.preventDefault();
 					if(touched==d) { //second touch
 						touched="";		
 						tip("hide",d);
-						return zoom(node != d.parent ? d.parent : root);
+						return zoomSkip(d);
 					}
 					else { //first touched
 						if(touched!=""){ //opacity
