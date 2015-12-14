@@ -792,8 +792,14 @@ if(verbose){console.time("config");}
 				e.append("option").attr("value","nodes").text("nodes");
 				e.node().value=config[i].mode;
 			}
-			
+			if(config[i].hasOwnProperty("pattern")) {
+				var row = part.append("tr")
+				row.append("td").text("pattern")
+				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_pattern").style("width","120px").on("change",function(){return configChange(this);});
+				e.attr("value",config[i].pattern);
+			}
 		}
+		loc.append("div").style("display","inline-block").style("vertical-align","top").append("p").html("<b>Pattern keys</b><br/>#N: name<br/>#I: id<br/>#H: hits<br/>#R: rank<br/>#S: sample<br/>#P: % by sample<br/>#V: % by view").style("margin","0px");
 		loc.append("input").attr("type","button").attr("value","Update view").on("click",function(){return setLayout();});
 
 if(verbose){console.timeEnd("config");}
@@ -1134,7 +1140,7 @@ if(verbose){console.time("setColorTable");}
 						subs=[];
 					}
 					//Descendant
-					else if (rank<d.depth-1) {
+					else if (rank<d.depth-1 && rank>-1) {
 							subs.push(lines[0][i]);
 					}
 					//Initial color
