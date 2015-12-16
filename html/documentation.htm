@@ -242,14 +242,14 @@
 			<li>label: taxon | rank (labels treemap according to leaves or rank respectively)</li>
 			<li>upper: color | gray (colored or grayed upper rank respectively)</li>
 			<li>font: [number] (font size in point)</li>
-			<li>palette: 12 | 20 (number of colors in the palette)</li>
+			<li>palette: #800080,#008000 (list of colors)</li>
 			<li>background: black | white (color of treemap background)</li>
 			<li>size: norm | hits | nodes (see <a href="#size">Size parameter</a> for additinal information)</li>
 			<li>pattern: [pseudo code] (expression pattern for labelling the nodes of treemap - see <a href="#pattern">Pattern</a> for additional information)</li>
 		</ul></li>
 	</ul>
 	The file must be in JSON format. The default configuration file (mtm-config.json) is :
-	<div class="code">{"bar":{"display":false,"location":"bottom","width":600},"configuration":{"display":true,"location":"config"},"treemap":{"display":true,"location":"left","width":800,"height":600,"options":true},"table":{"display":true,"location":"right","width":700,"height":"650","options":false},"options":{"color":"taxon","rank":"null","label":"taxon","upper":"color","font":"14","palette":"12","background":"black","mode":"norm","pattern":"#N"}}</div>
+	<div class="code">{"bar":{"display":false,"location":"bottom","width":600},"configuration":{"display":true,"location":"config"},"treemap":{"display":true,"location":"left","width":800,"height":600,"options":true},"table":{"display":true,"location":"right","width":700,"height":"650","options":false},"options":{"color":"taxon","rank":"null","label":"taxon","upper":"color","font":"14","palette":"#8dd3c7, #ffffb3, #bebada, #fb8072, #80b1d3, #fdb462, #b3de69, #fccde5, #d9d9d9, #bc80bd, #ccebc5, #ffed6f", "background":"black","mode":"norm","pattern":"#N"}}</div>
 	<br/><a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	
 	<h2 id="treemap">Treemap View</h2>
@@ -442,9 +442,15 @@
 	
 	<h3 id="colorset">Color Set</h3>
 	<img src="../img/guide-4.7.png" alt="color set"/>
-	<p>By default, the color set is 12 colors designed for qualitative data by <a href="http://colorbrewer.org" target="_blank">Cynthia Brewer</a></p>
+	<p>The user can define a color set by enter a list of color in this field. the colors must be separated by a comma. the colors can be named (red, green, blue), or in hexadecimal code (#80000,#00AA00,#003080). 
+	<br/>MTM suggest 2 sets: 
+	<ul><li>Colorbrewer: a color set of 12 colors designed for qualitative data by <a href="http://colorbrewer.org" target="_blank">Cynthia Brewer</a></li>
+		<li>d3.category: a color set of 20 colors designed for categories into <a href="http://d3js.org/" target="_blank">d3.js library</a></li>
+	</ul>
+	Example colorbrewer
+	</p>
 	<img src="../img/guide-4.7.1.1.png" alt="map 12 colors"/><img src="../img/guide-4.7.1.2.png" alt="table 12 colors"/>
-	<p>By turning off the Set button (see 7), color set change for 20 colors designed for categories into <a href="http://d3js.org/" target="_blank">d3.js library</a></p>
+	<p>Exemple d3.category</p>
 	<img src="../img/guide-4.7.2.1.png" alt="map 20 colors"/><img src="../img/guide-4.7.2.2.png" alt="table 20 colors"/>
 	<br/>
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
@@ -453,7 +459,7 @@
 	<img src="../img/guide-4.8.png" alt="bgcolor"/>
 	<p>By default, the background color is black. Turning off the background button (see 8) switch to white</p>
 	<img src="../img/guide-4.8.1.png" alt="map bgcolor"/>
-	<p>In this example, Colored is set as "by rank", Rank is set as "phylum" and Background is "off". The black label of phyla are more legible with white border for rectangles.
+	<p>In this example, Colored is set as "by rank", Rank is set as "phylum", Labelling button is "off", and Background is "off". The black label of phyla are more legible with white border for rectangles.
 	</p>
 	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
 	

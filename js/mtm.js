@@ -597,6 +597,7 @@ if(verbose){console.time("bar");}
 			.attr("value",config.options.palette)
 			.on("click",function() {
 				d3.selectAll('.mtm-colorbox').select('ul')
+					.style("padding","5px")
 					.selectAll("li")
 					.data(colors)
 					.enter().append("li")
@@ -606,7 +607,8 @@ if(verbose){console.time("bar");}
 						d3.selectAll(".mtm-palette").property("value",d[1]);
 						d3.select("#options_palette").property('value',d[1]);
 						//action
-						d3.selectAll('.mtm-colorbox').select('ul').selectAll("li").remove()
+						d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
+							.selectAll("li").remove()
 						color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/));
 						updateColor(); 
 					})
@@ -618,7 +620,8 @@ if(verbose){console.time("bar");}
 				d3.selectAll(".mtm-palette").property("value",this.value);
 				d3.select("#options_palette").property('value',this.value);
 				//action
-				d3.selectAll('.mtm-colorbox').select('ul').selectAll("li").remove()
+				d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
+					.selectAll("li").remove()
 				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/));
 				updateColor(); 
 			})
@@ -688,12 +691,13 @@ if(verbose){console.time("bar");}
 				d3.selectAll('.mtm-searchbox').select('ul')
 					.selectAll("li").remove()
 				d3.selectAll('.mtm-searchbox').select('ul')
+					.style("padding","5px")
 					.selectAll("li")
 					.data(matches)
 					.enter().append("li")
 					.on("click",function(d) {
 						d3.selectAll(".mtm-search").property("value",d.name);
-						d3.selectAll('.mtm-searchbox').select('ul')
+						d3.selectAll('.mtm-searchbox').select('ul').style("padding","0px 5px")
 							.selectAll("li").remove()
 						tip("hide",d);
 						zoomSkip(d); 
