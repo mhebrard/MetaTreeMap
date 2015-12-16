@@ -5,8 +5,10 @@
 
 	//VARIABLES//
 	//this product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
-	var colorbrewer = {Set3: { 12: ["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f"]
-	}};
+	var colors=[
+		["colorbrewer.Set3(12)","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
+		["d3.category20(20)","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
+	];
 	
 	//need to compute json
 	//functions merge, completeTree, relatives, sumHits
@@ -374,25 +376,25 @@ if(verbose){console.time("layout");}
 		+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
 		+".mtm-on{color:#000;border:3px solid #000;}\n"
 		+".mtm-off{color:#888;border:3px solid #888;}\n"
-		+".mtm-searchbox{position:absolute;background-color:#888;border:1px solid #fff;border-radius:.2em;}\n"
-		+".mtm-searchbox:hover{border: 1px solid black;}\n"
-		+".mtm-searchbox ul{margin:0px;padding:0px 5px;}\n"
-		+".mtm-searchbox ul li {list-style-type:none;list-style-position:outside;}\n"
-		+".mtm-searchbox ul li:hover{background-color:#666;cursor:pointer;}\n"
+		+".mtm-box{position:absolute;background-color:#888;border:1px solid #fff;border-radius:.2em;}\n"
+		+".mtm-box:hover{border: 1px solid black;}\n"
+		+".mtm-box ul{margin:0px;padding:0px 5px;}\n"
+		+".mtm-box ul li {list-style-type:none;list-style-position:outside;}\n"
+		+".mtm-box ul li:hover{background-color:#666;cursor:pointer;}\n"
 		+"#mtm-table table{border-collapse:collapse;width:100%;}\n"
 		);
 		
 		//set color palette
-		if(color==""){ color = d3.scale.ordinal().range(colorbrewer.Set3[12]); }
+		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/));	
+		
+		//Delete previous views
+		d3.selectAll(".mtm-container").html("");
+		param={};
 		
 		//hidden div
 		d3.select("body").append("div").attr("id","mtm-tip");
 		d3.select("body").append("div").attr("id","mtm-canvas").style("display","none");
 
-		//Delete previous views
-		d3.selectAll(".mtm-container").html("");
-		param={};
-		
 		//build d3.layout
 		computeLayout();
 		//sort nodes for search
@@ -586,20 +588,45 @@ if(verbose){console.time("bar");}
 			});
 
 		//Palette//
-		menu.append("span").attr("class","mtm-button fa fa-eyedropper mtm-palette")
-			.attr("title","Switch from 12 to 20 colors")
-			.classed("mtm-on",function() { return config.options.palette=="12"; })
-			.classed("mtm-off",function() { return config.options.palette=="20"; })
-			.on("click", function() {
-				config.options.palette=config.options.palette=="20"?"12":"20";
-				d3.selectAll(".mtm-palette")
-					.classed("mtm-on",function() { return config.options.palette=="12"; })
-					.classed("mtm-off",function() { return config.options.palette=="20"; })
-				d3.select("#options_palette").property('value',config.options.palette);
+		var s = menu.append("span").attr("class","mtm-button mtm-on")
+			.append("span").attr("class","fa fa-eyedropper")
+			.attr("title","Color palette")
+		s.append("input").attr("type","text")
+			.attr("class","mtm-palette")
+			.attr("size","7")
+			.attr("value",config.options.palette)
+			.on("click",function() {
+				d3.selectAll('.mtm-colorbox').select('ul')
+					.style("padding","5px")
+					.selectAll("li")
+					.data(colors)
+					.enter().append("li")
+					.on("click",function(d) {
+						//change all button
+						config.options.palette=d[1];
+						d3.selectAll(".mtm-palette").property("value",d[1]);
+						d3.select("#options_palette").property('value',d[1]);
+						//action
+						d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
+							.selectAll("li").remove()
+						color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/));
+						updateColor(); 
+					})
+					.text(function(d){ return d[0]; }) 
+			})
+			.on("change", function() {
+				//change all button
+				config.options.palette=this.value;
+				d3.selectAll(".mtm-palette").property("value",this.value);
+				d3.select("#options_palette").property('value',this.value);
 				//action
-				color=config.options.palette=="20"?d3.scale.category20c():d3.scale.ordinal().range(colorbrewer.Set3[12]);
-				updateColor();
-			});	
+				d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
+					.selectAll("li").remove()
+				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/));
+				updateColor(); 
+			})
+		s.append("div").attr("class","mtm-colorbox mtm-box")
+			.append("ul");
 			
 		//Background//
 		menu.append("span").attr("class","mtm-button fa fa-adjust mtm-background")
@@ -646,7 +673,7 @@ if(verbose){console.time("bar");}
 			.attr("title","Search a taxon")
 		s.append("input").attr("type","text")
 			.attr("class","mtm-search")
-			.attr("size","17")
+			.attr("size","7")
 			.on("keyup",function() {
 				var word = this.value;
 				var matches=[];
@@ -664,12 +691,13 @@ if(verbose){console.time("bar");}
 				d3.selectAll('.mtm-searchbox').select('ul')
 					.selectAll("li").remove()
 				d3.selectAll('.mtm-searchbox').select('ul')
+					.style("padding","5px")
 					.selectAll("li")
 					.data(matches)
 					.enter().append("li")
 					.on("click",function(d) {
 						d3.selectAll(".mtm-search").property("value",d.name);
-						d3.selectAll('.mtm-searchbox').select('ul')
+						d3.selectAll('.mtm-searchbox').select('ul').style("padding","0px 5px")
 							.selectAll("li").remove()
 						tip("hide",d);
 						zoomSkip(d); 
@@ -679,7 +707,7 @@ if(verbose){console.time("bar");}
 					.on("mousemove", function(d) { tip("move"); })
 					.text(function(d){ return d.name; }) 
 			})
-		s.append("div").attr("class","mtm-searchbox")
+		s.append("div").attr("class","mtm-searchbox mtm-box")
 			.append("ul");
 
 if(verbose){console.timeEnd("bar");}
@@ -770,9 +798,7 @@ if(verbose){console.time("config");}
 			if(config[i].hasOwnProperty("palette")) {
 				var row = part.append("tr")
 				row.append("td").text("palette")
-				var e = row.append("td").append("select").attr("id",i+"_palette").style("width","70px").on("change",function(){return configChange(this);});
-				e.append("option").attr("value","12").text("12");
-				e.append("option").attr("value","20").text("20");
+				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_palette").style("width","120px").on("change",function(){return configChange(this);});
 				e.node().value=config[i].palette;
 			}
 			if(config[i].hasOwnProperty("background")) {
