@@ -18,18 +18,28 @@ MTM can be use as a javascript library and include in your own webpage.
 
 **Exposed functions:**
 
-* **mtm.config(obj)**: **TODO**
-* **mtm.convertor(location)**: display a form, in a div with id=_location_, to convert JSON or tabular file in the proper input format for MTM.
-* **mtm.load(array)**: load the data files that will be displayed. _array_ is a list of string _<path/to/file>_. Files must be in JSON format (see specifications [here](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#standard)) 
+* **mtm.convertor(location)**: display a form, in a HTML container (div) with id=**location**, used to convert JSON or tabular file in the proper input format for MTM.
 
+* **mtm.load(filesList,config)**: load the data files and a config file. **fileList** is a list of string, path of json files (see specifications [here](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#standard)) . **config** is a json file with the list of options for MTM (see specifications [here](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#config)).
 ```
-mtm.load(["data/HuFS.json","data/HuFU.json"]);
+mtm.load(["data/sample1.json","data/sample2.json"],"./mtm-config.json");
 ```
 
-* **mtm.menu(location, width)**: display the option bar in the div with id=_location_ and width=_width_
-* **mtm.save(mode)**: create file from the current view, and allow user to download the file. _mode_ can be : "json", "svg", "png", "txt" or "config". See [documentation](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#export) for more details. 
-* **mtm.table(location, width, height, menu)**: create the table view in the div with id=_location_. the dimmention of the view are _width_ x _height_ in pixels. If _menu_ is true, the option bar will be inside the div.
-* mtm.toggle: **DELETE**
-* **mtm.treemap(location, width, height, menu,labels)**: create the treemap view in the div with id=_location_. the dimmention of the view are _width_ x _height_ in pixels. If _menu_ is true, the option bar will be inside the div. _labels_ is the pattern used for labelling the rectangles (see [documentation](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#pattern) for more details.
+* **mtm.save(mode)**: create file from the current view, and allow user to download the file. **mode** can be : "json", "svg", "png", "txt" or "config" (see [documentation](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#export) for more details) 
+
 * **mtm.version**: return the version number
 
+# Repository
+
+* **data**: example data files used as input for MTM. Sequensing data from Kurokawa et al, taxonomic assignation computed with [MetaBin](http://metabin.riken.jp/). In addition **taxonomy.tsv** is the list of NCBI taxa with ID and phylogenic rank information (file needed for convertor module).
+
+> Kurokawa,K. et al. (2007) Comparative metagenomics revealed commonly enriched gene sets in human gut microbiomes. DNA Res., 14(4), 169-181. 
+
+* **html**: Documentation and feedback form.
+* **img**: images for documentation.
+* **js**: javascript libraries and sources.
+* **LICENCE**: full licence file.
+* **README**: current abstract
+* **index.htm**: The frontpage of the web interface.
+* **mtm-config.json**: the default config file for MTM.
+* **mtm.min.js**: the minify version of MTM (used by the web interface)
