@@ -1,208 +1,46 @@
 !(function() {
 
-	var mtm = { version: "2.3.3" };
+	var mtm = { version: "2.4" };
 	var verbose=false;
 
 	//VARIABLES//
-	//this product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
-	var colorbrewer = {Set3: { 12: ["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f"]
-	}};
-	
-	//displayed modules
-	var hasMenu=false, //menu manager
-	map=false, //display treemap
-	table=false; //display table
-	
+	//need to compute json
+	//functions merge, completeTree, relatives, sumHits
+	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"];
+	var config; //object configuration
 	var root; //object root (all tree)
-	var out; //output tree
+	var bkeys; //list of keys for bridges
+	var bobjs; //list of node -object- for bridge
+	
+	//neet to initiate layout
+	//functions setLayout, computeLayout
+	var node; //current node displayed
+	var sorted; //taxa names for search
+	var d3layout; //d3 layout
+	var color=""; //color set for leaves
+	var colors=[ //default set of colors
+		["colorbrewer.Set3(12)","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
+		["d3.category20(20)","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
+	];
+	
+	//need to update
+	var w=1,h=1; //map dimentions
+	var x,y; //d3 scales
+	var kx=1,ky=1; //zoom ratio
 	var touched=""; //node for touch event
 	
-	//need to compute json
-	//functions completeTree, relatives, sumHits
-	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"],
-	bkeys, //list of keys for bridges
-	bobjs; //list of node -object- for bridge
-	
-	//layout init
-	var color="", //color set for leaves
-	treemap, //d3 layout
-	w=1,h=1, //treemap dimensions, needed for compute json tree
-	barh=31, //height of menu bar
-	node; //current node displayed
-	
-	//global variable for Treemap
-	var kx=1, //treemap width ratio
-	ky=1, //treemap height ratio
-	tags, //treemap labels format 
-	tip; //treemap tooltip
-	
-	
-	//init font and pixel ratio.
-	var font=14;
-	
-	//METHODS//
-	mtm.treemap = function(location,width,height,menu,labels) {
-		map=true; //activate treemap
-		//default menu is true 
-		menu==false ? menu=false : menu=true;
-		//set labels format
-		labels ? tags = labels : tags="$N"; 
-		
-		//CONTAINER//
-		//create container div//
-		var container = d3.select("#"+location) //container div
-			.append("div")
-			.classed("mtm",true)
-			.classed("mtm-map",true)
-			.style("width", width + "px")
-		
-		//create menu bar//		
-		if(menu) {
-			container.insert("div").attr("id","mtm-menu-container");
-			mtm.menu("mtm-menu-container",width);
-		}
-		
-		//VARIABLES//
-		var margin = {top:20, right:0, bottom:0, left:1}; //margin inner final svg
-		if(menu) { h = height - margin.top - margin.bottom - 
-			d3.select("#mtm-menu-container").node().offsetHeight; } //svg height with menu
-		else { h = height - margin.top - margin.bottom; } //svg height without menu 
-		w = width - margin.right - margin.left; //int = final map width
-		x = d3.scale.linear().range([0, w]), //x scale from data to map
-		y = d3.scale.linear().range([0, h]); //y scale from data to map	
-		
-		//TOOLTIP//
-		tip = d3.tip()
-			.attr('id', 'd3-tip')
-			.direction(function(d) {
-				var pos="";//switch est/west at half + limit of 1/4 each side
-				(d.y<node.y+node.dy/2) ? ( (d.y+d.dy > (node.y+node.dy)*3/4) ? pos=pos : pos=pos+"s" ) : pos=pos+"n";
-				(d.x<node.x+node.dx/2) ? ( (d.x+d.dx > (node.x+node.dx)*3/4) ? pos=pos : pos=pos+"e" ) : pos=pos+"w";
-				return pos ? pos : "s"; //for header: "s"
-			})
-			.html(function(d) {		
-				return d.name+"<br/>Taxonomy ID: "+(+d.id > 0 ? d.id :"")
-					+"<br/>Rank: "+d.data.rank
-					+"<br/>"+d.data.hits+" hits"
-					+"<br/>"+d.data.percent.toFixed(2)
-					+"% of sample "+d.data.sample
-					+"<br/>"+(d.value*100/node.value).toFixed(2) 
-					+"% of the view";				
-			})	
-		//SVG//
-		var content = container.append("div")
-			.classed("mtm-content",true)
-			.append("svg") //general SVG
-				.attr("display","block")//disable bottom padding
-				.attr("width", w + margin.left + margin.right)
-				.attr("height", h + margin.top + margin.bottom);
-			
-		content.append("rect")//backgroung
-			.attr("width","100%")
-			.attr("height","100%")
-			.attr("fill","#000")
-			.attr("class","mtm-bg");
-				
-		var svg = content.append("g")//general group
-			.attr("transform", "translate(" + margin.left + "," + (margin.top) + ")")
-			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace");
-		
-		//group for rectangles//
-		svg.append("g")
-			.classed("mtm-view",true)
-			.call(tip); //call tooltip
-			
-		//rect for highlight//
-		svg.append("rect")
-			.classed("mtm-hl",true)
-			.style("stroke","#000")
-			.style("stroke-width","5")
-			.style("fill","none")
-			.style("pointer-events","none");
-
-		//group for labels//
-		svg.append("g")
-			.classed("mtm-labels",true)
-			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace");
-			
-		//group for header (current zoom)//
-		var header = svg.append("g")
-			.classed("mtm-header",true)
-			.on('mouseover', tip.show)
-			.on('mouseout', tip.hide)
-			.style("font-size",font+"px")
-		//create visual element rect
-		header.append("rect")
-			.attr("y", -margin.top) //child of root g, moved on margin.top
-			.attr("width", w - margin.right - margin.left)
-			.attr("height", margin.top - margin.bottom-1) //border-bottom
-			.style("fill","#888").style("stroke","black")
-		//create text element
-		header.append("text")
-			.attr("x", 6)
-			.attr("y", 4 - margin.top)
-			.attr("dy", ".75em")
-			.text("Please load json file (add mtm.load('data/yourFile.json');)");
-	}//end function treemap
-		
-	mtm.table = function(location,width,height,menu) {
-		table=true; //activate table
-		//if(map){no menu} else{menu} by default:false.
-		if(menu==false || hasMenu) { menu=false; }
-		else { menu=true; }
-		
-		var container = d3.select("#"+location) //container div
-			.append("div")
-			.classed("mtm",true)
-			.classed("mtm-table",true)
-			.style("width", width-2 + "px") //border left|right 1px
-			
-		//manage menu
-		var rowsh; //height of mtm-content
-		if(menu) { 	
-			container.insert("div").attr("id","mtm-menu-container");
-			mtm.menu("mtm-menu-container",width);
-			rowsh = height-2-d3.select("#mtm-menu-container").node().offsetHeight;//border up|down 1px
-		}
-		else {rowsh = height-2;} //border up|down 1px
-		
-		var rows = container.append("div")
-			.classed("mtm-content",true)
-			.style("height",rowsh)
-			.style("overflow","auto")
-		
-		//thead
-		var thead = rows.append("div")
-			.append("table")
-			.append("tr")
-			.classed("mtm-header",true);
-		thead.append("th").text("Node");
-		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID");
-		thead.append("th").style("width","60px").style("text-align","right").text("Hits");
-		thead.append("th").style("width","60px").style("text-align","right").text("%/View");
-		thead.append("th").style("width","80px").style("text-align","right").html("%/Sample&nbsp;");
-		thead.append("th").style("width","130px").style("text-align","left").text("Rank");
-		thead.append("th").style("width","15px").text("");//scroll bar
-
-		//tbody
-		rows.append("div")
-			.style("height",(rowsh-thead.node().offsetHeight)+"px")
-			.style("overflow","auto")
-			.attr("class","mtm-scrollable")
-			.append("table")
-			.classed("mtm-view",true)
-			.classed("mtm-labels",true)
-			.style("table-layout","fixed")
-	}
-	
-	mtm.load = function(files) {
+	//CONSTRUCTORS//
+	mtm.load = function(files,conf) {
 if(verbose){console.time("load");}
-		hasMenu=false;
-		map=table=false;
 		//root init.
 		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
 		bobjs = [root]; //list of node -object-
+		
+		//loading config file
+		if(conf) { d3.json(URL.createObjectURL(conf),function(c) {config=c;}) }
+		else if (!config) { d3.json("./mtm-config.json",function(c) {config=c;}) }
+		
 		//Loading input files
 		var queue = files.length; //counter
 		var hundreds = []; //samples total reads
@@ -215,284 +53,16 @@ if(verbose){console.time("load");}
 if(verbose){console.time("completeTree");}
 					completeTree(root,hundreds); //Add 1 node by rank + sum hits
 if(verbose){console.timeEnd("completeTree");}
-					layout(); //compute treemap
+					setLayout();
 				} 
-			});
+			})
 		}
 if(verbose){console.timeEnd("load");}
 	}   
-
-	mtm.config = function(conf) {
-		if(conf.mtm){
-			if(conf.mtm.group) {
-				d3.select("#mtm-group").node().value=conf.mtm.group;
-			}
-			if(conf.mtm.rank) {
-				d3.select("#mtm-phylogeny").node().value=ranks.indexOf(conf.mtm.rank);
-			}
-			if(conf.mtm.labels) {
-				d3.select("#mtm-label").attr("class",conf.mtm.labels);
-			}
-			if(conf.mtm.upper) {
-				d3.select("#mtm-upper").attr("class",conf.mtm.upper);
-			}
-			if(conf.mtm.font) {
-				d3.select("#mtm-font").node().value=conf.mtm.font;
-			}
-			if(conf.mtm.palette) {
-				if(conf.mtm.palette=="20") {
-					d3.select("#mtm-color").attr("class","off");
-					color = d3.scale.category20c();
-				}
-				else {
-					d3.select("#mtm-color").attr("class","on");
-					color = d3.scale.ordinal().range(colorbrewer.Set3[12]);
-				}
-			}
-			if(conf.mtm.background) {
-				if(conf.mtm.background=="white") {
-					d3.select("#mtm-background").attr("class","off");
-					d3.selectAll(".mtm").style("background-color","#fff");
-					d3.selectAll(".mtm-header rect").style("stroke","#fff");
-					d3.selectAll(".mtm-bg").style("fill","#fff");
-				}
-				else {
-					d3.select("#mtm-background").attr("class","on");
-					d3.selectAll(".mtm").style("background-color","#000");
-					d3.selectAll(".mtm-header rect").style("stroke","#000");
-					d3.selectAll(".mtm-bg").style("fill","#000");
-				}
-			}
-			if(conf.mtm.size) {
-				d3.select("#mtm-size").node().value=conf.mtm.size;
-			}
-		}
-	}
 	
-	mtm.toggle = function toggle(nid) {
-		var sel = d3.select(".mtm-table").select(".t"+nid);
-		var span = sel.select(".fa");
-		var d = sel.datum();
-		if(span.classed("fa-minus-square-o")) {
-			span.attr("class","fa fa-plus-square-o");
-			//hide children 
-			if (d.children) {
-				for (var i in d.children) {
-					hide(d.children[i]);
-				}
-			}
-		}
-		else {
-			span.attr("class","fa fa-minus-square-o");
-			//show children
-			if (d.children) {
-				for (var i in d.children) {
-					show(d.children[i]);
-				}
-			}
-		}
-	}
-		
-	mtm.menu = function(location,width) {
-		hasMenu=true; //activate menu
-			
-		//create menu bar//
-		var menu = d3.select("#"+location) //container div
-			.append("div")
-			.attr("id","mtm-menu")
-			.classed("mtm",true)
-		if(width) { menu.style("width",width + "px"); }
-		
-		menu.append("span").attr("class","button")
-			.append("span").attr("class","fa fa-link")
-			.attr("title","Group by...")
-			.append("select").attr("id","mtm-group");
-		menu.append("span").attr("class","button")
-			.append("select").attr("id","mtm-phylogeny");
-		menu.append("button").attr("id","mtm-label")
-			.append("span").attr("class","fa fa-tag");
-		menu.append("button").attr("id","mtm-upper")
-			.append("span").attr("class","fa fa-sitemap");
-		
-		menu.append("button").attr("id","mtm-root")
-			.append("span").attr("class","fa fa-home");
-		menu.append("span").attr("class","button")
-			.append("span").attr("class","fa fa-text-height")
-			.append("select").attr("id","mtm-font");
-		menu.append("button").attr("id","mtm-color")
-			.append("span").attr("class","fa fa-eyedropper");
-		menu.append("button").attr("id","mtm-background")
-			.append("span").attr("class","fa fa-adjust");
-			
-		menu.append("span").attr("class","button")
-			.append("span").attr("class","fa fa-th")
-			.attr("title","Size mode")
-			.append("select").attr("id","mtm-size")
-			.attr("title","Samples normalized")
-
-		//search bar//
-		var search = menu.append("span").attr("class","button")
-			.append("span").attr("class","fa fa-search")
-			.attr("title","Search a name")
-		search.append("input").attr("type","text").attr("id","mtm-search")
-			.on("input",function() {
-				if (this.value){
-					var re= new RegExp(this.value,"i");
-					d3.select("#mtm-slist").selectAll("li")
-						.style("display","none")
-						.filter(function(d) { return d.name.match(re); })
-						.style("display","block");
-				}
-				else {
-					d3.select("#mtm-slist").selectAll("li")
-						.style("display","none");
-				}
-			})
-		//searchbox//
-		var box = d3.select("#mtm-search").node().getBoundingClientRect();
-		search.append("div").attr("id","mtm-slist")
-			.style("width",box.width+"px")
-				
-		// MENU EVENT //
-		//rank select//
-		var s = d3.select("#mtm-phylogeny")
-			.on("change",function() {
-				if(d3.select("#mtm-group").node().value=="rank") {
-					updateColor(root);
-				}
-				if(d3.select("#mtm-label").node().className=="off") {
-					updateLabel();
-					zoom(node);
-				}
-			});
-		s.append("option")
-			.attr("value","init")
-			.text("--Phylogenic rank--");
-		for (var k in ranks) {
-			s.append("option")
-				.attr("value",k)
-				.text(ranks[k]);
-		}
-	
-		//gray upper ranks//
-		d3.select("#mtm-upper") 
-			.attr("class","on")
-			.attr("title","Grayed or colored upper ranks")
-			.on("click", function() {
-				if(this.className=="off" ) {
-					this.className="on";
-				}
-				else {
-					this.className="off";
-				}
-				updateColor(root);
-			});
-		
-		//group by Color option//
-		//rank select//
-		var s = d3.select("#mtm-group")
-			.attr("title","Group by ...")
-			.on("change",function() {
-				updateColor();
-			});
-		s.append("option").attr("value","taxon").text("by taxon");
-		s.append("option").attr("value","rank").text("by rank");
-		s.append("option").attr("value","sample").text("by sample");
-		s.append("option").attr("value","max").text("majority");
-			
-		//labels//
-		d3.select("#mtm-label") 
-			.attr("class","on")
-			.attr("title","Labelling leaves or ranks")
-			.on("click", function() {
-				if(this.className=="off" ) {this.className="on";}
-				else {this.className="off";}
-				updateLabel();
-				zoom(node);
-			});
-
-		//size//
-		var s = d3.select("#mtm-size")
-			.on("change",function() {
-				if(this.value=="norm") { 
-					treemap.value(sizeNorm).nodes(root);
-					this.title="Samples normalized";
-				}
-				else if(this.value=="hits") { 
-					treemap.value(sizeHits).nodes(root);
-					this.title="Number of hits (not normalized)";
-				}
-				else if(this.value=="nodes") { 
-					treemap.value(sizeNodes).nodes(root);
-					this.title="All nodes same size";
-				}
-				zoom(node);
-			});
-			s.append("option").attr("value","norm").text("norm");
-			s.append("option").attr("value","hits").text("hits");
-			s.append("option").attr("value","nodes").text("nodes");
-
-		//root//
-		d3.select("#mtm-root")
-			.attr("class","on")
-			.attr("title","Back to root")
-			.on("click", function() { 
-				this.className="on";
-				zoom(root);
-			});
-		
-		//color range//
-		d3.select("#mtm-color")
-			.attr("class","on")
-			.attr("title","Switch from 12 to 20 colors")
-			.on("click", function() {
-				if(this.className=="off" ) {
-					this.className="on";
-					color = d3.scale.ordinal().range(colorbrewer.Set3[12]);
-				}
-				else {
-					this.className="off";
-					color = d3.scale.category20c();
-				}
-				updateColor();
-			});	
-			
-		//background color//
-		d3.select("#mtm-background")
-			.attr("class","on")
-			.attr("title","Background black or white")
-			.on("click", function() {
-				if(this.className=="off" ) {
-					this.className="on";
-					d3.selectAll(".mtm").style("background-color","#000");
-					d3.selectAll(".mtm-header rect").style("stroke","#000");
-					d3.selectAll(".mtm-bg").style("fill","#000");	
-				}
-				else {
-					this.className="off";
-					d3.selectAll(".mtm").style("background-color","#fff");
-					d3.selectAll(".mtm-header rect").style("stroke","#fff");
-					d3.selectAll(".mtm-bg").style("fill","#fff");
-				}
-			});
-
-		//font size//
-		var s = d3.select("#mtm-font") 
-			.attr("title","Font size")
-			.on("change",function() {
-				font=this.value;
-				updateLabel();
-				zoom(node);
-			}); 
-		for (var i=8; i<40; i=i+2) {
-			s.append("option")
-				.attr("value",i)
-				.text(i);
-		}
-		s.selectAll("option[value='14']").property("selected","true")
-	}
-
 	mtm.save = function(mode) {
+		//delete previous
+		d3.select("#mtm-canvas").html("")
 		
 		if(mode=="json") {
 			copy(root); //format tree for output
@@ -502,12 +72,12 @@ if(verbose){console.timeEnd("load");}
 			ddl("merge.json",url);
 		}
 		else if(mode=="svg") {
-			var svg = d3.select("svg");		
+			var svg = d3.select("svg");	
 			//add svg header
 			var html = d3.select("svg")
 				.attr("version", 1.1)
 				.attr("xmlns", "http://www.w3.org/2000/svg")
-				.node().parentNode.innerHTML;
+				.node().parentNode.innerHTML
 				
 			var url = 'data:image/svg+xml;charset=utf8;filename=treemap.svg,' + encodeURIComponent(html);
 			//Direct DownLoad call
@@ -520,14 +90,14 @@ if(verbose){console.timeEnd("load");}
 				.attr("width",svg.attr("width"))
 				.attr("height",svg.attr("height"))
 				.style("display","none")
-				.node();
+				.node()
 			var context = canvas.getContext("2d");
 			
 			//add svg header
 			var html = svg.attr("version", 1.1)
 				.attr("xmlns", "http://www.w3.org/2000/svg")
 				.attr(":xmlns:xlink","http://www.w3.org/1999/xlink")
-				.node().outerHTML;
+				.node().outerHTML
 				
 			//img tag
 			var image = new Image;
@@ -551,35 +121,6 @@ if(verbose){console.timeEnd("load");}
 			ddl("table.txt",url);
 		}
 		else if(mode=="config") {
-			var config={"layout":{"treemap":{},"table":{},"options":{}},"mtm":{}};
-			
-			document.getElementById("tree").checked ? config.layout.treemap.show="yes" : config.layout.treemap.show="no";
-			config.layout.treemap.width = document.getElementsByName("treew")[0].value;
-			config.layout.treemap.height = document.getElementsByName("treeh")[0].value;
-			document.getElementById("treem").checked ? config.layout.treemap.option="yes" : config.layout.treemap.option="no";
-			config.layout.treemap.place = document.getElementsByName("treep")[0].value;
-			
-			document.getElementById("table").checked ? config.layout.table.show="yes" : config.layout.table.show="no";
-			config.layout.table.width = document.getElementsByName("tablew")[0].value;
-			config.layout.table.height = document.getElementsByName("tableh")[0].value;
-			document.getElementById("tablem").checked ? config.layout.table.option="yes" : config.layout.table.option="no";
-			config.layout.table.place = document.getElementsByName("tablep")[0].value;
-			
-			document.getElementById("opt").checked ? config.layout.options.show="yes" : config.layout.options.show="no";
-			config.layout.options.width = document.getElementsByName("optw")[0].value;
-			document.getElementById("optm").checked ? config.layout.options.option="yes" : config.layout.options.option="no";
-			config.layout.options.place = document.getElementsByName("optp")[0].value;
-			
-			config.mtm.pattern = document.getElementsByName("pattern")[0].value;
-			config.mtm.group = d3.select("#mtm-group").node().value;
-			config.mtm.rank = ranks[d3.select("#mtm-phylogeny").node().value];
-			config.mtm.labels = d3.select("#mtm-label").attr("class");
-			config.mtm.upper = d3.select("#mtm-upper").attr("class");
-			config.mtm.font = d3.select("#mtm-font").node().value;
-			d3.select("#mtm-color").attr("class") == "off" ? config.mtm.palette="20" : config.mtm.palette="12";
-			d3.select("#mtm-background").attr("class") == "off" ? config.mtm.background="white" : config.mtm.background="black";
-			config.mtm.size = d3.select("#mtm-size").node().value;
-
 			//create file
 			var url = 'data:text/json;charset=utf8;filename=mtm-config.json,' + encodeURIComponent(JSON.stringify(config));
 			//Direct DownLoad call
@@ -590,7 +131,7 @@ if(verbose){console.timeEnd("load");}
 	mtm.convertor = function(location) {
 		//CONTAINER//
 		var container = d3.select("#"+location) //container div
-			.append("table");
+			.append("table")
 		var row = container.append("tr");
 		row.append("td")
 			.text("Other.json")
@@ -607,6 +148,15 @@ if(verbose){console.timeEnd("load");}
 			.attr("name","mtm-format")
 			.attr("value","tab")
 			.on("click",function(){format(this);})
+		row = container.append("tr");
+		row.append("td")
+			.text("data file:")
+		row.append("td")
+			.append("input")
+			.attr("type","file")
+			.attr("name","mtm-convertFile")
+			.attr("id","mtm-convert")
+			.style("width","155px")
 		row = container.append("tr");
 		row.append("th")
 			.text("Fields")
@@ -659,6 +209,67 @@ if(verbose){console.timeEnd("load");}
 	
 	//SUB FUNCTIONS//
 	//DATA STRUCTURE//
+	function merge(n,p,s,h) {
+		//Create skeleton tree and leaves with assigned hits
+		//avoid space in id
+		n.id = (""+n.id).replace(/\s+/g, '_');
+		//avoid no rank
+		if(n.data.rank=="no rank" && p != ""){ n.data.rank=p.data.rank;}
+		
+		//update skeleton
+		var nsk; //skeleton node of n
+		var idx = bkeys.indexOf(n.id);
+		if(idx > -1) { // if node exist
+			nsk=bobjs[idx]; //existing node
+			
+			//New branch is deeper, need rebase
+			if(p!="" && ranks.indexOf(p.data.rank) > ranks.indexOf(nsk.parent.data.rank)) {
+				//disconnect skeleton
+				nsk.parent.children.splice(
+					nsk.parent.children.indexOf(nsk),1
+				);
+				
+				//connect with deeper
+				var psk = bobjs[bkeys.indexOf(p.id)];
+				psk.children.push(nsk);
+			}
+		}
+		else { //else new skeleton node
+			var psk=bobjs[bkeys.indexOf(p.id)];
+			nsk = {"name":n.name,
+				"children":[],
+				"parent":psk,
+				"data":{"hits":0,"rank":n.data.rank,"sample":0},
+				"id":n.id
+			};	
+			psk.children.push(nsk);
+			bkeys.push(nsk.id);
+			bobjs.push(nsk);
+		}
+		
+		//Add tag node
+		if(n.data.assigned!="0"){
+			var tag={"name":n.name,
+				"children":[],
+				"data":{"hits":+n.data.assigned,
+					"rank":n.data.rank,
+					"sample":s,
+					"percent":+n.data.assigned*100/h[s]},
+				"id":n.id
+			}
+
+			if (n.children.length>0) {tag.name+="*";}
+			nsk.children.push(tag);
+		}
+		
+		//recursive call
+		if (n.children.length>0) {
+			for (var i in n.children) {
+				merge(n.children[i],n,s,h);
+			}
+		}
+	}
+	
 	function completeTree(n,h) { 
 		//walk through the input tree from root to leaves
 		//complete tree: 1 node by rank
@@ -751,130 +362,56 @@ if(verbose){console.timeEnd("load");}
 		}
 	}
 	
-	function merge(n,p,s,h) {
-		//Create skeleton tree and leaves with assigned hits
-		//avoid space in id
-		n.id = (""+n.id).replace(/\s+/g, '_');
-		//avoid no rank
-		if(n.data.rank=="no rank" && p != ""){ n.data.rank=p.data.rank;}
-		
-		//update skeleton
-		var nsk; //skeleton node of n
-		var idx = bkeys.indexOf(n.id);
-		if(idx > -1) { // if node exist
-			nsk=bobjs[idx]; //existing node
-			
-			//New branch is deeper, need rebase
-			if(p!="" && ranks.indexOf(p.data.rank) > ranks.indexOf(nsk.parent.data.rank)) {
-				//disconnect skeleton
-				nsk.parent.children.splice(
-					nsk.parent.children.indexOf(nsk),1
-				);
-				
-				//connect with deeper
-				var psk = bobjs[bkeys.indexOf(p.id)];
-				psk.children.push(nsk);
-			}
-		}
-		else { //else new skeleton node
-			var psk=bobjs[bkeys.indexOf(p.id)];
-			nsk = {"name":n.name,
-				"children":[],
-				"parent":psk,
-				"data":{"hits":0,"rank":n.data.rank,"sample":0},
-				"id":n.id
-			};	
-			psk.children.push(nsk);
-			bkeys.push(nsk.id);
-			bobjs.push(nsk);
-		}
-		
-		//Add tag node
-		if(n.data.assigned!="0"){
-			var tag={"name":n.name,
-				"children":[],
-				"data":{"hits":+n.data.assigned,
-					"rank":n.data.rank,
-					"sample":s,
-					"percent":+n.data.assigned*100/h[s]},
-				"id":n.id
-			}
-
-			if (n.children.length>0) {tag.name+="*";}
-			nsk.children.push(tag);
-		}
-		
-		//recursive call
-		if (n.children.length>0) {
-			for (var i in n.children) {
-				merge(n.children[i],n,s,h);
-			}
-		}
-	}
-	
 	//VIEW CREATION//
-	function layout() {
+	function setLayout() {
 if(verbose){console.time("layout");}
-		if(color==""){ color = d3.scale.ordinal().range(colorbrewer.Set3[12]); }
-		//compute final json tree
-		treemap = d3.layout.treemap() //array of all nodes
-				.size([w, h]) //size of map
-				.round(false) //round the value (for scale)
-				.sticky(true); //keep child position when transform
-		//specific accessors for child size	
-		var mode = d3.select("#mtm-size").node().value;
-		if(mode=="norm") { 
-			treemap.value(sizeNorm).nodes(root);
-		}
-		else if(mode=="hits") { 
-			treemap.value(sizeHits).nodes(root);
-		}
-		else if(mode=="nodes") { 
-			treemap.value(sizeNodes).nodes(root);
-		}	
-		var nodes = treemap.nodes(root);
-
-if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
-
-		//current zoom
-		node = root;
+		node=root;
 		
-		//search list//
-		var slist=d3.select("#mtm-slist").append("ul");
-		for (i in nodes) {
-			slist.append("li")
-				.datum(nodes[i])
-				.on("click", function(d){
-					d3.select("#mtm-slist").selectAll("li")
-						.style("display","none");
-					return zoom(node != d ? d : root);
-				})
-				.text(function(d){ return "."+d.name; });
-		}
-			
-		//check menu
-		if(!hasMenu) { 
-			d3.select("body").append("div")
-				.style("display","none")
-				.attr("id","mtm-content-menu");
-			mtm.menu("mtm-content-menu");	
-			console.log("No menu container define !")
-		}
+		//style
+		d3.select("head").append("style").text(
+		"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14pt;pointer-events:none;opacity:0}\n"
+		+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
+		+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
+		+".mtm-on{color:#000;border:3px solid #000;}\n"
+		+".mtm-off{color:#888;border:3px solid #888;}\n"
+		+".mtm-box{position:absolute;z-index:3;background-color:#888;border:1px solid #fff;border-radius:.2em;}\n"
+		+".mtm-box:hover{border: 1px solid black;}\n"
+		+".mtm-box ul{margin:0px;padding:0px 5px;}\n"
+		+".mtm-box ul li {list-style-type:none;list-style-position:outside;}\n"
+		+".mtm-box ul li:hover{background-color:#666;cursor:pointer;}\n"
+		+"#mtm-table table{border-collapse:collapse;width:100%;}\n"
+		)
+		
+		//set color palette
+		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
+		
+		//Delete previous views
+		d3.selectAll(".mtm-container").html("")
+		param={};
+		
+		//hidden div
+		d3.select("body").append("div").attr("id","mtm-tip")
+		d3.select("body").append("div").attr("id","mtm-canvas").style("display","none")
 
-		//header
-		if(map) {
-			d3.select(".mtm-map").select(".mtm-header")
-			.datum(node)
-			.on("click", function(d) { 
-				return zoom(node != d.parent ? d.parent : root); 
-			})
-			.select("text")
-				.text(function(d) { return d.name; });
+		//build d3.layout
+		computeLayout();
+		//sort nodes for search
+		sorted = d3layout.nodes().slice(0); //clone
+		sorted.sort(function(a,b) { return a.name.length<b.name.length ? -1 : a.name.length>b.name.length ? 1 : a.name<b.name ? -1 : a.name>b.name ? 1 : 0  ; });
+		
+		//build views
+		if(config.bar) { bar(config.bar); }
+		if(config.configuration && config.configuration.display) {
+			configuration(config.configuration);
 		}
-					
-		//create DOM elements
-		if(map){ growMap(); }
-		if(table){ growTable(); }
+		if(config.table && config.table.display) {
+			param.table={};
+			table(config.table,param.table);
+		}
+		if(config.treemap && config.treemap.display) {
+			param.treemap={};
+			treemap(config.treemap,param.treemap);
+		}
 
 		//update
 		updateColor();
@@ -884,144 +421,701 @@ if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){r
 if(verbose){console.timeEnd("layout");}
 	}
 	
-	function growMap() {
-if(verbose){console.time("growMap");}
-		//leaves		
-		var leaves = treemap.nodes().filter(function(d) { return !d.children; });
-		d3.select(".mtm-map").select(".mtm-view").selectAll("rect")
-			.data(leaves).enter().append("rect")
-				.attr("class",function(d){ return "v"+d.id+"-"+d.data.sample;},true)
-				.on("click", function(d){ 
-					if(touched=="") {//mouse click or 2nd touch
-						highlightMap(d,false);
-						tip.hide(d);
-						zoom(node != d.parent ? d.parent : root)
-					}
-				})
-				.on('mouseover', function(d){ 
-					highlightMap(d,true);
-					tip.show(d);
-				})
-				.on('mouseout', function(d){ 
-					highlightMap(d,false);
-					tip.hide(d);
-				})
-				.on('touchstart', handleTouch);
-				
-if(verbose){console.timeEnd("growMap");}
+	function computeLayout() {
+		if(config.treemap.display) {
+			h = config.treemap.height - 20;  //margin top
+			w = config.treemap.width - 1; //margin left
+		}
+
+		//compute final json tree
+		d3layout = d3.layout.treemap() //array of all nodes
+			.size([w, h]) //size of map
+			.round(false) //round the value (for scale)
+			.sticky(true) //keep child position when transform
+			.value(setMode(config.options.mode))
+		var nodes = d3layout.nodes(root)
+		
+		//scale from data to map
+		x = d3.scale.linear().range([0, w]);
+		y = d3.scale.linear().range([0, h]);
+		
+if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
 	}
 	
-	function handleTouch(d) { touched==d ? touched="": touched=d; }
+	function setMode(confMode) {
+		var mode;
+		if(confMode=="norm") { mode=sizeNorm; }
+		else if(confMode=="hits") { mode=sizeHits; }
+		else if(confMode=="nodes") { mode=sizeNodes;}
+		else {console.log("ERROR: unvalide size mode"); mode=sizeNorm; }
+		return mode;
+	}
 	
-	function growTable() {
+	function sizeNorm(d) { return d.data.percent; }
+	function sizeHits(d) { return d.data.hits; } 
+	function sizeNodes(d) { return 1; }
+
+	//LAYOUTS//
+	function bar(c,location,width) {
+if(verbose){console.time("bar");}
+		//create menu bar//
+		var menu;
+		if(location) {
+			menu = d3.select("#"+location)
+				.classed("mtm-container",true)
+				.append("div")
+				.classed("mtm-menu",true)
+				.style("width",width+"px")
+		}
+		else if(c.display) {
+			menu = d3.select("#"+c.location)
+				.classed("mtm-container",true)
+				.append("div")
+				.classed("mtm-menu",true)
+				.style("width",c.width+"px")
+		}
+		else { 
+			menu = d3.select("body")
+				.append("div")
+				.classed("mtm-menu",true)
+				.style("display","none")
+		}
+		
+		menu.style("position","relative")
+			.style("z-index","2") //menu is in the middle
+		
+		//Color By//
+		var s = menu.append("span").attr("class","mtm-button mtm-on")
+			.append("span").attr("class","fa fa-link")
+			.attr("title","Color by...")
+			.append("select").attr("class","mtm-color")
+			//options//
+			s.append("option").attr("value","taxon").text("by taxon")
+			s.append("option").attr("value","rank").text("by rank")
+			s.append("option").attr("value","sample").text("by sample")
+			s.append("option").attr("value","max").text("majority")
+			//value//
+			s.property("value",config.options.color)
+			s.on("change",function() { 
+				//change all button
+				config.options.color=this.value;
+				d3.selectAll(".mtm-color").property('value',this.value)
+				d3.select("#options_color").property('value',this.value)
+				//action
+				updateColor();
+			});
+		
+		//Phylogenic Rank//
+		var s = menu.append("span").attr("class","mtm-button mtm-on")
+			.append("select").attr("class","mtm-phylogeny")
+			//options//
+			s.append("option").attr("value","init").text("--Phylogenic rank--")
+			for (var k in ranks) {
+				s.append("option").attr("value",ranks[k]).text(ranks[k])
+			}
+			//value//
+			s.property("value",config.options.rank)
+			s.on("change",function() {
+				//change all button
+				config.options.rank=this.value;
+				d3.selectAll(".mtm-phylogeny").property('value',this.value)
+				d3.select("#options_rank").property('value',this.value)
+				//action
+				if(config.options.color=="rank") { updateColor(); }
+				if(config.options.label=="rank") {
+					updateLabel();
+					zoom(node);
+				}
+			});
+		
+		//Labels//
+		menu.append("span").attr("class","mtm-button fa fa-tag mtm-label")
+			.attr("title","Labelling leaves or ranks")
+			.classed("mtm-on",function() { return config.options.label=="taxon"; })
+			.classed("mtm-off",function() { return config.options.label=="rank"; })
+			.on("click", function() {
+				config.options.label=config.options.label=="taxon"?"rank":"taxon";
+				d3.selectAll(".mtm-label")
+					.classed("mtm-on",function() { return config.options.label=="taxon"; })
+					.classed("mtm-off",function() { return config.options.label=="rank"; })
+				d3.select("#options_label").property('value',config.options.label);
+				updateLabel();
+				zoom(node);
+			});
+		
+		//Parents//	
+		menu.append("span").attr("class","mtm-button fa fa-sitemap mtm-upper")
+			.attr("title","Grayed or colored upper ranks")
+			.classed("mtm-on",function() { return config.options.upper=="color"; })
+			.classed("mtm-off",function() { return config.options.upper=="gray"; })
+			.on("click", function() {
+				config.options.upper=config.options.upper=="color"?"gray":"color";
+				d3.selectAll(".mtm-upper")
+					.classed("mtm-on",function() { return config.options.upper=="color"; })
+					.classed("mtm-off",function() { return config.options.upper=="gray"; })
+				d3.select("#options_upper").property('value',config.options.upper)
+				updateColor();
+			});
+			
+		//Home//
+		menu.append("span").attr("class","mtm-button fa fa-home mtm-root")
+			.attr("title","Back to root")
+			.classed("mtm-on",true)
+			.on("click", function() { 
+				d3.selectAll(".mtm-root").classed("mtm-on",true);
+				zoom(root);
+			})
+		
+		//Font//
+		var s = menu.append("span").attr("class","mtm-button mtm-on")
+			.append("span").attr("class","fa fa-text-height")
+			.attr("title","Font size")
+			.append("select").attr("class","mtm-font")
+			//options//
+			for (var i=8; i<40; i=i+2) {
+				s.append("option").attr("value",i).text(i);
+			}
+			//value//
+			s.property("value",config.options.font)
+			s.on("change",function() { 
+				//change all button
+				config.options.font=this.value;
+				d3.selectAll(".mtm-font").property('value',this.value)
+				d3.select("#options_font").property('value',this.value)
+				//action
+				updateLabel();
+				zoom(node);
+			})
+
+		//Palette//
+		var s = menu.append("span").attr("class","mtm-button mtm-on")
+			.style("position","relative").style("z-index","1")
+			.append("span").attr("class","fa fa-eyedropper")
+			.attr("title","Color palette")
+		s.append("input").attr("type","text")
+			.attr("class","mtm-palette")
+			.attr("size","7")
+			.attr("value",config.options.palette)
+			.on("click",function() {
+				d3.selectAll('.mtm-colorbox').select('ul')
+					.style("padding","5px")
+					.selectAll("li")
+					.data(colors)
+					.enter().append("li")
+					.on("click",function(d) {
+						//change all button
+						config.options.palette=d[1];
+						d3.selectAll(".mtm-palette").property("value",d[1])
+						d3.select("#options_palette").property('value',d[1])
+						//action
+						d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
+							.selectAll("li").remove()
+						color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
+						updateColor(); 
+					})
+					.text(function(d){ return d[0]; }) 
+			})
+			.on("change", function() {
+				//change all button
+				config.options.palette=this.value;
+				d3.selectAll(".mtm-palette").property("value",this.value)
+				d3.select("#options_palette").property('value',this.value)
+				//action
+				d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
+					.selectAll("li").remove()
+				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
+				updateColor(); 
+			})
+		s.append("div").attr("class","mtm-colorbox mtm-box")
+			.append("ul")
+			
+		//Background//
+		menu.append("span").attr("class","mtm-button fa fa-adjust mtm-background")
+			.attr("title","Background black or white")
+			.classed("mtm-on",function() { return config.options.background=="black"; })
+			.classed("mtm-off",function() { return config.options.background=="white"; })
+			.on("click", function() {
+				config.options.background=config.options.background=="black"?"white":"black";
+				d3.selectAll(".mtm-background")
+					.classed("mtm-on",function() { return config.options.background=="black"; })
+					.classed("mtm-off",function() { return config.options.background=="white"; })
+				d3.select("#options_background").property('value',config.options.background)
+				//action
+				d3.selectAll(".mtm-bg").attr("fill",config.options.background)
+				d3.selectAll(".mtm-header rect").style("stroke",config.options.background)
+				d3.select("#mtm-table").style("background-color",config.options.background)
+			});
+			
+		//Mode//
+		var s = menu.append("span").attr("class","mtm-button mtm-on")
+			.append("span").attr("class","fa fa-th")
+			.attr("title","Size mode")
+			.append("select").attr("class","mtm-mode")
+			//options//
+			s.append("option").attr("value","norm").text("norm")
+			s.append("option").attr("value","hits").text("hits")
+			s.append("option").attr("value","nodes").text("nodes")
+			//value//
+			s.property("value",config.options.mode)
+			s.on("change",function() { 
+				//change all button
+				config.options.mode=this.value;
+				d3.selectAll(".mtm-mode").property('value',this.value)
+				d3.select("#options_mode").property('value',this.value)
+				//action
+				d3layout.value(setMode(config.options.mode))
+				d3layout.nodes(root)
+				zoom(node);
+			});
+		
+		//Search bar//
+		var s = menu.append("span").attr("class","mtm-button mtm-on")
+			.style("position","relative").style("z-index","1")
+			.append("span").attr("class","fa fa-search")
+			.attr("title","Search a taxon")
+		s.append("input").attr("type","text")
+			.attr("class","mtm-search")
+			.attr("size","7")
+			.on("keyup",function() {
+				var word = this.value;
+				var matches=[];
+				var i=0;
+				//build regext with input
+				regexp = new RegExp(word,'i');
+				//search 10 first results (sort by length & alpha)
+				while(i<sorted.length && matches.length<10) {
+					if(regexp.test(sorted[i].name)) {
+						matches.push(sorted[i]);
+					}
+					i++;
+				}
+				//update list of options
+				d3.selectAll('.mtm-searchbox').select('ul')
+					.selectAll("li").remove()
+				d3.selectAll('.mtm-searchbox').select('ul')
+					.style("padding","5px")
+					.selectAll("li")
+					.data(matches)
+					.enter().append("li")
+					.on("click",function(d) {
+						d3.selectAll(".mtm-search").property("value",d.name)
+						d3.selectAll('.mtm-searchbox').select('ul').style("padding","0px 5px")
+							.selectAll("li").remove()
+						tip("hide",d);
+						zoomSkip(d); 
+					})
+					.on('mouseover', function(d){ tip("show",d); })
+					.on('mouseout', function(d){ tip("hide",d); })
+					.on("mousemove", function(d) { tip("move"); })
+					.text(function(d){ return d.name; }) 
+			})
+		s.append("div").attr("class","mtm-searchbox mtm-box")
+			.append("ul")
+
+if(verbose){console.timeEnd("bar");}
+		return menu.node().offsetHeight;
+	}
+	
+	function configuration(c) {
+if(verbose){console.time("config");}
+		var loc = d3.select("#"+c.location).classed("mtm-container",true)
+		for (var i in config) {
+			var part=loc.append("div").style("display","inline-block").style("vertical-align","top").append("table")
+			part.append("tr").append("th").attr("colspan",2).text(i)
+			if(config[i].hasOwnProperty("display")) {
+				var row = part.append("tr")
+				row.append("td").text("display")
+				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_display").on("change",function(){return configChange(this);})
+				if(config[i].display) {e.property("checked",true)}
+			}
+			if(config[i].hasOwnProperty("location")) {
+				var row = part.append("tr")
+				row.append("td").text("location")
+				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_location").style("width","120px").on("change",function(){return configChange(this);})
+				e.attr("value",config[i].location)
+			}
+			if(config[i].hasOwnProperty("width")) {
+				var row = part.append("tr")
+				row.append("td").text("width")
+				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_width").style("width","64px").on("change",function(){return configChange(this);})
+				e.attr("value",config[i].width)
+			}
+			if(config[i].hasOwnProperty("height")) {
+				var row = part.append("tr")
+				row.append("td").text("height")
+				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_height").style("width","64px").on("change",function(){return configChange(this);})
+				e.attr("value",config[i].height)
+			}
+			if(config[i].hasOwnProperty("options")) {
+				var row = part.append("tr")
+				row.append("td").text("options")
+				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_options").on("change",function(){return configChange(this);})
+				if(config[i].options) {e.property("checked",true)}
+			}
+			//options//
+			if(config[i].hasOwnProperty("color")) {
+				var row = part.append("tr")
+				row.append("td").text("color by")
+				var e = row.append("td").append("select").attr("id",i+"_color").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","taxon").text("taxon")
+				e.append("option").attr("value","rank").text("rank")
+				e.append("option").attr("value","sample").text("sample")
+				e.append("option").attr("value","max").text("majority")
+				e.node().value=config[i].color;
+			}
+			if(config[i].hasOwnProperty("rank")) {
+				var row = part.append("tr")
+				row.append("td").text("rank")
+				var e = row.append("td").append("select").attr("id",i+"_rank").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","null").text("--empty--")
+				for (var k in ranks) { e.append("option").attr("value",ranks[k]).text(ranks[k])}
+				e.node().value=config[i].rank;
+			}
+			if(config[i].hasOwnProperty("label")) {
+				var row = part.append("tr")
+				row.append("td").text("labeling")
+				var e = row.append("td").append("select").attr("id",i+"_label").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","taxon").text("taxon")
+				e.append("option").attr("value","rank").text("rank")
+				//e.append("option").attr("value","none").text("none")
+				e.node().value=config[i].label;
+			}
+			if(config[i].hasOwnProperty("upper")) {
+				var row = part.append("tr")
+				row.append("td").text("upper")
+				var e = row.append("td").append("select").attr("id",i+"_upper").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","color").text("color")
+				e.append("option").attr("value","gray").text("gray")
+				e.node().value=config[i].label;
+			}
+			if(config[i].hasOwnProperty("font")) {
+				var row = part.append("tr")
+				row.append("td").text("font")
+				var e = row.append("td").append("select").attr("id",i+"_font").style("width","70px").on("change",function(){return configChange(this);})
+				for (var j=8; j<40; j=j+2) {
+					e.append("option").attr("value",j).text(j)
+				}
+				e.node().value=config[i].font;
+			}
+			if(config[i].hasOwnProperty("palette")) {
+				var row = part.append("tr")
+				row.append("td").text("palette")
+				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_palette").style("width","120px").on("change",function(){return configChange(this);})
+				e.node().value=config[i].palette;
+			}
+			if(config[i].hasOwnProperty("background")) {
+				var row = part.append("tr")
+				row.append("td").text("background")
+				var e = row.append("td").append("select").attr("id",i+"_background").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","black").text("black")
+				e.append("option").attr("value","white").text("white")
+				e.node().value=config[i].background;
+			}
+			if(config[i].hasOwnProperty("mode")) {
+				var row = part.append("tr")
+				row.append("td").text("mode")
+				var e = row.append("td").append("select").attr("id",i+"_mode").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","norm").text("norm")
+				e.append("option").attr("value","hits").text("hits")
+				e.append("option").attr("value","nodes").text("nodes")
+				e.node().value=config[i].mode;
+			}
+			if(config[i].hasOwnProperty("pattern")) {
+				var row = part.append("tr")
+				row.append("td").text("pattern")
+				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_pattern").style("width","120px").on("change",function(){return configChange(this);})
+				e.attr("value",config[i].pattern)
+			}
+		}
+		loc.append("div").style("display","inline-block").style("vertical-align","top").append("p").html("<b>Pattern keys</b><br/>#N: name<br/>#I: id<br/>#H: hits<br/>#R: rank<br/>#S: sample<br/>#P: % by sample<br/>#V: % by view").style("margin","0px")
+		loc.append("input").attr("type","button").attr("value","Update view").on("click",function(){return setLayout();})
+
+if(verbose){console.timeEnd("config");}
+	}
+	
+	function treemap(c,p) {
+if(verbose){console.time("treemap");}
+		//CONTAINER//
+		//create container div//
+		var container = d3.select("#"+c.location) //container div
+			.classed("mtm-container",true)
+			
+		//Menu//
+		if(c.options) {
+			bar(config.bar,c.location,c.width);
+		}
+		
+		//SVG//
+		var svg = container.append("svg") //general SVG
+				.attr("id","mtm-treemap")
+				.attr("height", c.height)
+				.attr("width", c.width)
+				.style("display","inline-block")//disable bottom padding
+				.style("position","relative")
+				.style("z-index","1") //View is below
+		
+		//backgroung
+		svg.append("rect")
+			.attr("width","100%")
+			.attr("height","100%")
+			.attr("fill","#000")
+			.attr("class","mtm-bg")
+		
+		//group for visual elements
+		var view = svg.append("g")
+			.attr("transform", "translate(1,20)") //margin left, top
+			.classed("mtm-view",true)
+		
+		//visual elements
+		var leaves = d3layout.nodes().filter(function(d) { return !d.children; })
+		view.datum(root).selectAll("rect")
+			.data(leaves)
+			.enter().append("rect")
+			.attr("class",function(d){ return "v"+d.id+"-"+d.data.sample;},true)
+			.on("click", function(d) {
+				if(touched=="") {//mouse click or 2nd touch
+					highlight(d,false);
+					tip("hide",d);
+					zoomSkip(d);
+				}
+			})
+			.on('mouseover', function(d){
+					highlight(d,true);
+					tip("show",d);
+				})
+			.on('mouseout', function(d){
+					highlight(d,false);
+					tip("hide",d);
+				})
+			.on("mousemove", function(d) { tip("move"); })
+			.on("touchstart", handleTouch)
+			
+			
+		//group for labels//
+		svg.append("g")
+			.attr("transform", "translate(1,20)") //margin left, top
+			.classed("mtm-labels",true)
+			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")			
+			
+		//group for header (current zoom)//
+		var header = svg.append("g")
+			.attr("transform", "translate(1,20)") //margin left, top
+			.classed("mtm-header",true)
+		//create visual element rect
+		header.append("rect")
+			.datum(node)
+			.attr("y", -20) //child of root g, moved on margin.top
+			.attr("width", c.width - 1)
+			.attr("height", 20-1) //border-bottom
+			.style("fill","#888").style("stroke","black")
+			.on('mouseover', function(d){ tip("show",d); })
+			.on('mouseout', function(d){ tip("hide",d); })
+			.on("touchstart", handleTouch)
+			.on("mousemove", function(d) { tip("move"); })
+		//create text element
+		header.append("text")
+			.attr("x", 6)
+			.attr("y", -18)
+			.attr("dy", ".75em")
+			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")
+			.text("Please load json file")
+
+		//rect for highlight//
+		svg.append("rect")
+			.classed("mtm-hl",true)
+			.style("stroke","#000")
+			.style("stroke-width","5")
+			.style("fill","none")
+			.style("pointer-events","none")
+if(verbose){console.timeEnd("treemap");}
+	}
+	
+	function table(c,p) {
+if(verbose){console.time("table");}		
+		var container = d3.select("#"+c.location) //container div
+			.classed("mtm-container",true)
+		
+		//Menu//
+		if(c.options) {
+			bar(config.bar,c.location,c.width);
+		}
+		
+		//table//
+		var tab=container.append("div")
+				.attr("id","mtm-table")
+				.style("height", c.height)
+				.attr("width", c.width)
+				.style("overflow","auto")
+				.style("background-color","#000")
+				.style("display","inline-block")
+				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")
+				.style("font-size","14px")
+				.style("position","relative")
+				.style("z-index","1") //view is below(1)
+				
+		//thead
+		var thead = tab.append("div")
+			.style("background-color","#888")
+			.append("table")
+			.append("tr")
+			.classed("mtm-header",true)
+		thead.append("th").text("Node")
+		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID")
+		thead.append("th").style("width","60px").style("text-align","right").text("Hits")
+		thead.append("th").style("width","60px").style("text-align","right").text("%/View")
+		thead.append("th").style("width","80px").style("text-align","right").html("%/Sample&nbsp;")
+		thead.append("th").style("width","130px").style("text-align","left").text("Rank")
+		thead.append("th").style("width","15px").text("")//scroll bar
+
+		//tbody
+		var view = tab.append("div")
+			.style("height",(c.height-thead.node().offsetHeight)+"px")
+			.style("width", c.width+"px")
+			.style("overflow","auto")
+			.attr("class","mtm-scrollable")
+			.append("table")
+			.classed("mtm-view",true)
+			.classed("mtm-labels",true)
+			.style("table-layout","fixed")
+
+		//Fill table
 if(verbose){console.time("growTable");}
-		//100%
-		var hundread = root.data.hits;
-		var view = d3.select(".mtm-table").select(".mtm-view");
-		var nodes = treemap.nodes();
+		//var hundread = root.data.hits;
+		var nodes = d3layout.nodes()
 		
 		//create tr and td
-		d3.select(".mtm-table").select(".mtm-view")
-			.selectAll("tr").data(nodes).enter().append("tr")
-				.attr("class",function(d){return "v"+d.id+"-"+d.data.sample+" t"+d.id+"-"+d.data.sample;})
-				.attr("title",function(d){return d.name;})
+		view.selectAll("tr").data(nodes).enter().append("tr")
+				.attr("class",function(d){return "v"+d.id+"-"+d.data.sample;})
 				.on("mouseover",function(d) { 
-					highlightTable(d,true); 
+					highlight(d,true);
+					tip("show",d);
 				})
 				.on("mouseout",function(d) {
-					highlightTable(d,false);
+					highlight(d,false);
+					tip("hide",d);
 				})
-				.selectAll("td").data(["name","id","hits","percent","sample","rank"]).enter().append("td")
-					.attr("class",function(d){return d;})
+				.on("mousemove", function(d) { tip("move"); })
+				.selectAll("td").data(["name","id","hits","percent","sample","rank"])
+					.enter().append("td").attr("class",function(d){return d;})
 
 		//fill name
-		d3.select(".mtm-table").select(".mtm-view")
-			.selectAll(".name").data(nodes)
+		view.selectAll(".name").data(nodes)
 			.style("white-space","nowrap")
 			.style("overflow","hidden")
 			.style("text-overflow","ellipsis")
+			.style("cursor","pointer")
 			.append("span")
 				.style("padding-left",function(d){return (+d.depth*4)+"px";})
 				.html(function(d){return "<span class='fa'>&nbsp;</span>";})
 				.append("span")
 					.on("click", function(d){  
-						highlightTable(d,false);
-						return zoom(node != d ? d : root);
+						highlight(d,false);
+						return zoomSkip(d);
 					})
-					.text(function(d){return d.name;});
+					.text(function(d){return d.name;})
 		//fill id
-		d3.select(".mtm-table").select(".mtm-view")
-			.selectAll(".id").data(nodes)
+		view.selectAll(".id").data(nodes)
 				.style("width","70px").style("text-align","right")
 				.append("span")
 				.filter(function(d){return +d.id>0})
 					.append("a")
 					.attr("href",function(d){ return "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id="+d.id;})
 					.attr("target", "taxonomy")
-					.text(function(d){return d.id});
+					.text(function(d){return d.id})
 		//fill hits
-		d3.select(".mtm-table").select(".mtm-view")
-			.selectAll(".hits").data(nodes)
+		view.selectAll(".hits").data(nodes)
 				.style("width","60px").style("text-align","right")
 				.append("span").text(function(d){return d.data.hits;})
 		//fill %
-		d3.select(".mtm-table").select(".mtm-view")
-			.selectAll(".percent").data(nodes)
+		view.selectAll(".percent").data(nodes)
 				.style("width","60px").style("text-align","right")
 				.append("span")
 				//.text() fill in zoom()
 		//fill sample
-		d3.select(".mtm-table").select(".mtm-view")
-			.selectAll(".sample").data(nodes)
+		view.selectAll(".sample").data(nodes)
 				.style("width","80px").style("text-align","right")
 				.append("span").html(function(d){
-				return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";})
+					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
+				})
 		//fill rank
-		d3.select(".mtm-table").select(".mtm-view")
-			.selectAll(".rank").data(nodes)
+		view.selectAll(".rank").data(nodes)
 				.style("width","130px")
-			.append("span").text(function(d){return d.data.rank;});
+			.append("span").text(function(d){return d.data.rank;})
 
 		//internal nodes
-		d3.select(".mtm-table").select(".mtm-view").selectAll("tr")
+		view.selectAll("tr")
 			.filter(function(d){return d.children;})
 			.select(".fa")
-				.attr("onclick",function(d){return "mtm.toggle('"+d.id+"-"+d.data.sample+"',this)";});
-if(verbose){console.timeEnd("growTable");}				
+			.on("click",function(d){ return toggle(d); })
+				
+if(verbose){console.timeEnd("table");}				
 	}
+	
+	function tip(state,d) {
+		if(state=="show") {
+			d3.select("#mtm-tip")
+				.datum(d)
+				.style("opacity",1)
+				.html(function(d) {
+					return d.name+"<br/>Taxonomy ID: "+(+d.id > 0 ? d.id :"")
+						+"<br/>Rank: "+d.data.rank
+						+"<br/>"+d.data.hits+" hits"
+						+"<br/>"+d.data.percent.toFixed(2)
+						+"% of sample "+d.data.sample
+						+"<br/>"+(d.value*100/node.value).toFixed(2) 
+						+"% of the view";
+				})
+		}
+		else if(state=="hide") {
+			d3.select("#mtm-tip").style("opacity",0)
+		}
+		else { // move
+			d3.select("#mtm-tip").style("top", (d3.event.pageY+10)+"px")
+            .style("left", (d3.event.pageX+10)+"px")
+		}
+	}
+	
+	function configChange(elem) {
+		var vals=elem.id.split(/_/);
+		if(elem.type=="checkbox") {
+			if(elem.checked){ config[vals[0]][vals[1]]=true; }
+			else { config[vals[0]][vals[1]]=false; }
+		}
+		else { config[vals[0]][vals[1]]=elem.value; }
+	}
+	
+	function handleTouch(d) { touched==d ? touched="": touched=d; }
 	
 	//VIEW UPDATE//
 	function updateColor() {
 if(verbose){console.time("updateColor");}
-		rank = d3.select("#mtm-phylogeny").property("value"), //selected rank
-		upper = d3.select("#mtm-upper").attr("class")=="off" ? false : true; //option upper nodes
-		group = d3.select("#mtm-group").property("value"); //Color mode
-		
-		if(map) { setColorMap(rank,upper,group); }
-		if(table) {	setColorTable(rank,upper,group); }
+		rank = ranks.indexOf(config.options.rank) //selected rank
+		if(config.treemap.display) { setColorMap(rank); }
+		if(config.table.display) {	setColorTable(rank); }
 if(verbose){console.timeEnd("updateColor");}
 	}
 
-	function setColorMap(rank,upper,group) {
+	function setColorMap(rank) {
 if(verbose){console.time("setColorMap");}
-		var rects = d3.select(".mtm-map").select(".mtm-view").selectAll("rect");
-		if(group=="taxon") {
-			rects.style("fill",function(d){return color(d.parent.name);});
+		var rects = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
+		if(config.options.color=="taxon") {
+			rects.style("fill",function(d){return color(d.parent.name);})
 		}
-		else if(group=="rank") {
+		else if(config.options.color=="rank") {
 			//upper color
-			rects.style("fill",function(d){return color(d.parent.name);});
+			rects.style("fill",function(d){return color(d.parent.name);})
 			//list of node on the selected rank
-			treemap.nodes().filter(function(d){return d.data.rank == ranks[+rank] && d.children})
+			d3layout.nodes().filter(function(d){
+				return d.data.rank == ranks[rank] && d.children})
 				.forEach(function(d) {
 					//list of leaves for each subtree
-					var subleaves = getSubtree(d,[]).filter(function(d){return !d.children});
+					var subleaves = getSubtree(d,[]).filter(function(d){return !d.children})
 					rects.data(subleaves,function(d){return "v"+d.id+"-"+d.data.sample;})
-						.style("fill",color(d.name));				
+						.style("fill",color(d.name))			
 				});
 		}
-		else if(group=="sample") {
-			rects.style("fill",function(d){return color(d.data.sample);});
+		else if(config.options.color=="sample") {
+			rects.style("fill",function(d){return color(d.data.sample);})
 		}
 		else { //if(group=="max")
 			rects.style("fill",function(d){
@@ -1036,19 +1130,19 @@ if(verbose){console.time("setColorMap");}
 		}
 		
 		// gray upper
-		if(!upper) {
+		if(config.options.upper=="gray") {
 			rects.filter(function(d){return rank>=d.depth})
-				.style("fill","#888");
+				.style("fill","#888")
 		}
 if(verbose){console.timeEnd("setColorMap");}
 	}
 	
-	function setColorTable(rank,upper,group) {
+	function setColorTable(rank) {
 if(verbose){console.time("setColorTable");}
 		var pcol,phits; //previous color and sum
-		var lines = d3.select(".mtm-table").select(".mtm-view").selectAll("tr");
+		var lines = d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
 		var subs = []; //list of descendant.
-		if(group=="taxon") {
+		if(config.options.color=="taxon") {
 			// bottom > up
 			for (var i=lines[0].length;i>0;i--){
 				d3.select(lines[0][i]).style("background-color",function(d){
@@ -1064,7 +1158,7 @@ if(verbose){console.time("setColorTable");}
 				});
 			}//end bottom > up					
 		}
-		else if(group=="rank") {
+		else if(config.options.color=="rank") {
 			// bottom > up
 			for (var i=lines[0].length;i>0;i--){
 				d3.select(lines[0][i]).style("background-color",function(d){
@@ -1073,12 +1167,12 @@ if(verbose){console.time("setColorTable");}
 						pcol=color(d.name);
 						phits=d.data.hits;
 						for(tr in subs){		
-							d3.select(subs[tr]).style("background-color",pcol);
+							d3.select(subs[tr]).style("background-color",pcol)
 						}
 						subs=[];
 					}
 					//Descendant
-					else if (rank<d.depth-1) {
+					else if (rank<d.depth-1 && rank>-1) {
 							subs.push(lines[0][i]);
 					}
 					//Initial color
@@ -1095,11 +1189,11 @@ if(verbose){console.time("setColorTable");}
 						}
 					}
 					return pcol;
-				});
+				})
 			}//end bottom > up
 		}
-		else if(group=="sample"){
-			lines.style("background-color",function(d){ return color(d.data.sample); });
+		else if(config.options.color=="sample"){
+			lines.style("background-color",function(d){ return color(d.data.sample); })
 		}
 		else { // if(group=="max"){
 			//leaves
@@ -1111,7 +1205,7 @@ if(verbose){console.time("setColorTable");}
 					}
 				}
 				return color(major.data.sample);
-			});
+			})
 			//nodes
 			lines.filter(function(d){return d.children;}).style("background-color",function(d){ 
 				var major = {data:{hits:0,sample:0}}; //d.children[0];
@@ -1121,51 +1215,50 @@ if(verbose){console.time("setColorTable");}
 					}
 				}
 				return color(major.data.sample);
-			});
+			})
 		}
 
 		//root
-		d3.select(lines[0][0]).style("background-color","#888");
+		d3.select(lines[0][0]).style("background-color","#888")
 		// gray upper
-		if(!upper) {
+		if(config.options.upper=="gray") {
 			lines.filter(function(d){return rank>=d.depth})
-				.style("background-color","#888");
+				.style("background-color","#888")
 		}
 if(verbose){console.timeEnd("setColorTable");}
 	}
 
 	function updateLabel() {
 if(verbose){console.time("updateLabel");}
-		var rank = d3.select("#mtm-phylogeny").property("value"); // selected rank 
-		var label = d3.select("#mtm-label").attr("class")=="off" ? false : true;
-		
-		if(map) {
-			//font size
-			d3.select(".mtm-map").select(".mtm-labels").style("font-size",font+"px");
-			tip.style("font-size",font+"px");
-			setLabelMap(rank,label);
+
+		rank = ranks.indexOf(config.options.rank) //selected rank
+		//font size
+		if(config.treemap.display) {
+			d3.select("#mtm-treemap").select(".mtm-labels").style("font-size",config.options.font+"px")
+			d3.select("#mtm-tip").style("font-size",config.options.font+"px")
+			setLabelMap(rank);
 		}
-		if(table) { 
-			d3.select(".mtm-table").selectAll(".name").style("font-size",font+"px");
-			setLabelTable(rank,label);
+		if(config.table.display) { 
+			d3.select(".mtm-table").selectAll(".name").style("font-size",config.options.font+"px")
+			setLabelTable(rank);
 		}
 if(verbose){console.timeEnd("updateLabel");}
 	}
 
-	function setLabelMap(rank,label) {
+	function setLabelMap(rank) {
 if(verbose){console.time("setLabelMap");}
 		//delete previous labels
-		var labels = d3.select(".mtm-map").select(".mtm-labels").html("");
+		var labels = d3.select("#mtm-treemap").select(".mtm-labels").html("")
 		
 		//select
 		var labelled;
-		if(!label) { //show selected group || upper leaves
-			labelled=treemap.nodes(root).filter(function(d){
+		if(config.options.label=="rank") { //show selected group || upper leaves
+			labelled=d3layout.nodes(root).filter(function(d){
 				return (rank == +d.depth-1) || (!d.children && rank > +d.depth)
-			});
+			})
 		}
 		else { //label for each tags
-			labelled=treemap.nodes(root).filter(function(d){return !d.children;});
+			labelled=d3layout.nodes(root).filter(function(d){return !d.children;})
 		}
 		
 		//guides
@@ -1180,14 +1273,14 @@ if(verbose){console.time("setLabelMap");}
 		labels.selectAll("text")
 			.data(labelled)
 			.enter().append("text")
-				.attr("class",function(d){return "t"+d.id;})
+				//.attr("class",function(d){return "t"+d.id;})
 				.attr("text-anchor", "left")
 				.attr("dy","0.5ex")
 				.style("pointer-events","none")
 				.append("textPath")
 				.attr("xlink:href",function(d){return "#map"+d.id+d.data.sample;})
 				.html(function(d){
-					var tag = tags;
+					var tag = config.options.pattern;
 					//replace
 					tag = tag.replace(/#N/g,d.name);
 					tag = tag.replace(/#I/g,d.id);
@@ -1201,141 +1294,120 @@ if(verbose){console.time("setLabelMap");}
 if(verbose){console.timeEnd("setLabelMap");}
 	}
 
-	function setLabelTable(rank,label) {
+	function setLabelTable(rank) {
 if(verbose){console.time("setLabelTable");}
-		var lines = d3.select(".mtm-table").select(".mtm-labels").selectAll("tr");	
-		if(!label && rank!="init"){
+		var lines = d3.select("#mtm-table").select(".mtm-labels").selectAll("tr")
+		if(config.options.label=="rank" && rank!=-1){
 			//collapse rank
 			lines.filter(function(d){return rank == +d.depth-1;})
 				.style("display","table-row")
-				.select(".fa").attr("class","fa fa-plus-square-o");
+				.select(".fa").attr("class","fa fa-plus-square-o")
 			//expand upper
 			lines.filter(function(d){return rank>=+d.depth;})
 				.style("display","table-row")
-				.select(".fa").attr("class","fa fa-minus-square-o");
+				.select(".fa").attr("class","fa fa-minus-square-o")
 			//hide lower
 			lines.filter(function(d){return rank<+d.depth-1;})
-				.style("display","none");
+				.style("display","none")
 		}
 		else { //expand all
 			lines.style("display","table-row")
-				.select(".fa").attr("class","fa fa-minus-square-o");		
+				.select(".fa").attr("class","fa fa-minus-square-o")		
 		}
 		//leaf
 		lines.filter(function(d){return !d.children;})
-			.select(".fa").attr("class","fa fa-square-o");
+			.select(".fa").attr("class","fa fa-square-o")
 if(verbose){console.timeEnd("setLabelTable");}
 	}
 	
-	function highlightMap(n,toggle) {
-		if(toggle){ //mouseover
-			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity",".7");
-			d3.selectAll(".mtm-hl")
-				.attr("x",x(n.parent.x)+2) 
-				.attr("y",y(n.parent.y)+2)
+	function highlight(n,toggle) {
+		if(toggle) {
+			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity",".7")
+			if(n.data.sample==0) {
+				d3.selectAll(".mtm-hl")
+				.attr("x",x(n.x)+1+2) 
+				.attr("y",y(n.y)+20+2) //+header
+				.attr("width",(kx*n.dx)-5)
+				.attr("height",(ky*n.dy)-5)
+			}
+			else {
+				d3.selectAll(".mtm-hl")
+				.attr("x",x(n.parent.x)+1+2) 
+				.attr("y",y(n.parent.y)+20+2) //+header
 				.attr("width",(kx*n.parent.dx)-5)
-				.attr("height",(ky*n.parent.dy)-5);
-			//highlight stroke  = 5px >  x|y +2 = inside
-			//highlight stroke  = 5px >  dx|dy -5 = inside
+				.attr("height",(ky*n.parent.dy)-5)
+			}
 		}
 		else { //mouseout
-			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity","1");
+			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity","1")
 			d3.selectAll(".mtm-hl")
 				.attr("x",0) 
 				.attr("y",0)
 				.attr("width",0)
-				.attr("height",0);
+				.attr("height",0)
 		}
 	}
-	
-	function highlightTable(n,toggle) {
-		if(toggle){ 
-			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity",".7");
-			if(map) { 
-				if(n.children) { //skeleton
-					d3.selectAll(".mtm-hl")
-						.attr("x",x(n.x)+2) 
-						.attr("y",y(n.y)+2)
-						.attr("width",(kx*n.dx)-5)
-						.attr("height",(ky*n.dy)-5);
+
+	function zoomSkip(d) {
+	//skip node if same hits (bridge)
+		if(d==node){ //zoom out
+			if(d.parent){ //no root
+				if(d.parent.data.hits==d.data.hits) { //same hits
+					node=d.parent;
+					zoomSkip(d.parent);
 				}
-				else { //leaf
-					d3.selectAll(".mtm-hl")
-						.attr("x",x(n.parent.x)+2) 
-						.attr("y",y(n.parent.y)+2)
-						.attr("width",(kx*n.parent.dx)-5)
-						.attr("height",(ky*n.parent.dy)-5);
+				else { zoom(d.parent); } //more hits
+			}
+			else {} //root 
+		}
+		else { //zoom in
+			if(d.children) { //no leaf
+				if (d.children[0].data.hits==d.data.hits) { //same hits
+					zoomSkip(d.children[0]);
 				}
+				else { zoom(d); } //less hits
 			}
-		}
-		else {
-			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity","1");
-			if(map) { 
-				d3.selectAll(".mtm-hl")
-					.attr("x",0) 
-					.attr("y",0)
-					.attr("width",0)
-					.attr("height",0);
-			}
-		}
-	}
-	
-	function hide(n) {
-		//hide current raw and recursive
-		d3.select(".mtm-table").selectAll(".t"+n.id+"-"+n.data.sample)
-			.style("display","none");
-		//recursive call
-		if (n.children) {
-			for (var i in n.children) {
-				hide(n.children[i]);
-			}
-		}		
-	}
-		
-	function show(n) {
-		//show current raw and recursive
-		var t = d3.select(".mtm-table").select(".t"+n.id+"-"+n.data.sample)
-					.style("display","table-row");
-		if(t.select(".fa").classed("fa-minus-square-o") && n.children) {
-			for (var i in n.children) {
-				show(n.children[i]);
-			}
+			else { zoom(d.parent); } //leaf
 		}
 	}
 	
 	function zoom(n) {
 if(verbose){console.time("zoom");}
 		//button root switch
-		if (n==root) { d3.select("#mtm-root").attr("class","on"); }
-		else { d3.select("#mtm-root").attr("class","off"); }
+		if (n==root) {
+			d3.selectAll(".mtm-root").classed("mtm-on",true)
+			d3.selectAll(".mtm-root").classed("mtm-off",false)
+		}
+		else { 
+			d3.selectAll(".mtm-root").classed("mtm-on",false)
+			d3.selectAll(".mtm-root").classed("mtm-off",true)
+		}
 		
 		//update header
-		d3.select(".mtm-map").select(".mtm-header")
+		d3.select("#mtm-treemap").select(".mtm-header")
 			.datum(n)
-			.on("click", function(d) { 
-				return zoom(node != d.parent ? d.parent : root); 
-			})
+			.on("click", function(d) { return zoomSkip(d); })
 			.on('touchstart', function(d) {
-					d3.event.preventDefault();
+					d3.event.preventDefault()
 					if(touched==d) { //second touch
 						touched="";		
-						tip.hide(d);
-						return zoom(node != d.parent ? d.parent : root);
+						tip("hide",d);
+						return zoomSkip(d);
 					}
 					else { //first touched
 						if(touched!=""){ //opacity
 							d3.selectAll(".v"+touched.id+"-"+touched.data.sample).style("opacity","1");
-							highlightMap(touched,false);
+							highlight(touched,false)
 						}
 						touched=d;
-						tip.show(d);
+						tip("show",d);
 					}
 				})
 			.select("text")
-				.text(function(d) { return d.name; });
+				.text(function(d) { return d.name; })
 		
 		//update map	
-		if(map) {
+		if(config.treemap.display) {
 if(verbose){console.time("zoomMap");}			
 			kx = w / n.dx, ky = h / n.dy;
 			x.domain([n.x, n.x + n.dx]);
@@ -1343,9 +1415,9 @@ if(verbose){console.time("zoomMap");}
 				
 			//all rect position and size
 			var rectTranslate = d3.svg.transform()
-				.translate(function(d) { return [x(d.x), y(d.y)] });
+				.translate(function(d) { return [x(d.x), y(d.y)] })
 				
-			d3.select(".mtm-map").select(".mtm-view").selectAll("rect")
+			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
 				.transition()
 				.duration(1500)
 				.attr("transform", rectTranslate)
@@ -1356,8 +1428,8 @@ if(verbose){console.time("zoomMap");}
 			function line(d) {
 				var ax,ay,bx,by;
 				//margin width and height
-				var mw=Math.round(font*0.6); //SourceCodePro
-				var mh=Math.round(font*1.3); //SourceCodePro 
+				var mw=Math.round(config.options.font*0.6); //SourceCodePro
+				var mh=Math.round(config.options.font*1.3); //SourceCodePro 
 				//rect width and heigth
 				var rw=kx * d.dx - 1;
 				var rh=ky * d.dy - 1;
@@ -1390,34 +1462,34 @@ if(verbose){console.time("zoomMap");}
 			}
 			
 			//labels positions
-			var labels = d3.select(".mtm-map").select(".mtm-labels")
+			var labels = d3.select("#mtm-treemap").select(".mtm-labels")
 			labels.selectAll("path")
 				.transition().duration(1500)
-				.attr("d",function(d) {return line(d); })			
+				.attr("d",function(d) {return line(d);})			
 
 if(verbose){console.timeEnd("zoomMap");}
 		}
 		
 		//update table
-		if(table) {
+		if(config.table.display) {
 if(verbose){console.time("zoomTable");}
 			//clear %
-			d3.select(".mtm-table").select(".mtm-labels")
+			d3.select("#mtm-table").select(".mtm-labels")
 				.selectAll("tr").selectAll(".percent")
-				.text("-");
+				.text("-")
 			
 			//set % of the subtree
 			//var hundread = n.data.hits; //100%	
-			d3.select(".mtm-table").select(".mtm-labels").selectAll("tr") //all lines
+			d3.select("#mtm-table").select(".mtm-labels").selectAll("tr") //all lines
 				.data(getSubtree(n,[]),
 					function(d){return "t"+d.id+"-"+d.data.sample;}) //lines of subtree
 				.selectAll(".percent") //column of %
 				.text( //new text
 					function(d){return (d.value*100/n.value).toFixed(2)+"%";}
-				);
+				)
 
 			//map call updateLabel() else it is needed
-			if(!map) {updateLabel();} 
+			if(!config.treemap.display) {updateLabel();} 
 if(verbose){console.timeEnd("zoomTable");}
 		}
 		
@@ -1438,11 +1510,51 @@ if(verbose){console.timeEnd("zoom");}
 		return ns;
 	}
 	
-	//accessors for treemap size parameter
-	function sizeNorm(d) { return d.data.percent; }
-	function sizeHits(d) { return d.data.hits; } 
-	function sizeNodes(d) { return 1; }
-
+	function toggle(d) {
+		var span = d3.select("#mtm-table").select(".v"+d.id+"-"+d.data.sample).select(".fa")
+		if(span.classed("fa-minus-square-o")) {
+			span.attr("class","fa fa-plus-square-o");
+			//hide children 
+			if (d.children) {
+				for (var i in d.children) {
+					hide(d.children[i]);
+				}
+			}
+		}
+		else {
+			span.attr("class","fa fa-minus-square-o");
+			//show children
+			if (d.children) {
+				for (var i in d.children) {
+					show(d.children[i]);
+				}
+			}
+		}
+	}
+	
+	function hide(n) {
+		//hide current raw and recursive
+		d3.select("#mtm-table").selectAll(".v"+n.id+"-"+n.data.sample)
+			.style("display","none")
+		//recursive call
+		if (n.children) {
+			for (var i in n.children) {
+				hide(n.children[i]);
+			}
+		}		
+	}
+		
+	function show(n) {
+		//show current raw and recursive
+		var t = d3.select("#mtm-table").select(".v"+n.id+"-"+n.data.sample)
+					.style("display","table-row")
+		if(t.select(".fa").classed("fa-minus-square-o") && n.children) {
+			for (var i in n.children) {
+				show(n.children[i]);
+			}
+		}
+	}
+	
 	//OUTPUT//
 	function copy(n,p) {
 		//clean the structure tree to fit with input format
@@ -1474,11 +1586,11 @@ if(verbose){console.timeEnd("zoom");}
 	
 	function ddl(name,url) {
 		//hidden link to call DDL
-		d3.select("body").append("a")
+		d3.select("#mtm-canvas").append("a")
 			.attr("download",name)
 			.attr("href",url)
 			.node()
-			.click();
+			.click()
 	}
 	
 	function exportTab(n) {
@@ -1500,24 +1612,24 @@ if(verbose){console.timeEnd("zoom");}
 	function format(e) {
 		//manage radio button switch in mtm.convertor
 		if(e.value=="json"){
-			d3.select("#mtm-fieldhead").text("Object property");
-			d3.select("[name=mtm-tid]").attr("value","id");
-			d3.select("[name=mtm-tname]").attr("value","name");
-			d3.select("[name=mtm-hits]").attr("value","data.assigned");
-			d3.select("#mtm-headrow").style("display","none");
+			d3.select("#mtm-fieldhead").text("Object property")
+			d3.select("[name=mtm-tid]").attr("value","id")
+			d3.select("[name=mtm-tname]").attr("value","name")
+			d3.select("[name=mtm-hits]").attr("value","data.assigned")
+			d3.select("#mtm-headrow").style("display","none")
 		}
 		else if(e.value=="tab"){
-			d3.select("#mtm-fieldhead").text("Column index");
-			d3.select("[name=mtm-tid]").attr("value","1");
-			d3.select("[name=mtm-tname]").attr("value","2");
-			d3.select("[name=mtm-hits]").attr("value","3");
-			d3.select("#mtm-headrow").style("display","table-row");
+			d3.select("#mtm-fieldhead").text("Column index")
+			d3.select("[name=mtm-tid]").attr("value","1")
+			d3.select("[name=mtm-tname]").attr("value","2")
+			d3.select("[name=mtm-hits]").attr("value","3")
+			d3.select("#mtm-headrow").style("display","table-row")
 		}
 	}
 	
 	function convert() {
-		var format = d3.select("[name=mtm-format]:checked").node().value;
-		var file=d3.select("#input").node().files[0];
+		var format = d3.select("[name=mtm-format]:checked").node().value
+		var file=d3.select("#mtm-convert").node().files[0]
 		
 		//root init.
 		root={"name":"root","children":[],"data":{"assigned":0,"rank":"no rank"},"id":1}; //skeleton tree
@@ -1530,13 +1642,13 @@ if(verbose){console.timeEnd("zoom");}
 			taxo.split("\n").forEach(function(l){ //for each line
 				var vals = l.split("\t");
 				taxonomy[+vals[0]]={"id":+vals[0], "parent":+vals[1], "rank":vals[2], "name":vals[3]};
-			});
+			})
 		
 			if(format=="json") {
 				//get property
-				var id=d3.select("[name=mtm-tid]").node().value.split(".");
-				var name=d3.select("[name=mtm-tname]").node().value.split(".");
-				var hits=d3.select("[name=mtm-hits]").node().value.split(".");
+				var id=d3.select("[name=mtm-tid]").node().value.split(".")
+				var name=d3.select("[name=mtm-tname]").node().value.split(".")
+				var hits=d3.select("[name=mtm-hits]").node().value.split(".")
 	
 				//read input
 				d3.json(URL.createObjectURL(file), function(data) {
@@ -1554,10 +1666,10 @@ if(verbose){console.timeEnd("zoom");}
 			}
 			else if(format=="tab") {
 				//get property
-				var id=+d3.select("[name=mtm-tid]").node().value-1;
-				var name=+d3.select("[name=mtm-tname]").node().value-1;
-				var hits=+d3.select("[name=mtm-hits]").node().value-1;
-				var header=d3.select("[name=mtm-head]").property("checked");
+				var id=+d3.select("[name=mtm-tid]").node().value-1
+				var name=+d3.select("[name=mtm-tname]").node().value-1
+				var hits=+d3.select("[name=mtm-hits]").node().value-1
+				var header=d3.select("[name=mtm-head]").property("checked")
 	
 				//read input
 				d3.text(URL.createObjectURL(file), function(data) {
@@ -1584,9 +1696,9 @@ if(verbose){console.timeEnd("zoom");}
 					//Direct DownLoad call
 					ddl(file.name.replace(/.[^.]*$/,"")+"_metabin.json",url);
 				
-				});
+				})
 			}
-		});
+		})
 	}
 	
 	function ancestor(taxonomy,id,hits) {
