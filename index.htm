@@ -7,9 +7,9 @@
 	<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:600' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
-<!--Dev -->
+<!--Dev 
 	<link rel="stylesheet" type="text/css" href="./font-awesome-4.3.0/css/font-awesome.min.css" />
-
+-->
 	<style type="text/css">
 <!--
 	.options {
@@ -87,16 +87,16 @@
 		Copyright © 2015 Laboratory for Integrated Bioinformatics, RIKEN, Japan. All rights reserved. 
 	</center></div>	
 	
-<!--Prod 
+<!--Prod -->
 	<script src="./mtm.min.js"></script>
--->
-<!--Dev -->
+
+<!--Dev 
 	<script type="text/javascript" src="./js/d3.min.js"></script>
 	<script type="text/javascript" src="./js/d3-transform.js"></script>
 	<script type="text/javascript" src="./js/mtm.js"></script>
 	<script type="text/javascript" src="./js/log4javascript.js"></script>
 	<script type="text/javascript">var log = log4javascript.getDefaultLogger();</script>
-
+-->
 	<script type="text/javascript">// MTM //
 //test libs
 console.log("d3",d3.version);
@@ -149,7 +149,6 @@ console.log("mtm",mtm.version);
 				filenames += "<li>HuFS.json</li><li>HuFU.json</li>";
 				data=["data/HuFS.json","data/HuFU.json"]; 
 			}
-			//else { mtm.load(data); }
 			
 			filenames+="</ol>"
 			document.getElementById("samples").innerHTML=filenames;

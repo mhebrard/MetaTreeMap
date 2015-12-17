@@ -1,22 +1,16 @@
 !(function() {
 
-	var mtm = { version: "2.3.3" };
+	var mtm = { version: "2.4" };
 	var verbose=false;
 
 	//VARIABLES//
-	//this product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
-	var colors=[
-		["colorbrewer.Set3(12)","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
-		["d3.category20(20)","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
-	];
-	
 	//need to compute json
 	//functions merge, completeTree, relatives, sumHits
 	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"];
 	var config; //object configuration
 	var root; //object root (all tree)
-	var bkeys, //list of keys for bridges
-	bobjs; //list of node -object- for bridge
+	var bkeys; //list of keys for bridges
+	var bobjs; //list of node -object- for bridge
 	
 	//neet to initiate layout
 	//functions setLayout, computeLayout
@@ -24,6 +18,10 @@
 	var sorted; //taxa names for search
 	var d3layout; //d3 layout
 	var color=""; //color set for leaves
+	var colors=[ //default set of colors
+		["colorbrewer.Set3(12)","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
+		["d3.category20(20)","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
+	];
 	
 	//need to update
 	var w=1,h=1; //map dimentions
@@ -40,8 +38,8 @@ if(verbose){console.time("load");}
 		bobjs = [root]; //list of node -object-
 		
 		//loading config file
-		if(conf) { d3.json(URL.createObjectURL(conf),function(c) {config=c;}); }
-		else if (!config) { d3.json("./mtm-config.json",function(c) {config=c;});}
+		if(conf) { d3.json(URL.createObjectURL(conf),function(c) {config=c;}) }
+		else if (!config) { d3.json("./mtm-config.json",function(c) {config=c;}) }
 		
 		//Loading input files
 		var queue = files.length; //counter
@@ -57,14 +55,14 @@ if(verbose){console.time("completeTree");}
 if(verbose){console.timeEnd("completeTree");}
 					setLayout();
 				} 
-			});
+			})
 		}
 if(verbose){console.timeEnd("load");}
 	}   
 	
 	mtm.save = function(mode) {
 		//delete previous
-		d3.select("#mtm-canvas").html("");
+		d3.select("#mtm-canvas").html("")
 		
 		if(mode=="json") {
 			copy(root); //format tree for output
@@ -74,12 +72,12 @@ if(verbose){console.timeEnd("load");}
 			ddl("merge.json",url);
 		}
 		else if(mode=="svg") {
-			var svg = d3.select("svg");		
+			var svg = d3.select("svg");	
 			//add svg header
 			var html = d3.select("svg")
 				.attr("version", 1.1)
 				.attr("xmlns", "http://www.w3.org/2000/svg")
-				.node().parentNode.innerHTML;
+				.node().parentNode.innerHTML
 				
 			var url = 'data:image/svg+xml;charset=utf8;filename=treemap.svg,' + encodeURIComponent(html);
 			//Direct DownLoad call
@@ -92,14 +90,14 @@ if(verbose){console.timeEnd("load");}
 				.attr("width",svg.attr("width"))
 				.attr("height",svg.attr("height"))
 				.style("display","none")
-				.node();
+				.node()
 			var context = canvas.getContext("2d");
 			
 			//add svg header
 			var html = svg.attr("version", 1.1)
 				.attr("xmlns", "http://www.w3.org/2000/svg")
 				.attr(":xmlns:xlink","http://www.w3.org/1999/xlink")
-				.node().outerHTML;
+				.node().outerHTML
 				
 			//img tag
 			var image = new Image;
@@ -133,8 +131,7 @@ if(verbose){console.timeEnd("load");}
 	mtm.convertor = function(location) {
 		//CONTAINER//
 		var container = d3.select("#"+location) //container div
-			.append("table");
-		/*Upload data files (.json): <input type="file" name="dataFiles[]" id="data" multiple/>*/
+			.append("table")
 		var row = container.append("tr");
 		row.append("td")
 			.text("Other.json")
@@ -372,28 +369,29 @@ if(verbose){console.time("layout");}
 		
 		//style
 		d3.select("head").append("style").text(
-		"#mtm-tip{position:absolute;z-index:10;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14pt;pointer-events:none;opacity:0}\n"
+		"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14pt;pointer-events:none;opacity:0}\n"
+		+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
 		+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
 		+".mtm-on{color:#000;border:3px solid #000;}\n"
 		+".mtm-off{color:#888;border:3px solid #888;}\n"
-		+".mtm-box{position:absolute;background-color:#888;border:1px solid #fff;border-radius:.2em;}\n"
+		+".mtm-box{position:absolute;z-index:3;background-color:#888;border:1px solid #fff;border-radius:.2em;}\n"
 		+".mtm-box:hover{border: 1px solid black;}\n"
 		+".mtm-box ul{margin:0px;padding:0px 5px;}\n"
 		+".mtm-box ul li {list-style-type:none;list-style-position:outside;}\n"
 		+".mtm-box ul li:hover{background-color:#666;cursor:pointer;}\n"
 		+"#mtm-table table{border-collapse:collapse;width:100%;}\n"
-		);
+		)
 		
 		//set color palette
-		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/));	
+		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
 		
 		//Delete previous views
-		d3.selectAll(".mtm-container").html("");
+		d3.selectAll(".mtm-container").html("")
 		param={};
 		
 		//hidden div
-		d3.select("body").append("div").attr("id","mtm-tip");
-		d3.select("body").append("div").attr("id","mtm-canvas").style("display","none");
+		d3.select("body").append("div").attr("id","mtm-tip")
+		d3.select("body").append("div").attr("id","mtm-canvas").style("display","none")
 
 		//build d3.layout
 		computeLayout();
@@ -434,8 +432,8 @@ if(verbose){console.timeEnd("layout");}
 			.size([w, h]) //size of map
 			.round(false) //round the value (for scale)
 			.sticky(true) //keep child position when transform
-			.value(setMode(config.options.mode));
-		var nodes = d3layout.nodes(root);
+			.value(setMode(config.options.mode))
+		var nodes = d3layout.nodes(root)
 		
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
@@ -467,14 +465,14 @@ if(verbose){console.time("bar");}
 				.classed("mtm-container",true)
 				.append("div")
 				.classed("mtm-menu",true)
-				.style("width",width+"px");
+				.style("width",width+"px")
 		}
 		else if(c.display) {
 			menu = d3.select("#"+c.location)
 				.classed("mtm-container",true)
 				.append("div")
 				.classed("mtm-menu",true)
-				.style("width",c.width+"px");
+				.style("width",c.width+"px")
 		}
 		else { 
 			menu = d3.select("body")
@@ -483,44 +481,46 @@ if(verbose){console.time("bar");}
 				.style("display","none")
 		}
 		
+		menu.style("position","relative")
+			.style("z-index","2") //menu is in the middle
+		
 		//Color By//
 		var s = menu.append("span").attr("class","mtm-button mtm-on")
 			.append("span").attr("class","fa fa-link")
 			.attr("title","Color by...")
 			.append("select").attr("class","mtm-color")
 			//options//
-			s.append("option").attr("value","taxon").text("by taxon");
-			s.append("option").attr("value","rank").text("by rank");
-			s.append("option").attr("value","sample").text("by sample");
-			s.append("option").attr("value","max").text("majority");
+			s.append("option").attr("value","taxon").text("by taxon")
+			s.append("option").attr("value","rank").text("by rank")
+			s.append("option").attr("value","sample").text("by sample")
+			s.append("option").attr("value","max").text("majority")
 			//value//
 			s.property("value",config.options.color)
 			s.on("change",function() { 
 				//change all button
 				config.options.color=this.value;
-				d3.selectAll(".mtm-color").property('value',this.value);
-				d3.select("#options_color").property('value',this.value);
+				d3.selectAll(".mtm-color").property('value',this.value)
+				d3.select("#options_color").property('value',this.value)
 				//action
 				updateColor();
 			});
 		
 		//Phylogenic Rank//
 		var s = menu.append("span").attr("class","mtm-button mtm-on")
-			.append("select").attr("class","mtm-phylogeny");
+			.append("select").attr("class","mtm-phylogeny")
 			//options//
-			s.append("option").attr("value","init").text("--Phylogenic rank--");
+			s.append("option").attr("value","init").text("--Phylogenic rank--")
 			for (var k in ranks) {
-				s.append("option").attr("value",ranks[k]).text(ranks[k]);
+				s.append("option").attr("value",ranks[k]).text(ranks[k])
 			}
 			//value//
 			s.property("value",config.options.rank)
 			s.on("change",function() {
 				//change all button
 				config.options.rank=this.value;
-				d3.selectAll(".mtm-phylogeny").property('value',this.value);
-				d3.select("#options_rank").property('value',this.value);
+				d3.selectAll(".mtm-phylogeny").property('value',this.value)
+				d3.select("#options_rank").property('value',this.value)
 				//action
-//console.log(config.options.rank,config.options.color,config.options.label);
 				if(config.options.color=="rank") { updateColor(); }
 				if(config.options.label=="rank") {
 					updateLabel();
@@ -553,7 +553,7 @@ if(verbose){console.time("bar");}
 				d3.selectAll(".mtm-upper")
 					.classed("mtm-on",function() { return config.options.upper=="color"; })
 					.classed("mtm-off",function() { return config.options.upper=="gray"; })
-				d3.select("#options_upper").property('value',config.options.upper);
+				d3.select("#options_upper").property('value',config.options.upper)
 				updateColor();
 			});
 			
@@ -564,7 +564,7 @@ if(verbose){console.time("bar");}
 			.on("click", function() { 
 				d3.selectAll(".mtm-root").classed("mtm-on",true);
 				zoom(root);
-			});
+			})
 		
 		//Font//
 		var s = menu.append("span").attr("class","mtm-button mtm-on")
@@ -580,15 +580,16 @@ if(verbose){console.time("bar");}
 			s.on("change",function() { 
 				//change all button
 				config.options.font=this.value;
-				d3.selectAll(".mtm-font").property('value',this.value);
-				d3.select("#options_font").property('value',this.value);
+				d3.selectAll(".mtm-font").property('value',this.value)
+				d3.select("#options_font").property('value',this.value)
 				//action
 				updateLabel();
 				zoom(node);
-			});
+			})
 
 		//Palette//
 		var s = menu.append("span").attr("class","mtm-button mtm-on")
+			.style("position","relative").style("z-index","1")
 			.append("span").attr("class","fa fa-eyedropper")
 			.attr("title","Color palette")
 		s.append("input").attr("type","text")
@@ -604,12 +605,12 @@ if(verbose){console.time("bar");}
 					.on("click",function(d) {
 						//change all button
 						config.options.palette=d[1];
-						d3.selectAll(".mtm-palette").property("value",d[1]);
-						d3.select("#options_palette").property('value',d[1]);
+						d3.selectAll(".mtm-palette").property("value",d[1])
+						d3.select("#options_palette").property('value',d[1])
 						//action
 						d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
 							.selectAll("li").remove()
-						color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/));
+						color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
 						updateColor(); 
 					})
 					.text(function(d){ return d[0]; }) 
@@ -617,16 +618,16 @@ if(verbose){console.time("bar");}
 			.on("change", function() {
 				//change all button
 				config.options.palette=this.value;
-				d3.selectAll(".mtm-palette").property("value",this.value);
-				d3.select("#options_palette").property('value',this.value);
+				d3.selectAll(".mtm-palette").property("value",this.value)
+				d3.select("#options_palette").property('value',this.value)
 				//action
 				d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
 					.selectAll("li").remove()
-				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/));
+				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
 				updateColor(); 
 			})
 		s.append("div").attr("class","mtm-colorbox mtm-box")
-			.append("ul");
+			.append("ul")
 			
 		//Background//
 		menu.append("span").attr("class","mtm-button fa fa-adjust mtm-background")
@@ -638,11 +639,11 @@ if(verbose){console.time("bar");}
 				d3.selectAll(".mtm-background")
 					.classed("mtm-on",function() { return config.options.background=="black"; })
 					.classed("mtm-off",function() { return config.options.background=="white"; })
-				d3.select("#options_background").property('value',config.options.background);
+				d3.select("#options_background").property('value',config.options.background)
 				//action
-				d3.selectAll(".mtm-bg").attr("fill",config.options.background);
-				d3.selectAll(".mtm-header rect").style("stroke",config.options.background);
-				d3.select("#mtm-table").style("background-color",config.options.background);
+				d3.selectAll(".mtm-bg").attr("fill",config.options.background)
+				d3.selectAll(".mtm-header rect").style("stroke",config.options.background)
+				d3.select("#mtm-table").style("background-color",config.options.background)
 			});
 			
 		//Mode//
@@ -651,24 +652,25 @@ if(verbose){console.time("bar");}
 			.attr("title","Size mode")
 			.append("select").attr("class","mtm-mode")
 			//options//
-			s.append("option").attr("value","norm").text("norm");
-			s.append("option").attr("value","hits").text("hits");
-			s.append("option").attr("value","nodes").text("nodes");
+			s.append("option").attr("value","norm").text("norm")
+			s.append("option").attr("value","hits").text("hits")
+			s.append("option").attr("value","nodes").text("nodes")
 			//value//
 			s.property("value",config.options.mode)
 			s.on("change",function() { 
 				//change all button
 				config.options.mode=this.value;
-				d3.selectAll(".mtm-mode").property('value',this.value);
-				d3.select("#options_mode").property('value',this.value);
+				d3.selectAll(".mtm-mode").property('value',this.value)
+				d3.select("#options_mode").property('value',this.value)
 				//action
-				d3layout.value(setMode(config.options.mode));
-				d3layout.nodes(root);
+				d3layout.value(setMode(config.options.mode))
+				d3layout.nodes(root)
 				zoom(node);
 			});
 		
 		//Search bar//
 		var s = menu.append("span").attr("class","mtm-button mtm-on")
+			.style("position","relative").style("z-index","1")
 			.append("span").attr("class","fa fa-search")
 			.attr("title","Search a taxon")
 		s.append("input").attr("type","text")
@@ -696,7 +698,7 @@ if(verbose){console.time("bar");}
 					.data(matches)
 					.enter().append("li")
 					.on("click",function(d) {
-						d3.selectAll(".mtm-search").property("value",d.name);
+						d3.selectAll(".mtm-search").property("value",d.name)
 						d3.selectAll('.mtm-searchbox').select('ul').style("padding","0px 5px")
 							.selectAll("li").remove()
 						tip("hide",d);
@@ -708,7 +710,7 @@ if(verbose){console.time("bar");}
 					.text(function(d){ return d.name; }) 
 			})
 		s.append("div").attr("class","mtm-searchbox mtm-box")
-			.append("ul");
+			.append("ul")
 
 if(verbose){console.timeEnd("bar");}
 		return menu.node().offsetHeight;
@@ -716,117 +718,117 @@ if(verbose){console.timeEnd("bar");}
 	
 	function configuration(c) {
 if(verbose){console.time("config");}
-		var loc = d3.select("#"+c.location).classed("mtm-container",true);
+		var loc = d3.select("#"+c.location).classed("mtm-container",true)
 		for (var i in config) {
 			var part=loc.append("div").style("display","inline-block").style("vertical-align","top").append("table")
 			part.append("tr").append("th").attr("colspan",2).text(i)
 			if(config[i].hasOwnProperty("display")) {
 				var row = part.append("tr")
 				row.append("td").text("display")
-				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_display").on("change",function(){return configChange(this);});
-				if(config[i].display) {e.property("checked",true);}
+				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_display").on("change",function(){return configChange(this);})
+				if(config[i].display) {e.property("checked",true)}
 			}
 			if(config[i].hasOwnProperty("location")) {
 				var row = part.append("tr")
 				row.append("td").text("location")
-				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_location").style("width","120px").on("change",function(){return configChange(this);});
-				e.attr("value",config[i].location);
+				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_location").style("width","120px").on("change",function(){return configChange(this);})
+				e.attr("value",config[i].location)
 			}
 			if(config[i].hasOwnProperty("width")) {
 				var row = part.append("tr")
 				row.append("td").text("width")
-				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_width").style("width","64px").on("change",function(){return configChange(this);});
-				e.attr("value",config[i].width);
+				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_width").style("width","64px").on("change",function(){return configChange(this);})
+				e.attr("value",config[i].width)
 			}
 			if(config[i].hasOwnProperty("height")) {
 				var row = part.append("tr")
 				row.append("td").text("height")
-				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_height").style("width","64px").on("change",function(){return configChange(this);});
-				e.attr("value",config[i].height);
+				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_height").style("width","64px").on("change",function(){return configChange(this);})
+				e.attr("value",config[i].height)
 			}
 			if(config[i].hasOwnProperty("options")) {
 				var row = part.append("tr")
 				row.append("td").text("options")
-				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_options").on("change",function(){return configChange(this);});
-				if(config[i].options) {e.property("checked",true);}
+				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_options").on("change",function(){return configChange(this);})
+				if(config[i].options) {e.property("checked",true)}
 			}
 			//options//
 			if(config[i].hasOwnProperty("color")) {
 				var row = part.append("tr")
 				row.append("td").text("color by")
-				var e = row.append("td").append("select").attr("id",i+"_color").style("width","70px").on("change",function(){return configChange(this);});
-				e.append("option").attr("value","taxon").text("taxon");
-				e.append("option").attr("value","rank").text("rank");
-				e.append("option").attr("value","sample").text("sample");
-				e.append("option").attr("value","max").text("majority");
+				var e = row.append("td").append("select").attr("id",i+"_color").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","taxon").text("taxon")
+				e.append("option").attr("value","rank").text("rank")
+				e.append("option").attr("value","sample").text("sample")
+				e.append("option").attr("value","max").text("majority")
 				e.node().value=config[i].color;
 			}
 			if(config[i].hasOwnProperty("rank")) {
 				var row = part.append("tr")
 				row.append("td").text("rank")
-				var e = row.append("td").append("select").attr("id",i+"_rank").on("change",function(){return configChange(this);});
-				e.append("option").attr("value","null").text("--empty--");
-				for (var k in ranks) { e.append("option").attr("value",ranks[k]).text(ranks[k]);}
+				var e = row.append("td").append("select").attr("id",i+"_rank").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","null").text("--empty--")
+				for (var k in ranks) { e.append("option").attr("value",ranks[k]).text(ranks[k])}
 				e.node().value=config[i].rank;
 			}
 			if(config[i].hasOwnProperty("label")) {
 				var row = part.append("tr")
 				row.append("td").text("labeling")
-				var e = row.append("td").append("select").attr("id",i+"_label").style("width","70px").on("change",function(){return configChange(this);});
-				e.append("option").attr("value","taxon").text("taxon");
-				e.append("option").attr("value","rank").text("rank");
-				//e.append("option").attr("value","none").text("none");
+				var e = row.append("td").append("select").attr("id",i+"_label").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","taxon").text("taxon")
+				e.append("option").attr("value","rank").text("rank")
+				//e.append("option").attr("value","none").text("none")
 				e.node().value=config[i].label;
 			}
 			if(config[i].hasOwnProperty("upper")) {
 				var row = part.append("tr")
 				row.append("td").text("upper")
-				var e = row.append("td").append("select").attr("id",i+"_upper").style("width","70px").on("change",function(){return configChange(this);});
-				e.append("option").attr("value","color").text("color");
-				e.append("option").attr("value","gray").text("gray");
+				var e = row.append("td").append("select").attr("id",i+"_upper").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","color").text("color")
+				e.append("option").attr("value","gray").text("gray")
 				e.node().value=config[i].label;
 			}
 			if(config[i].hasOwnProperty("font")) {
 				var row = part.append("tr")
 				row.append("td").text("font")
-				var e = row.append("td").append("select").attr("id",i+"_font").style("width","70px").on("change",function(){return configChange(this);});
+				var e = row.append("td").append("select").attr("id",i+"_font").style("width","70px").on("change",function(){return configChange(this);})
 				for (var j=8; j<40; j=j+2) {
-					e.append("option").attr("value",j).text(j);
+					e.append("option").attr("value",j).text(j)
 				}
 				e.node().value=config[i].font;
 			}
 			if(config[i].hasOwnProperty("palette")) {
 				var row = part.append("tr")
 				row.append("td").text("palette")
-				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_palette").style("width","120px").on("change",function(){return configChange(this);});
+				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_palette").style("width","120px").on("change",function(){return configChange(this);})
 				e.node().value=config[i].palette;
 			}
 			if(config[i].hasOwnProperty("background")) {
 				var row = part.append("tr")
 				row.append("td").text("background")
-				var e = row.append("td").append("select").attr("id",i+"_background").style("width","70px").on("change",function(){return configChange(this);});
-				e.append("option").attr("value","black").text("black");
-				e.append("option").attr("value","white").text("white");
+				var e = row.append("td").append("select").attr("id",i+"_background").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","black").text("black")
+				e.append("option").attr("value","white").text("white")
 				e.node().value=config[i].background;
 			}
 			if(config[i].hasOwnProperty("mode")) {
 				var row = part.append("tr")
 				row.append("td").text("mode")
-				var e = row.append("td").append("select").attr("id",i+"_mode").style("width","70px").on("change",function(){return configChange(this);});
-				e.append("option").attr("value","norm").text("norm");
-				e.append("option").attr("value","hits").text("hits");
-				e.append("option").attr("value","nodes").text("nodes");
+				var e = row.append("td").append("select").attr("id",i+"_mode").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","norm").text("norm")
+				e.append("option").attr("value","hits").text("hits")
+				e.append("option").attr("value","nodes").text("nodes")
 				e.node().value=config[i].mode;
 			}
 			if(config[i].hasOwnProperty("pattern")) {
 				var row = part.append("tr")
 				row.append("td").text("pattern")
-				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_pattern").style("width","120px").on("change",function(){return configChange(this);});
-				e.attr("value",config[i].pattern);
+				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_pattern").style("width","120px").on("change",function(){return configChange(this);})
+				e.attr("value",config[i].pattern)
 			}
 		}
-		loc.append("div").style("display","inline-block").style("vertical-align","top").append("p").html("<b>Pattern keys</b><br/>#N: name<br/>#I: id<br/>#H: hits<br/>#R: rank<br/>#S: sample<br/>#P: % by sample<br/>#V: % by view").style("margin","0px");
-		loc.append("input").attr("type","button").attr("value","Update view").on("click",function(){return setLayout();});
+		loc.append("div").style("display","inline-block").style("vertical-align","top").append("p").html("<b>Pattern keys</b><br/>#N: name<br/>#I: id<br/>#H: hits<br/>#R: rank<br/>#S: sample<br/>#P: % by sample<br/>#V: % by view").style("margin","0px")
+		loc.append("input").attr("type","button").attr("value","Update view").on("click",function(){return setLayout();})
 
 if(verbose){console.timeEnd("config");}
 	}
@@ -849,13 +851,15 @@ if(verbose){console.time("treemap");}
 				.attr("height", c.height)
 				.attr("width", c.width)
 				.style("display","inline-block")//disable bottom padding
+				.style("position","relative")
+				.style("z-index","1") //View is below
 		
 		//backgroung
 		svg.append("rect")
 			.attr("width","100%")
 			.attr("height","100%")
 			.attr("fill","#000")
-			.attr("class","mtm-bg");
+			.attr("class","mtm-bg")
 		
 		//group for visual elements
 		var view = svg.append("g")
@@ -863,7 +867,7 @@ if(verbose){console.time("treemap");}
 			.classed("mtm-view",true)
 		
 		//visual elements
-		var leaves = d3layout.nodes().filter(function(d) { return !d.children; });
+		var leaves = d3layout.nodes().filter(function(d) { return !d.children; })
 		view.datum(root).selectAll("rect")
 			.data(leaves)
 			.enter().append("rect")
@@ -891,7 +895,7 @@ if(verbose){console.time("treemap");}
 		svg.append("g")
 			.attr("transform", "translate(1,20)") //margin left, top
 			.classed("mtm-labels",true)
-			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace");			
+			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")			
 			
 		//group for header (current zoom)//
 		var header = svg.append("g")
@@ -914,7 +918,7 @@ if(verbose){console.time("treemap");}
 			.attr("y", -18)
 			.attr("dy", ".75em")
 			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")
-			.text("Please load json file");
+			.text("Please load json file")
 
 		//rect for highlight//
 		svg.append("rect")
@@ -922,7 +926,7 @@ if(verbose){console.time("treemap");}
 			.style("stroke","#000")
 			.style("stroke-width","5")
 			.style("fill","none")
-			.style("pointer-events","none");
+			.style("pointer-events","none")
 if(verbose){console.timeEnd("treemap");}
 	}
 	
@@ -946,20 +950,22 @@ if(verbose){console.time("table");}
 				.style("display","inline-block")
 				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")
 				.style("font-size","14px")
+				.style("position","relative")
+				.style("z-index","1") //view is below(1)
 				
 		//thead
 		var thead = tab.append("div")
 			.style("background-color","#888")
 			.append("table")
 			.append("tr")
-			.classed("mtm-header",true);
-		thead.append("th").text("Node");
-		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID");
-		thead.append("th").style("width","60px").style("text-align","right").text("Hits");
-		thead.append("th").style("width","60px").style("text-align","right").text("%/View");
-		thead.append("th").style("width","80px").style("text-align","right").html("%/Sample&nbsp;");
-		thead.append("th").style("width","130px").style("text-align","left").text("Rank");
-		thead.append("th").style("width","15px").text("");//scroll bar
+			.classed("mtm-header",true)
+		thead.append("th").text("Node")
+		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID")
+		thead.append("th").style("width","60px").style("text-align","right").text("Hits")
+		thead.append("th").style("width","60px").style("text-align","right").text("%/View")
+		thead.append("th").style("width","80px").style("text-align","right").html("%/Sample&nbsp;")
+		thead.append("th").style("width","130px").style("text-align","left").text("Rank")
+		thead.append("th").style("width","15px").text("")//scroll bar
 
 		//tbody
 		var view = tab.append("div")
@@ -975,7 +981,7 @@ if(verbose){console.time("table");}
 		//Fill table
 if(verbose){console.time("growTable");}
 		//var hundread = root.data.hits;
-		var nodes = d3layout.nodes();
+		var nodes = d3layout.nodes()
 		
 		//create tr and td
 		view.selectAll("tr").data(nodes).enter().append("tr")
@@ -1006,7 +1012,7 @@ if(verbose){console.time("growTable");}
 						highlight(d,false);
 						return zoomSkip(d);
 					})
-					.text(function(d){return d.name;});
+					.text(function(d){return d.name;})
 		//fill id
 		view.selectAll(".id").data(nodes)
 				.style("width","70px").style("text-align","right")
@@ -1015,7 +1021,7 @@ if(verbose){console.time("growTable");}
 					.append("a")
 					.attr("href",function(d){ return "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id="+d.id;})
 					.attr("target", "taxonomy")
-					.text(function(d){return d.id});
+					.text(function(d){return d.id})
 		//fill hits
 		view.selectAll(".hits").data(nodes)
 				.style("width","60px").style("text-align","right")
@@ -1034,13 +1040,13 @@ if(verbose){console.time("growTable");}
 		//fill rank
 		view.selectAll(".rank").data(nodes)
 				.style("width","130px")
-			.append("span").text(function(d){return d.data.rank;});
+			.append("span").text(function(d){return d.data.rank;})
 
 		//internal nodes
 		view.selectAll("tr")
 			.filter(function(d){return d.children;})
 			.select(".fa")
-			.on("click",function(d){ return toggle(d); });
+			.on("click",function(d){ return toggle(d); })
 				
 if(verbose){console.timeEnd("table");}				
 	}
@@ -1058,14 +1064,14 @@ if(verbose){console.timeEnd("table");}
 						+"% of sample "+d.data.sample
 						+"<br/>"+(d.value*100/node.value).toFixed(2) 
 						+"% of the view";
-				});
+				})
 		}
 		else if(state=="hide") {
-			d3.select("#mtm-tip").style("opacity",0);
+			d3.select("#mtm-tip").style("opacity",0)
 		}
 		else { // move
 			d3.select("#mtm-tip").style("top", (d3.event.pageY+10)+"px")
-            .style("left", (d3.event.pageX+10)+"px");
+            .style("left", (d3.event.pageX+10)+"px")
 		}
 	}
 	
@@ -1091,25 +1097,25 @@ if(verbose){console.timeEnd("updateColor");}
 
 	function setColorMap(rank) {
 if(verbose){console.time("setColorMap");}
-		var rects = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect");
+		var rects = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
 		if(config.options.color=="taxon") {
-			rects.style("fill",function(d){return color(d.parent.name);});
+			rects.style("fill",function(d){return color(d.parent.name);})
 		}
 		else if(config.options.color=="rank") {
 			//upper color
-			rects.style("fill",function(d){return color(d.parent.name);});
+			rects.style("fill",function(d){return color(d.parent.name);})
 			//list of node on the selected rank
 			d3layout.nodes().filter(function(d){
 				return d.data.rank == ranks[rank] && d.children})
 				.forEach(function(d) {
 					//list of leaves for each subtree
-					var subleaves = getSubtree(d,[]).filter(function(d){return !d.children});
+					var subleaves = getSubtree(d,[]).filter(function(d){return !d.children})
 					rects.data(subleaves,function(d){return "v"+d.id+"-"+d.data.sample;})
-						.style("fill",color(d.name));				
+						.style("fill",color(d.name))			
 				});
 		}
 		else if(config.options.color=="sample") {
-			rects.style("fill",function(d){return color(d.data.sample);});
+			rects.style("fill",function(d){return color(d.data.sample);})
 		}
 		else { //if(group=="max")
 			rects.style("fill",function(d){
@@ -1126,7 +1132,7 @@ if(verbose){console.time("setColorMap");}
 		// gray upper
 		if(config.options.upper=="gray") {
 			rects.filter(function(d){return rank>=d.depth})
-				.style("fill","#888");
+				.style("fill","#888")
 		}
 if(verbose){console.timeEnd("setColorMap");}
 	}
@@ -1134,7 +1140,7 @@ if(verbose){console.timeEnd("setColorMap");}
 	function setColorTable(rank) {
 if(verbose){console.time("setColorTable");}
 		var pcol,phits; //previous color and sum
-		var lines = d3.select("#mtm-table").select(".mtm-view").selectAll("tr");
+		var lines = d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
 		var subs = []; //list of descendant.
 		if(config.options.color=="taxon") {
 			// bottom > up
@@ -1161,7 +1167,7 @@ if(verbose){console.time("setColorTable");}
 						pcol=color(d.name);
 						phits=d.data.hits;
 						for(tr in subs){		
-							d3.select(subs[tr]).style("background-color",pcol);
+							d3.select(subs[tr]).style("background-color",pcol)
 						}
 						subs=[];
 					}
@@ -1183,11 +1189,11 @@ if(verbose){console.time("setColorTable");}
 						}
 					}
 					return pcol;
-				});
+				})
 			}//end bottom > up
 		}
 		else if(config.options.color=="sample"){
-			lines.style("background-color",function(d){ return color(d.data.sample); });
+			lines.style("background-color",function(d){ return color(d.data.sample); })
 		}
 		else { // if(group=="max"){
 			//leaves
@@ -1199,7 +1205,7 @@ if(verbose){console.time("setColorTable");}
 					}
 				}
 				return color(major.data.sample);
-			});
+			})
 			//nodes
 			lines.filter(function(d){return d.children;}).style("background-color",function(d){ 
 				var major = {data:{hits:0,sample:0}}; //d.children[0];
@@ -1209,15 +1215,15 @@ if(verbose){console.time("setColorTable");}
 					}
 				}
 				return color(major.data.sample);
-			});
+			})
 		}
 
 		//root
-		d3.select(lines[0][0]).style("background-color","#888");
+		d3.select(lines[0][0]).style("background-color","#888")
 		// gray upper
 		if(config.options.upper=="gray") {
 			lines.filter(function(d){return rank>=d.depth})
-				.style("background-color","#888");
+				.style("background-color","#888")
 		}
 if(verbose){console.timeEnd("setColorTable");}
 	}
@@ -1228,12 +1234,12 @@ if(verbose){console.time("updateLabel");}
 		rank = ranks.indexOf(config.options.rank) //selected rank
 		//font size
 		if(config.treemap.display) {
-			d3.select("#mtm-treemap").select(".mtm-labels").style("font-size",config.options.font+"px");
-			d3.select("#mtm-tip").style("font-size",config.options.font+"px");
+			d3.select("#mtm-treemap").select(".mtm-labels").style("font-size",config.options.font+"px")
+			d3.select("#mtm-tip").style("font-size",config.options.font+"px")
 			setLabelMap(rank);
 		}
 		if(config.table.display) { 
-			d3.select(".mtm-table").selectAll(".name").style("font-size",config.options.font+"px");
+			d3.select(".mtm-table").selectAll(".name").style("font-size",config.options.font+"px")
 			setLabelTable(rank);
 		}
 if(verbose){console.timeEnd("updateLabel");}
@@ -1242,17 +1248,17 @@ if(verbose){console.timeEnd("updateLabel");}
 	function setLabelMap(rank) {
 if(verbose){console.time("setLabelMap");}
 		//delete previous labels
-		var labels = d3.select("#mtm-treemap").select(".mtm-labels").html("");
+		var labels = d3.select("#mtm-treemap").select(".mtm-labels").html("")
 		
 		//select
 		var labelled;
 		if(config.options.label=="rank") { //show selected group || upper leaves
 			labelled=d3layout.nodes(root).filter(function(d){
 				return (rank == +d.depth-1) || (!d.children && rank > +d.depth)
-			});
+			})
 		}
 		else { //label for each tags
-			labelled=d3layout.nodes(root).filter(function(d){return !d.children;});
+			labelled=d3layout.nodes(root).filter(function(d){return !d.children;})
 		}
 		
 		//guides
@@ -1290,55 +1296,55 @@ if(verbose){console.timeEnd("setLabelMap");}
 
 	function setLabelTable(rank) {
 if(verbose){console.time("setLabelTable");}
-		var lines = d3.select("#mtm-table").select(".mtm-labels").selectAll("tr");	
+		var lines = d3.select("#mtm-table").select(".mtm-labels").selectAll("tr")
 		if(config.options.label=="rank" && rank!=-1){
 			//collapse rank
 			lines.filter(function(d){return rank == +d.depth-1;})
 				.style("display","table-row")
-				.select(".fa").attr("class","fa fa-plus-square-o");
+				.select(".fa").attr("class","fa fa-plus-square-o")
 			//expand upper
 			lines.filter(function(d){return rank>=+d.depth;})
 				.style("display","table-row")
-				.select(".fa").attr("class","fa fa-minus-square-o");
+				.select(".fa").attr("class","fa fa-minus-square-o")
 			//hide lower
 			lines.filter(function(d){return rank<+d.depth-1;})
-				.style("display","none");
+				.style("display","none")
 		}
 		else { //expand all
 			lines.style("display","table-row")
-				.select(".fa").attr("class","fa fa-minus-square-o");		
+				.select(".fa").attr("class","fa fa-minus-square-o")		
 		}
 		//leaf
 		lines.filter(function(d){return !d.children;})
-			.select(".fa").attr("class","fa fa-square-o");
+			.select(".fa").attr("class","fa fa-square-o")
 if(verbose){console.timeEnd("setLabelTable");}
 	}
 	
 	function highlight(n,toggle) {
 		if(toggle) {
-			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity",".7");
+			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity",".7")
 			if(n.data.sample==0) {
 				d3.selectAll(".mtm-hl")
 				.attr("x",x(n.x)+1+2) 
 				.attr("y",y(n.y)+20+2) //+header
 				.attr("width",(kx*n.dx)-5)
-				.attr("height",(ky*n.dy)-5);
+				.attr("height",(ky*n.dy)-5)
 			}
 			else {
 				d3.selectAll(".mtm-hl")
 				.attr("x",x(n.parent.x)+1+2) 
 				.attr("y",y(n.parent.y)+20+2) //+header
 				.attr("width",(kx*n.parent.dx)-5)
-				.attr("height",(ky*n.parent.dy)-5);
+				.attr("height",(ky*n.parent.dy)-5)
 			}
 		}
 		else { //mouseout
-			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity","1");
+			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity","1")
 			d3.selectAll(".mtm-hl")
 				.attr("x",0) 
 				.attr("y",0)
 				.attr("width",0)
-				.attr("height",0);
+				.attr("height",0)
 		}
 	}
 
@@ -1369,12 +1375,12 @@ if(verbose){console.timeEnd("setLabelTable");}
 if(verbose){console.time("zoom");}
 		//button root switch
 		if (n==root) {
-			d3.selectAll(".mtm-root").classed("mtm-on",true);
-			d3.selectAll(".mtm-root").classed("mtm-off",false);
+			d3.selectAll(".mtm-root").classed("mtm-on",true)
+			d3.selectAll(".mtm-root").classed("mtm-off",false)
 		}
 		else { 
-			d3.selectAll(".mtm-root").classed("mtm-on",false);
-			d3.selectAll(".mtm-root").classed("mtm-off",true); 
+			d3.selectAll(".mtm-root").classed("mtm-on",false)
+			d3.selectAll(".mtm-root").classed("mtm-off",true)
 		}
 		
 		//update header
@@ -1382,7 +1388,7 @@ if(verbose){console.time("zoom");}
 			.datum(n)
 			.on("click", function(d) { return zoomSkip(d); })
 			.on('touchstart', function(d) {
-					d3.event.preventDefault();
+					d3.event.preventDefault()
 					if(touched==d) { //second touch
 						touched="";		
 						tip("hide",d);
@@ -1391,14 +1397,14 @@ if(verbose){console.time("zoom");}
 					else { //first touched
 						if(touched!=""){ //opacity
 							d3.selectAll(".v"+touched.id+"-"+touched.data.sample).style("opacity","1");
-							highlight(touched,false);
+							highlight(touched,false)
 						}
 						touched=d;
 						tip("show",d);
 					}
 				})
 			.select("text")
-				.text(function(d) { return d.name; });
+				.text(function(d) { return d.name; })
 		
 		//update map	
 		if(config.treemap.display) {
@@ -1409,7 +1415,7 @@ if(verbose){console.time("zoomMap");}
 				
 			//all rect position and size
 			var rectTranslate = d3.svg.transform()
-				.translate(function(d) { return [x(d.x), y(d.y)] });
+				.translate(function(d) { return [x(d.x), y(d.y)] })
 				
 			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
 				.transition()
@@ -1459,7 +1465,7 @@ if(verbose){console.time("zoomMap");}
 			var labels = d3.select("#mtm-treemap").select(".mtm-labels")
 			labels.selectAll("path")
 				.transition().duration(1500)
-				.attr("d",function(d) {return line(d); })			
+				.attr("d",function(d) {return line(d);})			
 
 if(verbose){console.timeEnd("zoomMap");}
 		}
@@ -1470,7 +1476,7 @@ if(verbose){console.time("zoomTable");}
 			//clear %
 			d3.select("#mtm-table").select(".mtm-labels")
 				.selectAll("tr").selectAll(".percent")
-				.text("-");
+				.text("-")
 			
 			//set % of the subtree
 			//var hundread = n.data.hits; //100%	
@@ -1480,7 +1486,7 @@ if(verbose){console.time("zoomTable");}
 				.selectAll(".percent") //column of %
 				.text( //new text
 					function(d){return (d.value*100/n.value).toFixed(2)+"%";}
-				);
+				)
 
 			//map call updateLabel() else it is needed
 			if(!config.treemap.display) {updateLabel();} 
@@ -1505,7 +1511,7 @@ if(verbose){console.timeEnd("zoom");}
 	}
 	
 	function toggle(d) {
-		var span = d3.select("#mtm-table").select(".v"+d.id+"-"+d.data.sample).select(".fa");
+		var span = d3.select("#mtm-table").select(".v"+d.id+"-"+d.data.sample).select(".fa")
 		if(span.classed("fa-minus-square-o")) {
 			span.attr("class","fa fa-plus-square-o");
 			//hide children 
@@ -1529,7 +1535,7 @@ if(verbose){console.timeEnd("zoom");}
 	function hide(n) {
 		//hide current raw and recursive
 		d3.select("#mtm-table").selectAll(".v"+n.id+"-"+n.data.sample)
-			.style("display","none");
+			.style("display","none")
 		//recursive call
 		if (n.children) {
 			for (var i in n.children) {
@@ -1541,7 +1547,7 @@ if(verbose){console.timeEnd("zoom");}
 	function show(n) {
 		//show current raw and recursive
 		var t = d3.select("#mtm-table").select(".v"+n.id+"-"+n.data.sample)
-					.style("display","table-row");
+					.style("display","table-row")
 		if(t.select(".fa").classed("fa-minus-square-o") && n.children) {
 			for (var i in n.children) {
 				show(n.children[i]);
@@ -1584,7 +1590,7 @@ if(verbose){console.timeEnd("zoom");}
 			.attr("download",name)
 			.attr("href",url)
 			.node()
-			.click();
+			.click()
 	}
 	
 	function exportTab(n) {
@@ -1606,24 +1612,24 @@ if(verbose){console.timeEnd("zoom");}
 	function format(e) {
 		//manage radio button switch in mtm.convertor
 		if(e.value=="json"){
-			d3.select("#mtm-fieldhead").text("Object property");
-			d3.select("[name=mtm-tid]").attr("value","id");
-			d3.select("[name=mtm-tname]").attr("value","name");
-			d3.select("[name=mtm-hits]").attr("value","data.assigned");
-			d3.select("#mtm-headrow").style("display","none");
+			d3.select("#mtm-fieldhead").text("Object property")
+			d3.select("[name=mtm-tid]").attr("value","id")
+			d3.select("[name=mtm-tname]").attr("value","name")
+			d3.select("[name=mtm-hits]").attr("value","data.assigned")
+			d3.select("#mtm-headrow").style("display","none")
 		}
 		else if(e.value=="tab"){
-			d3.select("#mtm-fieldhead").text("Column index");
-			d3.select("[name=mtm-tid]").attr("value","1");
-			d3.select("[name=mtm-tname]").attr("value","2");
-			d3.select("[name=mtm-hits]").attr("value","3");
-			d3.select("#mtm-headrow").style("display","table-row");
+			d3.select("#mtm-fieldhead").text("Column index")
+			d3.select("[name=mtm-tid]").attr("value","1")
+			d3.select("[name=mtm-tname]").attr("value","2")
+			d3.select("[name=mtm-hits]").attr("value","3")
+			d3.select("#mtm-headrow").style("display","table-row")
 		}
 	}
 	
 	function convert() {
-		var format = d3.select("[name=mtm-format]:checked").node().value;
-		var file=d3.select("#mtm-convert").node().files[0];
+		var format = d3.select("[name=mtm-format]:checked").node().value
+		var file=d3.select("#mtm-convert").node().files[0]
 		
 		//root init.
 		root={"name":"root","children":[],"data":{"assigned":0,"rank":"no rank"},"id":1}; //skeleton tree
@@ -1636,13 +1642,13 @@ if(verbose){console.timeEnd("zoom");}
 			taxo.split("\n").forEach(function(l){ //for each line
 				var vals = l.split("\t");
 				taxonomy[+vals[0]]={"id":+vals[0], "parent":+vals[1], "rank":vals[2], "name":vals[3]};
-			});
+			})
 		
 			if(format=="json") {
 				//get property
-				var id=d3.select("[name=mtm-tid]").node().value.split(".");
-				var name=d3.select("[name=mtm-tname]").node().value.split(".");
-				var hits=d3.select("[name=mtm-hits]").node().value.split(".");
+				var id=d3.select("[name=mtm-tid]").node().value.split(".")
+				var name=d3.select("[name=mtm-tname]").node().value.split(".")
+				var hits=d3.select("[name=mtm-hits]").node().value.split(".")
 	
 				//read input
 				d3.json(URL.createObjectURL(file), function(data) {
@@ -1660,10 +1666,10 @@ if(verbose){console.timeEnd("zoom");}
 			}
 			else if(format=="tab") {
 				//get property
-				var id=+d3.select("[name=mtm-tid]").node().value-1;
-				var name=+d3.select("[name=mtm-tname]").node().value-1;
-				var hits=+d3.select("[name=mtm-hits]").node().value-1;
-				var header=d3.select("[name=mtm-head]").property("checked");
+				var id=+d3.select("[name=mtm-tid]").node().value-1
+				var name=+d3.select("[name=mtm-tname]").node().value-1
+				var hits=+d3.select("[name=mtm-hits]").node().value-1
+				var header=d3.select("[name=mtm-head]").property("checked")
 	
 				//read input
 				d3.text(URL.createObjectURL(file), function(data) {
@@ -1690,9 +1696,9 @@ if(verbose){console.timeEnd("zoom");}
 					//Direct DownLoad call
 					ddl(file.name.replace(/.[^.]*$/,"")+"_metabin.json",url);
 				
-				});
+				})
 			}
-		});
+		})
 	}
 	
 	function ancestor(taxonomy,id,hits) {
