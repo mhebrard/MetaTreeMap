@@ -1,22 +1,16 @@
 !(function() {
 
-	var mtm = { version: "2.3.3" };
+	var mtm = { version: "2.4" };
 	var verbose=false;
 
 	//VARIABLES//
-	//this product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
-	var colors=[
-		["colorbrewer.Set3(12)","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
-		["d3.category20(20)","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
-	];
-	
 	//need to compute json
 	//functions merge, completeTree, relatives, sumHits
 	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"];
 	var config; //object configuration
 	var root; //object root (all tree)
-	var bkeys, //list of keys for bridges
-	bobjs; //list of node -object- for bridge
+	var bkeys; //list of keys for bridges
+	var bobjs; //list of node -object- for bridge
 	
 	//neet to initiate layout
 	//functions setLayout, computeLayout
@@ -24,6 +18,10 @@
 	var sorted; //taxa names for search
 	var d3layout; //d3 layout
 	var color=""; //color set for leaves
+	var colors=[ //default set of colors
+		["colorbrewer.Set3(12)","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
+		["d3.category20(20)","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
+	];
 	
 	//need to update
 	var w=1,h=1; //map dimentions
@@ -520,7 +518,6 @@ if(verbose){console.time("bar");}
 				d3.selectAll(".mtm-phylogeny").property('value',this.value);
 				d3.select("#options_rank").property('value',this.value);
 				//action
-//console.log(config.options.rank,config.options.color,config.options.label);
 				if(config.options.color=="rank") { updateColor(); }
 				if(config.options.label=="rank") {
 					updateLabel();
