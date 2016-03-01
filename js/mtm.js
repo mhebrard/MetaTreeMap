@@ -1,6 +1,6 @@
 !(function() {
 
-	var mtm = { version: "2.4" };
+	var mtm = { version: "2.4.1" };
 	var verbose=false;
 
 	//VARIABLES//
@@ -72,13 +72,12 @@ if(verbose){console.timeEnd("load");}
 			ddl("merge.json",url);
 		}
 		else if(mode=="svg") {
-			var svg = d3.select("svg");	
-			//add svg header
 			var html = d3.select("svg")
 				.attr("version", 1.1)
 				.attr("xmlns", "http://www.w3.org/2000/svg")
-				.node().parentNode.innerHTML
-				
+				.attr(":xmlns:xlink", "http://www.w3.org/1999/xlink")
+				.node().outerHTML
+
 			var url = 'data:image/svg+xml;charset=utf8;filename=treemap.svg,' + encodeURIComponent(html);
 			//Direct DownLoad call
 			ddl("treemap.svg",url);
