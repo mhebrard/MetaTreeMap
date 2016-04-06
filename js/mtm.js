@@ -33,7 +33,7 @@
 	mtm.load = function(files,conf) {
 		if(verbose){console.time("load");}
 		//root init.
-		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0},"id":"1"}; //skeleton tree
+		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"index":0},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
 		bobjs = [root]; //list of node -object-
 		
@@ -362,7 +362,7 @@
 
 	//VIEW CREATION//
 	function setLayout() {
-if(verbose){console.time("layout");}
+		if(verbose){console.time("layout");}
 		node=root;
 		
 		//style
@@ -416,7 +416,7 @@ if(verbose){console.time("layout");}
 		updateLabel();
 		zoom(node);
 
-if(verbose){console.timeEnd("layout");}
+		if(verbose){console.timeEnd("layout");}
 	}
 	
 	function computeLayout() {
@@ -432,12 +432,19 @@ if(verbose){console.timeEnd("layout");}
 			.sticky(true) //keep child position when transform
 			.value(setMode(config.options.mode))
 		var nodes = d3layout.nodes(root)
+
+		//compute index
+		d3layout.nodes().map(function(n){
+			var idx = n.children ? ranks.indexOf(n.data.rank) : ranks.indexOf(n.data.rank)+1;
+			n.data.index=Math.max(n.depth,idx); return n;
+		})
+		console.log(root);
 		
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
 		
-if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
+		if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
 	}
 	
 	function setMode(confMode) {
@@ -455,7 +462,7 @@ if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){r
 
 	//LAYOUTS//
 	function bar(c,location,width) {
-if(verbose){console.time("bar");}
+		if(verbose){console.time("bar");}
 		//create menu bar//
 		var menu;
 		if(location) {
@@ -710,12 +717,12 @@ if(verbose){console.time("bar");}
 		s.append("div").attr("class","mtm-searchbox mtm-box")
 			.append("ul")
 
-if(verbose){console.timeEnd("bar");}
+		if(verbose){console.timeEnd("bar");}
 		return menu.node().offsetHeight;
 	}
 	
 	function configuration(c) {
-if(verbose){console.time("config");}
+		if(verbose){console.time("config");}
 		var loc = d3.select("#"+c.location).classed("mtm-container",true)
 		for (var i in config) {
 			var part=loc.append("div").style("display","inline-block").style("vertical-align","top").append("table")
@@ -828,11 +835,11 @@ if(verbose){console.time("config");}
 		loc.append("div").style("display","inline-block").style("vertical-align","top").append("p").html("<b>Pattern keys</b><br/>#N: name<br/>#I: id<br/>#H: hits<br/>#R: rank<br/>#S: sample<br/>#P: % by sample<br/>#V: % by view").style("margin","0px")
 		loc.append("input").attr("type","button").attr("value","Update view").on("click",function(){return setLayout();})
 
-if(verbose){console.timeEnd("config");}
+		if(verbose){console.timeEnd("config");}
 	}
 	
 	function treemap(c,p) {
-if(verbose){console.time("treemap");}
+		if(verbose){console.time("treemap");}
 		//CONTAINER//
 		//create container div//
 		var container = d3.select("#"+c.location) //container div
@@ -925,11 +932,11 @@ if(verbose){console.time("treemap");}
 			.style("stroke-width","5")
 			.style("fill","none")
 			.style("pointer-events","none")
-if(verbose){console.timeEnd("treemap");}
+		if(verbose){console.timeEnd("treemap");}
 	}
 	
 	function table(c,p) {
-if(verbose){console.time("table");}		
+		if(verbose){console.time("table");}		
 		var container = d3.select("#"+c.location) //container div
 			.classed("mtm-container",true)
 		
@@ -977,7 +984,7 @@ if(verbose){console.time("table");}
 			.style("table-layout","fixed")
 
 		//Fill table
-if(verbose){console.time("growTable");}
+		if(verbose){console.time("growTable");}
 		//var hundread = root.data.hits;
 		var nodes = d3layout.nodes()
 		
@@ -1003,7 +1010,7 @@ if(verbose){console.time("growTable");}
 			.style("text-overflow","ellipsis")
 			.style("cursor","pointer")
 			.append("span")
-				.style("padding-left",function(d){return (+d.depth*4)+"px";})
+				.style("padding-left",function(d){return (+d.data.index*4)+"px";})
 				.html(function(d){return "<span class='fa'>&nbsp;</span>";})
 				.append("span")
 					.on("click", function(d){  
@@ -1046,7 +1053,7 @@ if(verbose){console.time("growTable");}
 			.select(".fa")
 			.on("click",function(d){ return toggle(d); })
 				
-if(verbose){console.timeEnd("table");}				
+		if(verbose){console.timeEnd("table");}				
 	}
 	
 	function tip(state,d) {
@@ -1086,31 +1093,23 @@ if(verbose){console.timeEnd("table");}
 	
 	//VIEW UPDATE//
 	function updateColor() {
-if(verbose){console.time("updateColor");}
+		if(verbose){console.time("updateColor");}
 		rank = ranks.indexOf(config.options.rank) //selected rank
-		if(config.treemap.display) { setColorMap(rank); }
-		if(config.table.display) {	setColorTable(rank); }
-if(verbose){console.timeEnd("updateColor");}
+		if(config.options.color=="rank") {
+			colorByRank(rank,root,root);
+		}
+		else {
+			if(config.treemap.display) { setColorMap(rank); }
+			if(config.table.display) {	setColorTable(rank); }
+		}
+		if(verbose){console.timeEnd("updateColor");}
 	}
 
 	function setColorMap(rank) {
-if(verbose){console.time("setColorMap");}
+		if(verbose){console.time("setColorMap");}
 		var rects = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
 		if(config.options.color=="taxon") {
 			rects.style("fill",function(d){return color(d.parent.name);})
-		}
-		else if(config.options.color=="rank") {
-			//upper color
-			rects.style("fill",function(d){return color(d.parent.name);})
-			//list of node on the selected rank
-			d3layout.nodes().filter(function(d){
-				return d.data.rank == ranks[rank] && d.children})
-				.forEach(function(d) {
-					//list of leaves for each subtree
-					var subleaves = getSubtree(d,[]).filter(function(d){return !d.children})
-					rects.data(subleaves,function(d){return "v"+d.id+"-"+d.data.sample;})
-						.style("fill",color(d.name))			
-				});
 		}
 		else if(config.options.color=="sample") {
 			rects.style("fill",function(d){return color(d.data.sample);})
@@ -1129,14 +1128,14 @@ if(verbose){console.time("setColorMap");}
 		
 		// gray upper
 		if(config.options.upper=="gray") {
-			rects.filter(function(d){return rank>=d.depth})
+			rects.filter(function(d){return rank>=d.data.index})
 				.style("fill","#888")
 		}
 if(verbose){console.timeEnd("setColorMap");}
 	}
 	
 	function setColorTable(rank) {
-if(verbose){console.time("setColorTable");}
+		if(verbose){console.time("setColorTable");}
 		var pcol,phits; //previous color and sum
 		var lines = d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
 		var subs = []; //list of descendant.
@@ -1155,40 +1154,6 @@ if(verbose){console.time("setColorTable");}
 					return pcol;
 				});
 			}//end bottom > up					
-		}
-		else if(config.options.color=="rank") {
-			// bottom > up
-			for (var i=lines[0].length;i>0;i--){
-				d3.select(lines[0][i]).style("background-color",function(d){
-					//Selected rank : new color for all the descendant
-					if(rank==d.depth-1){
-						pcol=color(d.name);
-						phits=d.data.hits;
-						for(tr in subs){		
-							d3.select(subs[tr]).style("background-color",pcol)
-						}
-						subs=[];
-					}
-					//Descendant
-					else if (rank<d.depth-1 && rank>-1) {
-							subs.push(lines[0][i]);
-					}
-					//Initial color
-					else {
-						//leaf
-						if(!d.children) {
-							phits=d.data.hits;
-							pcol=color(d.parent.name);				
-						}
-						//node if assigned=0 & sum = previous > same color. ELSE new color
-						else if(d.data.hits!=phits) {
-							pcol=color(d.name);
-							phits=d.data.hits;	
-						}
-					}
-					return pcol;
-				})
-			}//end bottom > up
 		}
 		else if(config.options.color=="sample"){
 			lines.style("background-color",function(d){ return color(d.data.sample); })
@@ -1220,14 +1185,52 @@ if(verbose){console.time("setColorTable");}
 		d3.select(lines[0][0]).style("background-color","#888")
 		// gray upper
 		if(config.options.upper=="gray") {
-			lines.filter(function(d){return rank>=d.depth})
+			lines.filter(function(d){return rank>=d.data.index})
 				.style("background-color","#888")
 		}
-if(verbose){console.timeEnd("setColorTable");}
+		if(verbose){console.timeEnd("setColorTable");}
+	}
+
+	function colorByRank(r,p,n){
+		//r is the rank we need
+		//p is root
+		//n is the current node. Test on n.children
+		//console.log(n);
+		if(n.children && n.children.length>0) {
+			for (var i in n.children) {
+				var rankC=ranks.indexOf(n.children[i].data.rank);
+
+				if(rankC>r) { //missing rank
+					var subnodes = getSubtree(n.children[i],[])
+					//rect
+					d3.selectAll(".mtm-view").selectAll("rect")
+						.data(subnodes,function(d){return "v"+d.id+"-"+d.data.sample;})
+						.style("fill",color("sub"+n.name));
+					//tr
+					d3.selectAll(".mtm-view").selectAll("tr")
+						.data(subnodes,function(d){return "v"+d.id+"-"+d.data.sample;})
+						.style("background-color",color("sub"+n.name));
+				}
+				else if(rankC==r) { //color node + subtree
+					var subnodes = getSubtree(n.children[i],[])
+					//rect
+					d3.selectAll(".mtm-view").selectAll("rect")
+						.data(subnodes,function(d){return "v"+d.id+"-"+d.data.sample;})
+						.style("fill",color(n.children[i].name))
+					//tr
+					d3.selectAll(".mtm-view").selectAll("tr")
+						.data(subnodes,function(d){return "v"+d.id+"-"+d.data.sample;})
+						.style("background-color",color(n.children[i].name));
+				}
+				else  { //if(rankC==0 || rankC<r) //search deeper
+					colorByRank(r,p,n.children[i]);
+				}
+			}//end foreach
+		}//end children
 	}
 
 	function updateLabel() {
-if(verbose){console.time("updateLabel");}
+		if(verbose){console.time("updateLabel");}
 
 		rank = ranks.indexOf(config.options.rank) //selected rank
 		//font size
@@ -1240,11 +1243,11 @@ if(verbose){console.time("updateLabel");}
 			d3.select(".mtm-table").selectAll(".name").style("font-size",config.options.font+"px")
 			setLabelTable(rank);
 		}
-if(verbose){console.timeEnd("updateLabel");}
+		if(verbose){console.timeEnd("updateLabel");}
 	}
 
 	function setLabelMap(rank) {
-if(verbose){console.time("setLabelMap");}
+		if(verbose){console.time("setLabelMap");}
 		//delete previous labels
 		var labels = d3.select("#mtm-treemap").select(".mtm-labels").html("")
 		
@@ -1252,7 +1255,7 @@ if(verbose){console.time("setLabelMap");}
 		var labelled;
 		if(config.options.label=="rank") { //show selected group || upper leaves
 			labelled=d3layout.nodes(root).filter(function(d){
-				return (rank == +d.depth-1) || (!d.children && rank > +d.depth)
+				return (rank == +d.data.index-1) || (!d.children && rank > +d.data.index)
 			})
 		}
 		else { //label for each tags
@@ -1289,23 +1292,23 @@ if(verbose){console.time("setLabelMap");}
 					tag = tag.replace(/#S/g,d.data.sample);
 					return tag;
 				})
-if(verbose){console.timeEnd("setLabelMap");}
+		if(verbose){console.timeEnd("setLabelMap");}
 	}
 
 	function setLabelTable(rank) {
-if(verbose){console.time("setLabelTable");}
+		if(verbose){console.time("setLabelTable");}
 		var lines = d3.select("#mtm-table").select(".mtm-labels").selectAll("tr")
 		if(config.options.label=="rank" && rank!=-1){
 			//collapse rank
-			lines.filter(function(d){return rank == +d.depth-1;})
+			lines.filter(function(d){return rank == +d.data.index-1;})
 				.style("display","table-row")
 				.select(".fa").attr("class","fa fa-plus-square-o")
 			//expand upper
-			lines.filter(function(d){return rank>=+d.depth;})
+			lines.filter(function(d){return rank>=+d.data.index;})
 				.style("display","table-row")
 				.select(".fa").attr("class","fa fa-minus-square-o")
 			//hide lower
-			lines.filter(function(d){return rank<+d.depth-1;})
+			lines.filter(function(d){return rank<+d.data.index-1;})
 				.style("display","none")
 		}
 		else { //expand all
@@ -1315,7 +1318,7 @@ if(verbose){console.time("setLabelTable");}
 		//leaf
 		lines.filter(function(d){return !d.children;})
 			.select(".fa").attr("class","fa fa-square-o")
-if(verbose){console.timeEnd("setLabelTable");}
+		if(verbose){console.timeEnd("setLabelTable");}
 	}
 	
 	function highlight(n,toggle) {
@@ -1347,7 +1350,7 @@ if(verbose){console.timeEnd("setLabelTable");}
 	}
 
 	function zoomSkip(d) {
-	//skip node if same hits (bridge)
+		//skip node if same hits (bridge)
 		if(d==node){ //zoom out
 			if(d.parent){ //no root
 				if(d.parent.data.hits==d.data.hits) { //same hits
@@ -1370,7 +1373,7 @@ if(verbose){console.timeEnd("setLabelTable");}
 	}
 	
 	function zoom(n) {
-if(verbose){console.time("zoom");}
+		if(verbose){console.time("zoom");}
 		//button root switch
 		if (n==root) {
 			d3.selectAll(".mtm-root").classed("mtm-on",true)
@@ -1406,7 +1409,7 @@ if(verbose){console.time("zoom");}
 		
 		//update map	
 		if(config.treemap.display) {
-if(verbose){console.time("zoomMap");}			
+		if(verbose){console.time("zoomMap");}			
 			kx = w / n.dx, ky = h / n.dy;
 			x.domain([n.x, n.x + n.dx]);
 			y.domain([n.y, n.y + n.dy]);
@@ -1465,12 +1468,12 @@ if(verbose){console.time("zoomMap");}
 				.transition().duration(1500)
 				.attr("d",function(d) {return line(d);})			
 
-if(verbose){console.timeEnd("zoomMap");}
+			if(verbose){console.timeEnd("zoomMap");}
 		}
 		
 		//update table
 		if(config.table.display) {
-if(verbose){console.time("zoomTable");}
+			if(verbose){console.time("zoomTable");}
 			//clear %
 			d3.select("#mtm-table").select(".mtm-labels")
 				.selectAll("tr").selectAll(".percent")
@@ -1488,12 +1491,12 @@ if(verbose){console.time("zoomTable");}
 
 			//map call updateLabel() else it is needed
 			if(!config.treemap.display) {updateLabel();} 
-if(verbose){console.timeEnd("zoomTable");}
+			if(verbose){console.timeEnd("zoomTable");}
 		}
 		
 		//update current node
 		node = n;
-if(verbose){console.timeEnd("zoom");}
+		if(verbose){console.timeEnd("zoom");}
 	}
 	
 	function getSubtree(n,ns) {
