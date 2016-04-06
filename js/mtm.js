@@ -5,7 +5,7 @@
 
 	//VARIABLES//
 	//need to compute json
-	//functions merge, completeTree, relatives, sumHits
+	//functions merge, sumHits
 	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"];
 	var config; //object configuration
 	var root; //object root (all tree)
@@ -31,7 +31,7 @@
 	
 	//CONSTRUCTORS//
 	mtm.load = function(files,conf) {
-if(verbose){console.time("load");}
+		if(verbose){console.time("load");}
 		//root init.
 		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
@@ -50,14 +50,12 @@ if(verbose){console.time("load");}
 				merge(di,"",(i-queue+1),hundreds); //Create skeleton and leaves (root,parent,sample)
 				if(!--queue) {
 					hundreds[0]= hundreds.reduce(function(a,b) {return a + b;});
-if(verbose){console.time("completeTree");}
-					completeTree(root,hundreds); //Add 1 node by rank + sum hits
-if(verbose){console.timeEnd("completeTree");}
+					sumHits(root,hundreds);
 					setLayout();
 				} 
 			})
 		}
-if(verbose){console.timeEnd("load");}
+		if(verbose){console.timeEnd("load");}
 	}   
 	
 	mtm.save = function(mode) {
@@ -268,8 +266,20 @@ if(verbose){console.timeEnd("load");}
 			}
 		}
 	}
+
+	function sumHits(n,h) {
+		//recursive call
+		if (n.children.length>0) {
+			for (var i in n.children) {
+				var hits=sumHits(n.children[i],h);
+				n.data.hits=+n.data.hits+hits;
+				n.data.percent=+n.data.hits*100/h[n.data.sample];
+			}
+		}
+		return n.data.hits;
+	}	
 	
-	function completeTree(n,h) { 
+/*	function completeTree(n,h) { 
 		//walk through the input tree from root to leaves
 		//complete tree: 1 node by rank
 		//Sum hits in subtree
@@ -299,8 +309,8 @@ if(verbose){console.timeEnd("load");}
 		//for sum hits in subtree
 		return n.data.hits;
 	}
-	
-	function relatives(parent,child,h) {
+*/	
+/*	function relatives(parent,child,h) {
 		//add missing node between two : parent -- medium -- child
 		var firstChild=child;
 		var prank=ranks.indexOf(parent.data.rank);
@@ -348,19 +358,8 @@ if(verbose){console.timeEnd("load");}
 			console.log("WARNING rank:",r,parent.name,firstChild.name,child.name);
 		}
 	}
-	
-	function sumHits(pid,mrank,sum,r,h) {
-		//sum hits to ancestor - recursive call
-		var mid=pid+"_"+mrank;
-		var idx = bkeys.indexOf(mid);
-		if(idx>-1) { 
-			var m = bobjs[idx];
-			m.data.hits = +m.data.hits + sum;
-			m.data.percent=+m.data.hits*100/h[m.data.sample];
-			if(r>2) { sumHits(pid,mrank-1,sum,r-1,h); }
-		}
-	}
-	
+*/	
+
 	//VIEW CREATION//
 	function setLayout() {
 if(verbose){console.time("layout");}
