@@ -1095,12 +1095,10 @@
 	function updateColor() {
 		if(verbose){console.time("updateColor");}
 		rank = ranks.indexOf(config.options.rank) //selected rank
+		if(config.treemap.display) { setColorMap(rank); }
+		if(config.table.display) {	setColorTable(rank); }
 		if(config.options.color=="rank") {
 			colorByRank(rank,root,root);
-		}
-		else {
-			if(config.treemap.display) { setColorMap(rank); }
-			if(config.table.display) {	setColorTable(rank); }
 		}
 		if(verbose){console.timeEnd("updateColor");}
 	}
@@ -1125,13 +1123,7 @@
 				return color(major.data.sample);
 			});
 		}
-		
-		// gray upper
-		if(config.options.upper=="gray") {
-			rects.filter(function(d){return rank>=d.data.index})
-				.style("fill","#888")
-		}
-if(verbose){console.timeEnd("setColorMap");}
+		if(verbose){console.timeEnd("setColorMap");}
 	}
 	
 	function setColorTable(rank) {
@@ -1183,11 +1175,6 @@ if(verbose){console.timeEnd("setColorMap");}
 
 		//root
 		d3.select(lines[0][0]).style("background-color","#888")
-		// gray upper
-		if(config.options.upper=="gray") {
-			lines.filter(function(d){return rank>=d.data.index})
-				.style("background-color","#888")
-		}
 		if(verbose){console.timeEnd("setColorTable");}
 	}
 
@@ -1223,6 +1210,16 @@ if(verbose){console.timeEnd("setColorMap");}
 						.style("background-color",color(n.children[i].name));
 				}
 				else  { //if(rankC==0 || rankC<r) //search deeper
+					if(config.options.upper=="gray") {
+						//rect
+						d3.selectAll(".mtm-view").selectAll("rect")
+						.data([n.children[i]],function(d){return "v"+d.id+"-"+d.data.sample;})
+						.style("fill","#888")
+						//tr
+						d3.selectAll(".mtm-view").selectAll("tr")
+							.data([n.children[i]],function(d){return "v"+d.id+"-"+d.data.sample;})
+							.style("background-color","#888");
+					}
 					colorByRank(r,p,n.children[i]);
 				}
 			}//end foreach
