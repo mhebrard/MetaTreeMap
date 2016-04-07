@@ -562,6 +562,7 @@
 				//action
 				d3.selectAll(".mtm-bg").attr("fill",config.options.background)
 				d3.selectAll(".mtm-header rect").style("stroke",config.options.background)
+				d3.selectAll(".mtm-view rect").style("stroke",config.options.background)
 				d3.select("#mtm-table").style("background-color",config.options.background)
 			});
 			
@@ -783,7 +784,7 @@
 		svg.append("rect")
 			.attr("width","100%")
 			.attr("height","100%")
-			.attr("fill","#000")
+			.attr("fill",function(){return config.options.background;})
 			.attr("class","mtm-bg")
 		
 		//group for visual elements
@@ -792,11 +793,40 @@
 			.classed("mtm-view",true)
 		
 		//visual elements
+		if(config.treemap.border) {
+			//ancestor
+			var ancestor = d3layout.nodes().filter(function(d) { return d.children && d.parent; })
+			view.datum(root).selectAll(".ancestor")
+				.data(ancestor)
+				.enter().append("rect")
+				.attr("class",function(d){ return "ancestor v"+d.id+"-"+d.data.sample;},true)
+				.style("stroke",function(){return config.options.background;})
+				.on("click", function(d) {
+					if(touched=="") {//mouse click or 2nd touch
+						highlight(d,false);
+						tip("hide",d);
+						zoomSkip(d);
+					}
+				})
+				.on('mouseover', function(d){
+						highlight(d,true);
+						tip("show",d);
+					})
+				.on('mouseout', function(d){
+						highlight(d,false);
+						tip("hide",d);
+					})
+				.on("mousemove", function(d) { tip("move"); })
+				.on("touchstart", handleTouch)
+		}
+
+		//leaves
 		var leaves = d3layout.nodes().filter(function(d) { return !d.children; })
-		view.datum(root).selectAll("rect")
+		view.datum(root).selectAll("leaf")
 			.data(leaves)
 			.enter().append("rect")
-			.attr("class",function(d){ return "v"+d.id+"-"+d.data.sample;},true)
+			.attr("class",function(d){ return "leaf v"+d.id+"-"+d.data.sample;},true)
+			.style("stroke",function(){return config.options.background;})
 			.on("click", function(d) {
 				if(touched=="") {//mouse click or 2nd touch
 					highlight(d,false);
@@ -832,7 +862,7 @@
 			.attr("y", -20) //child of root g, moved on margin.top
 			.attr("width", c.width - 1)
 			.attr("height", 20-1) //border-bottom
-			.style("fill","#888").style("stroke","black")
+			.style("fill","#888").style("stroke",function(){return config.options.background;})
 			.on('mouseover', function(d){ tip("show",d); })
 			.on('mouseout', function(d){ tip("hide",d); })
 			.on("touchstart", handleTouch)
@@ -871,7 +901,7 @@
 				.style("height", c.height)
 				.attr("width", c.width)
 				.style("overflow","auto")
-				.style("background-color","#000")
+				.style("background-color",function(){return config.options.background;})
 				.style("display","inline-block")
 				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")
 				.style("font-size","14px")
@@ -1044,7 +1074,7 @@
 		}
 		//else if(config.options.color=="rank") {}//Manage by colorByRank()
 		else {//default (config.options.color=="taxon")
-			rects.style("fill",function(d){return color(d.parent.name);})
+			rects.style("fill",function(d){return d.children ? color(d.name) : color(d.parent.name);})
 		}
 		if(verbose){console.timeEnd("setColorMap");}
 	}
