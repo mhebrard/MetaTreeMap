@@ -339,6 +339,7 @@
 	}
 	
 	function computeLayout() {
+		console.log("border",config.treemap.border);
 		if(config.treemap.display) {
 			h = config.treemap.height - 20;  //margin top
 			w = config.treemap.width - 1; //margin left
@@ -662,6 +663,12 @@
 				row.append("td").text("height")
 				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_height").style("width","64px").on("change",function(){return configChange(this);})
 				e.attr("value",config[i].height)
+			}
+			if(config[i].hasOwnProperty("border")) {
+				var row = part.append("tr")
+				row.append("td").text("border")
+				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_border").on("change",function(){return configChange(this);})
+				if(config[i].border) {e.property("checked",true)}
 			}
 			if(config[i].hasOwnProperty("options")) {
 				var row = part.append("tr")
