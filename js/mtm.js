@@ -339,7 +339,7 @@
 	}
 	
 	function computeLayout() {
-		console.log("border",config.treemap.border);
+		//console.log("border",config.treemap.border);
 		if(config.treemap.display) {
 			h = config.treemap.height - 20;  //margin top
 			w = config.treemap.width - 1; //margin left
@@ -350,6 +350,7 @@
 			.size([w, h]) //size of map
 			.round(false) //round the value (for scale)
 			.sticky(true) //keep child position when transform
+			.padding(function(){return config.treemap.border ? 2 : 0;})
 			.value(setMode(config.options.mode))
 		var nodes = d3layout.nodes(root)
 
