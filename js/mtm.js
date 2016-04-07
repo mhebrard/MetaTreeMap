@@ -433,13 +433,6 @@
 			.value(setMode(config.options.mode))
 		var nodes = d3layout.nodes(root)
 
-		//compute index
-		d3layout.nodes().map(function(n){
-			var idx = n.children ? ranks.indexOf(n.data.rank) : ranks.indexOf(n.data.rank)+1;
-			n.data.index=Math.max(n.depth,idx); return n;
-		})
-		console.log(root);
-		
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
@@ -1010,7 +1003,9 @@
 			.style("text-overflow","ellipsis")
 			.style("cursor","pointer")
 			.append("span")
-				.style("padding-left",function(d){return (+d.data.index*4)+"px";})
+				.style("padding-left",function(d){//max(depth,rank)
+					return (+Math.max(d.depth,(d.children ? ranks.indexOf(d.data.rank) : ranks.indexOf(d.data.rank)+1))*4)+"px";
+				})
 				.html(function(d){return "<span class='fa'>&nbsp;</span>";})
 				.append("span")
 					.on("click", function(d){  
@@ -1097,7 +1092,7 @@
 		rank = ranks.indexOf(config.options.rank) //selected rank
 		if(config.treemap.display) { setColorMap(rank); }
 		if(config.table.display) {	setColorTable(rank); }
-		if(config.options.color=="rank") {
+		if(config.options.color=="rank" && rank!=-1) {
 			colorByRank(rank,root,root);
 		}
 		if(verbose){console.timeEnd("updateColor");}
@@ -1106,13 +1101,7 @@
 	function setColorMap(rank) {
 		if(verbose){console.time("setColorMap");}
 		var rects = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
-		if(config.options.color=="taxon") {
-			rects.style("fill",function(d){return color(d.parent.name);})
-		}
-		else if(config.options.color=="sample") {
-			rects.style("fill",function(d){return color(d.data.sample);})
-		}
-		else { //if(group=="max")
+		if(config.options.color=="max") {
 			rects.style("fill",function(d){
 				var major = d;
 				for (var i in d.parent.children) {
@@ -1123,6 +1112,13 @@
 				return color(major.data.sample);
 			});
 		}
+		else if(config.options.color=="sample") {
+			rects.style("fill",function(d){return color(d.data.sample);})
+		}
+		//else if(config.options.color=="rank") {}//Manage by colorByRank()
+		else {//default (config.options.color=="taxon")
+			rects.style("fill",function(d){return color(d.parent.name);})
+		}
 		if(verbose){console.timeEnd("setColorMap");}
 	}
 	
@@ -1131,26 +1127,7 @@
 		var pcol,phits; //previous color and sum
 		var lines = d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
 		var subs = []; //list of descendant.
-		if(config.options.color=="taxon") {
-			// bottom > up
-			for (var i=lines[0].length;i>0;i--){
-				d3.select(lines[0][i]).style("background-color",function(d){
-					if(!d.children) {
-						phits=d.data.hits;
-						pcol=color(d.parent.name);				
-					}
-					else if(d.data.hits!=phits) {
-						pcol=color(d.name);
-						phits=d.data.hits;	
-					}
-					return pcol;
-				});
-			}//end bottom > up					
-		}
-		else if(config.options.color=="sample"){
-			lines.style("background-color",function(d){ return color(d.data.sample); })
-		}
-		else { // if(group=="max"){
+		if(config.options.color=="max") {
 			//leaves
 			lines.filter(function(d){return !d.children;}).style("background-color",function(d){ 
 				var major = d;
@@ -1172,7 +1149,26 @@
 				return color(major.data.sample);
 			})
 		}
-
+		else if(config.options.color=="sample"){
+			lines.style("background-color",function(d){ return color(d.data.sample); })
+		}
+		//else if(config.options.color=="rank") {}//Manage by colorByRank()
+		else { //default if(config.options.color=="taxon") {
+			// bottom > up
+			for (var i=lines[0].length;i>0;i--){
+				d3.select(lines[0][i]).style("background-color",function(d){
+					if(!d.children) {
+						phits=d.data.hits;
+						pcol=color(d.parent.name);				
+					}
+					else if(d.data.hits!=phits) {
+						pcol=color(d.name);
+						phits=d.data.hits;	
+					}
+					return pcol;
+				});
+			}//end bottom > up					
+		}
 		//root
 		d3.select(lines[0][0]).style("background-color","#888")
 		if(verbose){console.timeEnd("setColorTable");}
@@ -1250,10 +1246,8 @@
 		
 		//select
 		var labelled;
-		if(config.options.label=="rank") { //show selected group || upper leaves
-			labelled=d3layout.nodes(root).filter(function(d){
-				return (rank == +d.data.index-1) || (!d.children && rank > +d.data.index)
-			})
+		if(config.options.label=="rank" && rank!=-1) { //show selected group || upper leaves
+			labelled=labeledByRank(rank,root,root);
 		}
 		else { //label for each tags
 			labelled=d3layout.nodes(root).filter(function(d){return !d.children;})
@@ -1292,21 +1286,46 @@
 		if(verbose){console.timeEnd("setLabelMap");}
 	}
 
+	function labeledByRank(r,p,n){
+		//r is the rank we need
+		//p is root
+		//n is the current node. Test on n.children
+		var l=[];
+		if(n.children && n.children.length>0) {
+			for (var i in n.children) {
+				var rankC=ranks.indexOf(n.children[i].data.rank);
+
+				if(rankC>=r) { //missing rank
+					l.push(n.children[i]);
+	
+				}
+				else  { //if(rankC==0 || rankC<r) //search deeper
+					l=l.concat(labeledByRank(r,p,n.children[i]));
+				}
+			}//end foreach
+		}//end children
+		else {
+			if(ranks.indexOf(n.data.rank)<r) { l.push(n); } 
+		}
+		return l;
+	}
+
 	function setLabelTable(rank) {
 		if(verbose){console.time("setLabelTable");}
 		var lines = d3.select("#mtm-table").select(".mtm-labels").selectAll("tr")
 		if(config.options.label=="rank" && rank!=-1){
+			var list = collapseByRank(rank,root,root);
+			//hide lower
+			lines.data(list[2],function(d){return "v"+d.id+"-"+d.data.sample;})
+				.style("display","none")
 			//collapse rank
-			lines.filter(function(d){return rank == +d.data.index-1;})
+			lines.data(list[0],function(d){return "v"+d.id+"-"+d.data.sample;})
 				.style("display","table-row")
 				.select(".fa").attr("class","fa fa-plus-square-o")
 			//expand upper
-			lines.filter(function(d){return rank>=+d.data.index;})
+			lines.data(list[1],function(d){return "v"+d.id+"-"+d.data.sample;})
 				.style("display","table-row")
 				.select(".fa").attr("class","fa fa-minus-square-o")
-			//hide lower
-			lines.filter(function(d){return rank<+d.data.index-1;})
-				.style("display","none")
 		}
 		else { //expand all
 			lines.style("display","table-row")
@@ -1316,6 +1335,34 @@
 		lines.filter(function(d){return !d.children;})
 			.select(".fa").attr("class","fa fa-square-o")
 		if(verbose){console.timeEnd("setLabelTable");}
+	}
+
+	function collapseByRank(r,p,n){
+		//r is the rank we need
+		//p is root
+		//n is the current node. Test on n.children
+		var list=[[],[],[]];//collapse,expand,hide
+		if(n.children && n.children.length>0) {
+			for (var i in n.children) {
+				var rankC=ranks.indexOf(n.children[i].data.rank);
+				if(rankC>=r) { //match or missing rank 
+					//hide lower
+					list[2]=list[2].concat(getSubtree(n.children[i],[]));
+					//collapse current
+					list[0].push(n.children[i]);
+				}
+				else  { //if(rankC==0 || rankC<r) //search deeper
+					//expand upper
+					list[1].push(n.children[i]);
+					//search deeper
+					subList=collapseByRank(r,p,n.children[i]);
+					list[0]=list[0].concat(subList[0]);
+					list[1]=list[1].concat(subList[1]);
+					list[2]=list[2].concat(subList[2]);
+				}
+			}//end foreach
+		}//end children
+		return list;
 	}
 	
 	function highlight(n,toggle) {
