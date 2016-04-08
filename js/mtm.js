@@ -746,6 +746,14 @@
 				e.append("option").attr("value","nodes").text("nodes")
 				e.node().value=config[i].mode;
 			}
+			if(config[i].hasOwnProperty("zoom")) {
+				var row = part.append("tr")
+				row.append("td").text("zoom")
+				var e = row.append("td").append("select").attr("id",i+"_zoom").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","sticky").text("sticky")
+				e.append("option").attr("value","fluid").text("fluid")
+				e.node().value=config[i].zoom;
+			}
 			if(config[i].hasOwnProperty("pattern")) {
 				var row = part.append("tr")
 				row.append("td").text("pattern")
