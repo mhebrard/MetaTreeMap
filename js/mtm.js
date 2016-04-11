@@ -33,7 +33,7 @@
 	mtm.load = function(files,conf) {
 		if(verbose){console.time("load");}
 		//root init.
-		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"index":0},"id":"1"}; //skeleton tree
+		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"index":0,"color":"#888"},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
 		bobjs = [root]; //list of node -object-
 		
@@ -268,15 +268,27 @@
 	}
 
 	function sumHits(n,h) {
+		n.data.count = h.map(function(m) {return 0;});
 		//recursive call
 		if (n.children.length>0) {
 			for (var i in n.children) {
-				var hits=sumHits(n.children[i],h);
+				var count = sumHits(n.children[i],h);
+				//n.data.hits=+n.data.hits+count[0];
+				//n.data.percent=+n.data.hits*100/h[n.data.sample];
+				for(var j in count) {
+					n.data.count[j]+=count[j];
+				}
+				/*var hits=sumHits(n.children[i],h);
 				n.data.hits=+n.data.hits+hits;
 				n.data.percent=+n.data.hits*100/h[n.data.sample];
+				*/
 			}
 		}
-		return n.data.hits;
+			n.data.count[n.data.sample]+=n.data.hits;
+			n.data.hits = n.data.count.reduce(function(t,c){return t+c;},0);
+			n.data.percent=+n.data.hits*100/h[n.data.sample];
+		//return n.data.hits;
+		return n.data.count;
 	}
 
 	//VIEW CREATION//
@@ -334,6 +346,8 @@
 		zoom(node);
 		updateColor();
 		updateLabel();
+
+		console.log(root);
 		
 		if(verbose){console.timeEnd("layout");}
 	}
@@ -1090,88 +1104,44 @@
 	function updateColor() {
 		if(verbose){console.time("updateColor");}
 		rank = ranks.indexOf(config.options.rank) //selected rank
-		if(config.treemap.display) { setColorMap(rank); }
-		if(config.table.display) {	setColorTable(rank); }
+		var getColor;
+		//color by rank : top-down
 		if(config.options.color=="rank" && rank!=-1) {
 			colorByRank(rank,root,root);
+			getColor = function(d){return d.data.color;}
 		}
-		if(verbose){console.timeEnd("updateColor");}
-	}
-
-	function setColorMap(rank) {
-		if(verbose){console.time("setColorMap");}
-		var rects = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
-		if(config.options.color=="max") {
-			rects.style("fill",function(d){
-				var major = d;
-				for (var i in d.parent.children) {
-					if(!d.parent.children[i].children) {
-						major= d.parent.children[i].data.hits> major.data.hits ? d.parent.children[i] : major;
-					}
-				}
-				return color(major.data.sample);
-			});
+		//set color
+		else if(config.options.color=="max") { //colorByMajority
+			getColor = function(d) {
+				d.data.color = color(d.data.count.indexOf(Math.max(...d.data.count)));
+				return d.data.color;
+			}
 		}
 		else if(config.options.color=="sample") {
-			rects.style("fill",function(d){return color(d.data.sample);})
+			getColor = function(d) {
+				d.data.color = color(d.data.sample);
+				return d.data.color;
+			}
 		}
-		//else if(config.options.color=="rank") {}//Manage by colorByRank()
 		else {//default (config.options.color=="taxon")
-			rects.style("fill",function(d){return d.children ? color(d.name) : color(d.parent.name);})
+			getColor = function(d) {
+				d.data.color = d.children ? color(d.name) : color(d.parent.name);
+				return d.data.color;
+			}
 		}
-		if(verbose){console.timeEnd("setColorMap");}
-	}
-	
-	function setColorTable(rank) {
-		if(verbose){console.time("setColorTable");}
-		var pcol,phits; //previous color and sum
-		var lines = d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
-		var subs = []; //list of descendant.
-		if(config.options.color=="max") {
-			//leaves
-			lines.filter(function(d){return !d.children;}).style("background-color",function(d){ 
-				var major = d;
-				for (var i in d.parent.children) {
-					if(!d.parent.children[i].children) {
-						major= d.parent.children[i].data.hits> major.data.hits ? d.parent.children[i] : major;
-					}
-				}
-				return color(major.data.sample);
-			})
-			//nodes
-			lines.filter(function(d){return d.children;}).style("background-color",function(d){ 
-				var major = {data:{hits:0,sample:0}}; //d.children[0];
-				for (var i in d.children) {
-					if(!d.children[i].children) {
-						major= d.children[i].data.hits> major.data.hits ? d.children[i] : major;
-					}
-				}
-				return color(major.data.sample);
-			})
+		//Affect color
+		if(config.treemap.display) { //call treemap + affect
+			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
+				.style("fill",function(d){return getColor(d);})
+			if(config.table.display) { //affect table
+				d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
+					.style("background-color",function(d){ return d.data.color;})
+			}
 		}
-		else if(config.options.color=="sample"){
-			lines.style("background-color",function(d){ return color(d.data.sample); })
+		else if(config.table.display) { //call table + affect
+			d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
+				.style("background-color",function(d){ return getColor(d); })
 		}
-		//else if(config.options.color=="rank") {}//Manage by colorByRank()
-		else { //default if(config.options.color=="taxon") {
-			// bottom > up
-			for (var i=lines[0].length;i>0;i--){
-				d3.select(lines[0][i]).style("background-color",function(d){
-					if(!d.children) {
-						phits=d.data.hits;
-						pcol=color(d.parent.name);				
-					}
-					else if(d.data.hits!=phits) {
-						pcol=color(d.name);
-						phits=d.data.hits;	
-					}
-					return pcol;
-				});
-			}//end bottom > up					
-		}
-		//root
-		d3.select(lines[0][0]).style("background-color","#888")
-		if(verbose){console.timeEnd("setColorTable");}
 	}
 
 	function colorByRank(r,p,n){
@@ -1184,38 +1154,20 @@
 				var rankC=ranks.indexOf(n.children[i].data.rank);
 
 				if(rankC>r) { //missing rank
-					var subnodes = getSubtree(n.children[i],[])
-					//rect
-					d3.selectAll(".mtm-view").selectAll("rect")
-						.data(subnodes,function(d){return "v"+d.id+d.data.sample;})
-						.style("fill",color("sub"+n.name));
-					//tr
-					d3.selectAll(".mtm-view").selectAll("tr")
-						.data(subnodes,function(d){return "v"+d.id+d.data.sample;})
-						.style("background-color",color("sub"+n.name));
+					getSubtree(n.children[i],[]).forEach(function(d) {
+						d.data.color = color("sub"+n.name);
+					})
 				}
 				else if(rankC==r) { //color node + subtree
-					var subnodes = getSubtree(n.children[i],[])
-					//rect
-					d3.selectAll(".mtm-view").selectAll("rect")
-						.data(subnodes,function(d){return "v"+d.id+d.data.sample;})
-						.style("fill",color(n.children[i].name))
-					//tr
-					d3.selectAll(".mtm-view").selectAll("tr")
-						.data(subnodes,function(d){return "v"+d.id+d.data.sample;})
-						.style("background-color",color(n.children[i].name));
+					getSubtree(n.children[i],[]).forEach(function(d) {
+						d.data.color = color(n.children[i].name);
+					})
 				}
 				else  { //if(rankC==0 || rankC<r) //search deeper
 					if(config.options.upper=="gray") {
-						//rect
-						d3.selectAll(".mtm-view").selectAll("rect")
-						.data([n.children[i]],function(d){return "v"+d.id+d.data.sample;})
-						.style("fill","#888")
-						//tr
-						d3.selectAll(".mtm-view").selectAll("tr")
-							.data([n.children[i]],function(d){return "v"+d.id+d.data.sample;})
-							.style("background-color","#888");
+						n.children[i].data.color = "#888";
 					}
+					else {n.children[i].data.color = n.children[i].children ? color(n.children[i].name) : color(n.name);} //taxon
 					colorByRank(r,p,n.children[i]);
 				}
 			}//end foreach
@@ -1330,7 +1282,14 @@
 	function highlight(n,toggle) {
 		if(toggle) {
 			var kx = w / node.dx, ky = h / node.dy;
-			d3.selectAll(".v"+n.id+n.data.sample).style("opacity",".7")
+			//d3.selectAll(".v"+n.id+n.data.sample).style("opacity",".7")
+			d3.selectAll("rect.v"+n.id+n.data.sample).style("fill",function(d){
+				return d3.hsl(d.data.color).darker(1);
+			})
+			d3.selectAll("tr.v"+n.id+n.data.sample).style("background-color",function(d){
+				return d3.hsl(d.data.color).darker(1);
+			})
+
 			if(d3layout.nodes().indexOf(n)>0) {//hl treemap
 				if(n.data.sample==0) {
 					d3.selectAll(".mtm-hl")
@@ -1349,7 +1308,13 @@
 			}
 		}
 		else { //mouseout
-			d3.selectAll(".v"+n.id+n.data.sample).style("opacity","1")
+			//d3.selectAll(".v"+n.id+n.data.sample).style("opacity","1")
+			d3.selectAll("rect.v"+n.id+n.data.sample).style("fill",function(d){
+				return d3.hsl(d.data.color);
+			})
+			d3.selectAll("tr.v"+n.id+n.data.sample).style("background-color",function(d){
+				return d3.hsl(d.data.color);
+			})
 			d3.selectAll(".mtm-hl")
 				.attr("x",0) 
 				.attr("y",0)
@@ -1425,8 +1390,8 @@
 			
 			//In zoom fluid, need to affect color to new rect, not in zoom stiky
 			if(config.options.zoom=="fluid") { //Update color for new rect
-				rank = ranks.indexOf(config.options.rank) 
-				setColorMap(rank);
+				d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
+					.style("fill",function(d){return d.data.color;})
 			}
 
 			positionRects(n); //set x,y,w,h of rects
