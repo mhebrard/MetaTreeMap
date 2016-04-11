@@ -311,7 +311,7 @@
 		d3.select("body").append("div").attr("id","mtm-canvas").style("display","none")
 
 		//build d3.layout
-		computeLayout();
+		computeLayout(root);
 		//sort nodes for search
 		sorted = d3layout.nodes().slice(0); //clone
 		sorted.sort(function(a,b) { return a.name.length<b.name.length ? -1 : a.name.length>b.name.length ? 1 : a.name<b.name ? -1 : a.name>b.name ? 1 : 0  ; });
@@ -331,14 +331,14 @@
 		}
 
 		//update
+		zoom(node);
 		updateColor();
 		updateLabel();
-		zoom(node);
-
+		
 		if(verbose){console.timeEnd("layout");}
 	}
 	
-	function computeLayout() {
+	function computeLayout(n) {
 		//console.log("border",config.treemap.border);
 		if(config.treemap.display) {
 			h = config.treemap.height - 20;  //margin top
@@ -352,7 +352,7 @@
 			.sticky(true) //keep child position when transform
 			.padding(function(){return config.treemap.border ? 2 : 0;})
 			.value(setMode(config.options.mode))
-		var nodes = d3layout.nodes(root)
+		var nodes = d3layout.nodes(n)
 
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
@@ -746,6 +746,14 @@
 				e.append("option").attr("value","nodes").text("nodes")
 				e.node().value=config[i].mode;
 			}
+			if(config[i].hasOwnProperty("zoom")) {
+				var row = part.append("tr")
+				row.append("td").text("zoom")
+				var e = row.append("td").append("select").attr("id",i+"_zoom").style("width","70px").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","sticky").text("sticky")
+				e.append("option").attr("value","fluid").text("fluid")
+				e.node().value=config[i].zoom;
+			}
 			if(config[i].hasOwnProperty("pattern")) {
 				var row = part.append("tr")
 				row.append("td").text("pattern")
@@ -788,64 +796,10 @@
 			.attr("class","mtm-bg")
 		
 		//group for visual elements
-		var view = svg.append("g")
+		svg.append("g")
 			.attr("transform", "translate(1,20)") //margin left, top
 			.classed("mtm-view",true)
-		
-		//visual elements
-		if(config.treemap.border) {
-			//ancestor
-			var ancestor = d3layout.nodes().filter(function(d) { return d.children && d.parent; })
-			view.datum(root).selectAll(".ancestor")
-				.data(ancestor)
-				.enter().append("rect")
-				.attr("class",function(d){ return "ancestor v"+d.id+"-"+d.data.sample;},true)
-				.style("stroke",function(){return config.options.background;})
-				.on("click", function(d) {
-					if(touched=="") {//mouse click or 2nd touch
-						highlight(d,false);
-						tip("hide",d);
-						zoomSkip(d);
-					}
-				})
-				.on('mouseover', function(d){
-						highlight(d,true);
-						tip("show",d);
-					})
-				.on('mouseout', function(d){
-						highlight(d,false);
-						tip("hide",d);
-					})
-				.on("mousemove", function(d) { tip("move"); })
-				.on("touchstart", handleTouch)
-		}
 
-		//leaves
-		var leaves = d3layout.nodes().filter(function(d) { return !d.children; })
-		view.datum(root).selectAll("leaf")
-			.data(leaves)
-			.enter().append("rect")
-			.attr("class",function(d){ return "leaf v"+d.id+"-"+d.data.sample;},true)
-			.style("stroke",function(){return config.options.background;})
-			.on("click", function(d) {
-				if(touched=="") {//mouse click or 2nd touch
-					highlight(d,false);
-					tip("hide",d);
-					zoomSkip(d);
-				}
-			})
-			.on('mouseover', function(d){
-					highlight(d,true);
-					tip("show",d);
-				})
-			.on('mouseout', function(d){
-					highlight(d,false);
-					tip("hide",d);
-				})
-			.on("mousemove", function(d) { tip("move"); })
-			.on("touchstart", handleTouch)
-			
-			
 		//group for labels//
 		svg.append("g")
 			.attr("transform", "translate(1,20)") //margin left, top
@@ -858,15 +812,15 @@
 			.classed("mtm-header",true)
 		//create visual element rect
 		header.append("rect")
-			.datum(node)
+			//.datum(node)
 			.attr("y", -20) //child of root g, moved on margin.top
 			.attr("width", c.width - 1)
 			.attr("height", 20-1) //border-bottom
 			.style("fill","#888").style("stroke",function(){return config.options.background;})
-			.on('mouseover', function(d){ tip("show",d); })
-			.on('mouseout', function(d){ tip("hide",d); })
-			.on("touchstart", handleTouch)
-			.on("mousemove", function(d) { tip("move"); })
+			//.on('mouseover', function(d){ tip("show",d); })
+			//.on('mouseout', function(d){ tip("hide",d); })
+			//.on("touchstart", handleTouch)
+			//.on("mousemove", function(d) { tip("move"); })
 		//create text element
 		header.append("text")
 			.attr("x", 6)
@@ -874,7 +828,7 @@
 			.attr("dy", ".75em")
 			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")
 			.text("Please load json file")
-
+		
 		//rect for highlight//
 		svg.append("rect")
 			.classed("mtm-hl",true)
@@ -940,7 +894,7 @@
 		
 		//create tr and td
 		view.selectAll("tr").data(nodes).enter().append("tr")
-				.attr("class",function(d){return "v"+d.id+"-"+d.data.sample;})
+				.attr("class",function(d){return "v"+d.id+d.data.sample;})
 				.on("mouseover",function(d) { 
 					highlight(d,true);
 					tip("show",d);
@@ -967,7 +921,7 @@
 				.append("span")
 					.on("click", function(d){  
 						highlight(d,false);
-						return zoomSkip(d);
+						return zoom(d);
 					})
 					.text(function(d){return d.name;})
 		//fill id
@@ -1044,6 +998,95 @@
 	function handleTouch(d) { touched==d ? touched="": touched=d; }
 	
 	//VIEW UPDATE//
+	function updateRects() {
+		//select
+		var displayed;
+		if(config.treemap.border) { //ancestor + leaves
+			displayed=d3layout.nodes().filter(function(d) {return d.parent;})
+		}
+		else { // leaves
+			displayed=d3layout.nodes(root).filter(function(d){return !d.children;})
+		}
+
+		//rect
+		var sel = d3.select("#mtm-treemap").select(".mtm-view")
+			.selectAll("rect").data(displayed,function(d){return d.id+d.data.sample;});
+		//create new
+		sel.enter().insert("rect")
+			.attr("class",function(d){ return "v"+d.id+d.data.sample;})
+			.style("stroke",function(){return config.options.background;})
+			.attr("transform","translate(0,0)")
+			.attr("width", 0)
+			.attr("height", 0)
+			.on("click", function(d) {
+				if(touched=="") {//mouse click or 2nd touch
+					highlight(d,false);
+					tip("hide",d);
+					zoomSkip(d);
+				}
+			})
+			.on('mouseover', function(d){
+					highlight(d,true);
+					tip("show",d);
+				})
+			.on('mouseout', function(d){
+					highlight(d,false);
+					tip("hide",d);
+				})
+			.on("mousemove", function(d) { tip("move"); })
+			.on("touchstart", handleTouch)
+		//delete
+		sel.exit().remove()
+	}
+
+	function updatePaths() {
+		//select
+		var labelled;
+		if(config.options.label=="rank" && rank!=-1) { //show selected group || upper leaves
+			labelled=labeledByRank(rank,root,root);
+		}
+		else { //label for each tags
+			labelled=d3layout.nodes(root).filter(function(d){return !d.children;})
+		}
+		
+		//guides
+		var sel = d3.select("#mtm-treemap").select(".mtm-labels")
+			.selectAll("path").data(labelled,function(d){return d.id+d.data.sample;});
+			//create new
+			sel.enter().append("path")
+				.attr("id",function(d){return "map"+d.id+d.data.sample;})
+				.attr("d","M0,0L0,0")
+				.style("opacity",0)
+				.style("pointer-events","none")
+			//delete
+			sel.exit().remove()
+		
+		//text
+		var sel = d3.select("#mtm-treemap").select(".mtm-labels")
+			.selectAll("text").data(labelled,function(d){return d.id+d.data.sample;});
+			//create new
+			sel.enter().append("text")
+				.attr("text-anchor", "left")
+				.attr("dy","0.5ex")
+				.style("pointer-events","none")
+				.append("textPath")
+				.attr("xlink:href",function(d){return "#map"+d.id+d.data.sample;})
+				.html(function(d){
+					var tag = config.options.pattern;
+					//replace
+					tag = tag.replace(/#N/g,d.name);
+					tag = tag.replace(/#I/g,d.id);
+					tag = tag.replace(/#H/g,d.data.hits);
+					tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
+					tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
+					tag = tag.replace(/#R/g,d.data.rank);
+					tag = tag.replace(/#S/g,d.data.sample);
+					return tag;
+				})
+			//delete
+			sel.exit().remove();
+	}
+
 	function updateColor() {
 		if(verbose){console.time("updateColor");}
 		rank = ranks.indexOf(config.options.rank) //selected rank
@@ -1144,33 +1187,33 @@
 					var subnodes = getSubtree(n.children[i],[])
 					//rect
 					d3.selectAll(".mtm-view").selectAll("rect")
-						.data(subnodes,function(d){return "v"+d.id+"-"+d.data.sample;})
+						.data(subnodes,function(d){return "v"+d.id+d.data.sample;})
 						.style("fill",color("sub"+n.name));
 					//tr
 					d3.selectAll(".mtm-view").selectAll("tr")
-						.data(subnodes,function(d){return "v"+d.id+"-"+d.data.sample;})
+						.data(subnodes,function(d){return "v"+d.id+d.data.sample;})
 						.style("background-color",color("sub"+n.name));
 				}
 				else if(rankC==r) { //color node + subtree
 					var subnodes = getSubtree(n.children[i],[])
 					//rect
 					d3.selectAll(".mtm-view").selectAll("rect")
-						.data(subnodes,function(d){return "v"+d.id+"-"+d.data.sample;})
+						.data(subnodes,function(d){return "v"+d.id+d.data.sample;})
 						.style("fill",color(n.children[i].name))
 					//tr
 					d3.selectAll(".mtm-view").selectAll("tr")
-						.data(subnodes,function(d){return "v"+d.id+"-"+d.data.sample;})
+						.data(subnodes,function(d){return "v"+d.id+d.data.sample;})
 						.style("background-color",color(n.children[i].name));
 				}
 				else  { //if(rankC==0 || rankC<r) //search deeper
 					if(config.options.upper=="gray") {
 						//rect
 						d3.selectAll(".mtm-view").selectAll("rect")
-						.data([n.children[i]],function(d){return "v"+d.id+"-"+d.data.sample;})
+						.data([n.children[i]],function(d){return "v"+d.id+d.data.sample;})
 						.style("fill","#888")
 						//tr
 						d3.selectAll(".mtm-view").selectAll("tr")
-							.data([n.children[i]],function(d){return "v"+d.id+"-"+d.data.sample;})
+							.data([n.children[i]],function(d){return "v"+d.id+d.data.sample;})
 							.style("background-color","#888");
 					}
 					colorByRank(r,p,n.children[i]);
@@ -1199,47 +1242,9 @@
 	function setLabelMap(rank) {
 		if(verbose){console.time("setLabelMap");}
 		//delete previous labels
-		var labels = d3.select("#mtm-treemap").select(".mtm-labels").html("")
+		//var labels = d3.select("#mtm-treemap").select(".mtm-labels").html("")
 		
-		//select
-		var labelled;
-		if(config.options.label=="rank" && rank!=-1) { //show selected group || upper leaves
-			labelled=labeledByRank(rank,root,root);
-		}
-		else { //label for each tags
-			labelled=d3layout.nodes(root).filter(function(d){return !d.children;})
-		}
-		
-		//guides
-		labels.selectAll("path")
-			.data(labelled)
-			.enter().append("path")
-				.attr("id",function(d){return "map"+d.id+d.data.sample;})
-				.style("opacity",0)
-				.style("pointer-events","none")
-		
-		//text
-		labels.selectAll("text")
-			.data(labelled)
-			.enter().append("text")
-				//.attr("class",function(d){return "t"+d.id;})
-				.attr("text-anchor", "left")
-				.attr("dy","0.5ex")
-				.style("pointer-events","none")
-				.append("textPath")
-				.attr("xlink:href",function(d){return "#map"+d.id+d.data.sample;})
-				.html(function(d){
-					var tag = config.options.pattern;
-					//replace
-					tag = tag.replace(/#N/g,d.name);
-					tag = tag.replace(/#I/g,d.id);
-					tag = tag.replace(/#H/g,d.data.hits);
-					tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
-					tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
-					tag = tag.replace(/#R/g,d.data.rank);
-					tag = tag.replace(/#S/g,d.data.sample);
-					return tag;
-				})
+		/////////////////////////////////////////////
 		if(verbose){console.timeEnd("setLabelMap");}
 	}
 
@@ -1273,14 +1278,14 @@
 		if(config.options.label=="rank" && rank!=-1){
 			var list = collapseByRank(rank,root,root);
 			//hide lower
-			lines.data(list[2],function(d){return "v"+d.id+"-"+d.data.sample;})
+			lines.data(list[2],function(d){return "v"+d.id+d.data.sample;})
 				.style("display","none")
 			//collapse rank
-			lines.data(list[0],function(d){return "v"+d.id+"-"+d.data.sample;})
+			lines.data(list[0],function(d){return "v"+d.id+d.data.sample;})
 				.style("display","table-row")
 				.select(".fa").attr("class","fa fa-plus-square-o")
 			//expand upper
-			lines.data(list[1],function(d){return "v"+d.id+"-"+d.data.sample;})
+			lines.data(list[1],function(d){return "v"+d.id+d.data.sample;})
 				.style("display","table-row")
 				.select(".fa").attr("class","fa fa-minus-square-o")
 		}
@@ -1324,24 +1329,27 @@
 	
 	function highlight(n,toggle) {
 		if(toggle) {
-			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity",".7")
-			if(n.data.sample==0) {
-				d3.selectAll(".mtm-hl")
-				.attr("x",x(n.x)+1+2) 
-				.attr("y",y(n.y)+20+2) //+header
-				.attr("width",(kx*n.dx)-5)
-				.attr("height",(ky*n.dy)-5)
-			}
-			else {
-				d3.selectAll(".mtm-hl")
-				.attr("x",x(n.parent.x)+1+2) 
-				.attr("y",y(n.parent.y)+20+2) //+header
-				.attr("width",(kx*n.parent.dx)-5)
-				.attr("height",(ky*n.parent.dy)-5)
+			var kx = w / node.dx, ky = h / node.dy;
+			d3.selectAll(".v"+n.id+n.data.sample).style("opacity",".7")
+			if(d3layout.nodes().indexOf(n)>0) {//hl treemap
+				if(n.data.sample==0) {
+					d3.selectAll(".mtm-hl")
+					.attr("x",x(n.x)+1+2) 
+					.attr("y",y(n.y)+20+2) //+header
+					.attr("width",(kx*n.dx)-5)
+					.attr("height",(ky*n.dy)-5)
+				}
+				else {
+					d3.selectAll(".mtm-hl")
+					.attr("x",x(n.parent.x)+1+2) 
+					.attr("y",y(n.parent.y)+20+2) //+header
+					.attr("width",(kx*n.parent.dx)-5)
+					.attr("height",(ky*n.parent.dy)-5)
+				}
 			}
 		}
 		else { //mouseout
-			d3.selectAll(".v"+n.id+"-"+n.data.sample).style("opacity","1")
+			d3.selectAll(".v"+n.id+n.data.sample).style("opacity","1")
 			d3.selectAll(".mtm-hl")
 				.attr("x",0) 
 				.attr("y",0)
@@ -1374,7 +1382,6 @@
 	}
 	
 	function zoom(n) {
-		if(verbose){console.time("zoom");}
 		//button root switch
 		if (n==root) {
 			d3.selectAll(".mtm-root").classed("mtm-on",true)
@@ -1384,94 +1391,48 @@
 			d3.selectAll(".mtm-root").classed("mtm-on",false)
 			d3.selectAll(".mtm-root").classed("mtm-off",true)
 		}
-		
 		//update header
 		d3.select("#mtm-treemap").select(".mtm-header")
 			.datum(n)
-			.on("click", function(d) { return zoomSkip(d); })
-			.on('touchstart', function(d) {
-					d3.event.preventDefault()
-					if(touched==d) { //second touch
-						touched="";		
+			.on("click", function(d) {
+					if(touched=="") {//mouse click or 2nd touch
+						highlight(d,false);
 						tip("hide",d);
-						return zoomSkip(d);
-					}
-					else { //first touched
-						if(touched!=""){ //opacity
-							d3.selectAll(".v"+touched.id+"-"+touched.data.sample).style("opacity","1");
-							highlight(touched,false)
-						}
-						touched=d;
-						tip("show",d);
+						zoomSkip(d);
 					}
 				})
+			.on('mouseover', function(d){
+				highlight(d,false);
+				tip("show",d);
+			})
+			.on('mouseout', function(d){
+				highlight(d,false);
+				tip("hide",d);
+			})
+			.on("mousemove", function(d) { tip("move"); })
+			.on("touchstart", handleTouch)
 			.select("text")
 				.text(function(d) { return d.name; })
-		
-		//update map	
+
+		//update map
 		if(config.treemap.display) {
-		if(verbose){console.time("zoomMap");}			
-			kx = w / n.dx, ky = h / n.dy;
-			x.domain([n.x, n.x + n.dx]);
-			y.domain([n.y, n.y + n.dy]);
-				
-			//all rect position and size
-			var rectTranslate = d3.svg.transform()
-				.translate(function(d) { return [x(d.x), y(d.y)] })
-				
-			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
-				.transition()
-				.duration(1500)
-				.attr("transform", rectTranslate)
-				.attr("width", function(d) { return kx * d.dx - 1; })
-				.attr("height", function(d) { return ky * d.dy - 1; })
-				
-			//subfunction for labels guide
-			function line(d) {
-				var ax,ay,bx,by;
-				//margin width and height
-				var mw=Math.round(config.options.font*0.6); //SourceCodePro
-				var mh=Math.round(config.options.font*1.3); //SourceCodePro 
-				//rect width and heigth
-				var rw=kx * d.dx - 1;
-				var rh=ky * d.dy - 1;
 
-				if(rw<rh) {//vertical
-					ax=x(d.x+(d.dx/2));
-					ay=y(d.y);
-					bx=ax;
-					by=y(d.y+d.dy);
-					//margin && min width
-					if(ay+mw<by-mw && rw>mh) { ay=ay+mw; by=by-mw;} 
-					else {by=ay;}
-				}
-				else { //horizontal
-					ax=x(d.x);
-					ay=y(d.y+(d.dy/2));
-					bx=x(d.x+d.dx);
-					by=ay;
-					//margin && min height
-					if(ax+mw<bx-mw && rh>mh) { ax=ax+mw; bx=bx-mw;}
-					else {bx=ax;}					
-				}
-				
-				var path = d3.svg.line()
-				.x(function(t) {return t[0];})
-				.y(function(t) {return t[1];})
-				.interpolate("linear");
-		
-				return path([[ax,ay],[bx,by]]);
-			}
+			if(config.options.zoom=="fluid") {computeLayout(n);}
+			//else (sticky) d3layout.nodes() never change
+
+			updateRects(); //Create rectangle elements
+			updatePaths(); //Create path and text element
 			
-			//labels positions
-			var labels = d3.select("#mtm-treemap").select(".mtm-labels")
-			labels.selectAll("path")
-				.transition().duration(1500)
-				.attr("d",function(d) {return line(d);})			
+			//In zoom fluid, need to affect color to new rect, not in zoom stiky
+			if(config.options.zoom=="fluid") { //Update color for new rect
+				rank = ranks.indexOf(config.options.rank) 
+				setColorMap(rank);
+			}
 
-			if(verbose){console.timeEnd("zoomMap");}
+			positionRects(n); //set x,y,w,h of rects
+			positionPaths(n); //set x1,y1,x2,y2 of paths
 		}
-		
+
 		//update table
 		if(config.table.display) {
 			if(verbose){console.time("zoomTable");}
@@ -1481,25 +1442,87 @@
 				.text("-")
 			
 			//set % of the subtree
-			//var hundread = n.data.hits; //100%	
 			d3.select("#mtm-table").select(".mtm-labels").selectAll("tr") //all lines
 				.data(getSubtree(n,[]),
-					function(d){return "t"+d.id+"-"+d.data.sample;}) //lines of subtree
+					function(d){return "t"+d.id+d.data.sample;}) //lines of subtree
 				.selectAll(".percent") //column of %
 				.text( //new text
 					function(d){return (d.value*100/n.value).toFixed(2)+"%";}
 				)
-
-			//map call updateLabel() else it is needed
-			if(!config.treemap.display) {updateLabel();} 
-			if(verbose){console.timeEnd("zoomTable");}
 		}
-		
-		//update current node
-		node = n;
-		if(verbose){console.timeEnd("zoom");}
+			//update current node
+			node = n;
 	}
+
+	function positionRects(n) {
+		x.domain([n.x, n.x + n.dx]);
+		y.domain([n.y, n.y + n.dy]);
+
+		var sel = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
+		sel.transition().duration(1500)
+			.attr("transform", function(d) {return "translate("+x(d.x)+","+y(d.y)+")";})
+
+		if(config.options.zoom=="sticky") {
+			var kx = w / n.dx, ky = h / n.dy;
+			sel.attr("width", function(d) { return kx * d.dx - 1; })
+				.attr("height", function(d) { return ky * d.dy - 1; })
+		}
+		else {//fluid
+			sel.attr("width", function(d) { return d.dx - 1; })
+				.attr("height", function(d) { return d.dy - 1; })
+		}
+	}
+
+	function positionPaths(n) {
+		//labels positions
+		var sel = d3.select("#mtm-treemap").select(".mtm-labels").selectAll("path")
+			.transition().duration(1500)
+
+		if(config.options.zoom=="sticky") {
+			var kx = w / n.dx, ky = h / n.dy;
+			sel.attr("d",function(d) {return line(d,kx,ky);})	
+		}
+		else { //fluid
+			sel.attr("d",function(d) {return line(d,1,1);})	
+		}
+
+		function line(d,kx,ky) {
+			var ax,ay,bx,by;
+			//margin width and height
+			var mw=Math.round(config.options.font*0.6); //SourceCodePro
+			var mh=Math.round(config.options.font*1.3); //SourceCodePro 
+			//rect width and heigth
+			var rw=kx * d.dx - 1;
+			var rh=ky * d.dy - 1;
+
+			if(rw<rh) {//vertical
+				ax=x(d.x+(d.dx/2));
+				ay=y(d.y);
+				bx=ax;
+				by=y(d.y+d.dy);
+				//margin && min width
+				if(ay+mw<by-mw && rw>mh) { ay=ay+mw; by=by-mw;} 
+				else {by=ay;}
+			}
+			else { //horizontal
+				ax=x(d.x);
+				ay=y(d.y+(d.dy/2));
+				bx=x(d.x+d.dx);
+				by=ay;
+				//margin && min height
+				if(ax+mw<bx-mw && rh>mh) { ax=ax+mw; bx=bx-mw;}
+				else {bx=ax;}					
+			}
+			
+			var path = d3.svg.line()
+			.x(function(t) {return t[0];})
+			.y(function(t) {return t[1];})
+			.interpolate("linear");
 	
+			return path([[ax,ay],[bx,by]]);
+		}
+	}
+
 	function getSubtree(n,ns) {
 		//get a list of all nodes in subtree of n, n included
 		if(n.children) {
@@ -1513,7 +1536,7 @@
 	}
 	
 	function toggle(d) {
-		var span = d3.select("#mtm-table").select(".v"+d.id+"-"+d.data.sample).select(".fa")
+		var span = d3.select("#mtm-table").select(".v"+d.id+d.data.sample).select(".fa")
 		if(span.classed("fa-minus-square-o")) {
 			span.attr("class","fa fa-plus-square-o");
 			//hide children 
@@ -1536,7 +1559,7 @@
 	
 	function hide(n) {
 		//hide current raw and recursive
-		d3.select("#mtm-table").selectAll(".v"+n.id+"-"+n.data.sample)
+		d3.select("#mtm-table").selectAll(".v"+n.id+n.data.sample)
 			.style("display","none")
 		//recursive call
 		if (n.children) {
@@ -1548,7 +1571,7 @@
 		
 	function show(n) {
 		//show current raw and recursive
-		var t = d3.select("#mtm-table").select(".v"+n.id+"-"+n.data.sample)
+		var t = d3.select("#mtm-table").select(".v"+n.id+n.data.sample)
 					.style("display","table-row")
 		if(t.select(".fa").classed("fa-minus-square-o") && n.children) {
 			for (var i in n.children) {
