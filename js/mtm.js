@@ -828,7 +828,9 @@
 			.attr("y", -20) //child of root g, moved on margin.top
 			.attr("width", c.width - 1)
 			.attr("height", 20-1) //border-bottom
-			.style("fill","#888").style("stroke",function(){return config.options.background;})
+			.style("fill","#888")
+			.style("stroke",function(){return config.options.background;})
+			.style("cursor","pointer")
 			//.on('mouseover', function(d){ tip("show",d); })
 			//.on('mouseout', function(d){ tip("hide",d); })
 			//.on("touchstart", handleTouch)
@@ -839,6 +841,7 @@
 			.attr("y", -18)
 			.attr("dy", ".75em")
 			.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")
+			.style("pointer-events","none")
 			.text("Please load json file")
 		
 		//rect for highlight//
@@ -902,7 +905,7 @@
 		//Fill table
 		if(verbose){console.time("growTable");}
 		//var hundread = root.data.hits;
-		var nodes = d3layout.nodes()
+		var nodes = getSubtree(root,[]);
 		
 		//create tr and td
 		view.selectAll("tr").data(nodes).enter().append("tr")
@@ -1010,23 +1013,32 @@
 	function handleTouch(d) { touched==d ? touched="": touched=d; }
 	
 	//VIEW UPDATE//
-	function updateRects() {
+	function updateRects(n) {
+		//scale
+		x.domain([n.x, n.x + n.dx]);
+		y.domain([n.y, n.y + n.dy]);
+		var kx = config.options.zoom=="sticky" ? (w / n.dx) : 1;
+		var ky = config.options.zoom=="sticky" ? (h / n.dy) : 1;
+
 		//select
 		var displayed;
-		if(config.treemap.border) { //ancestor + leaves
-			displayed=d3layout.nodes().filter(function(d) {return d.parent;})
+		if(config.treemap.border) { //ancestor + leaves (w>0 & h>0)
+			displayed=d3layout.nodes().filter(function(d) {return d.parent && (kx*d.dx-1 > 0) && (ky*d.dy-1 > 0);})
 		}
 		else { // leaves
-			displayed=d3layout.nodes(root).filter(function(d){return !d.children;})
+			displayed=d3layout.nodes(root).filter(function(d){return !d.children && (kx*d.dx-1 > 0) && (ky*d.dy-1 > 0);})
 		}
 
 		//rect
 		var sel = d3.select("#mtm-treemap").select(".mtm-view")
 			.selectAll("rect").data(displayed,function(d){return d.id+d.data.sample;});
+		console.log("rect sel",sel,"enter",sel.enter(),"exit",sel.exit());
 		//create new
 		sel.enter().insert("rect")
 			.attr("class",function(d){ return "v"+d.id+d.data.sample;})
 			.style("stroke",function(){return config.options.background;})
+			.style("fill",function(d){return d.data.color;})
+			.style("cursor","pointer")
 			.attr("transform","translate(0,0)")
 			.attr("width", 0)
 			.attr("height", 0)
@@ -1047,11 +1059,22 @@
 				})
 			.on("mousemove", function(d) { tip("move"); })
 			.on("touchstart", handleTouch)
+		//update all
+		sel.transition().duration(1500)
+			.attr("transform", function(d) {return "translate("+x(d.x)+","+y(d.y)+")";})
+			.attr("width", function(d) { return kx * d.dx - 1; })
+			.attr("height", function(d) { return ky * d.dy - 1; })
 		//delete
 		sel.exit().remove()
 	}
 
-	function updatePaths() {
+	function updatePaths(n) {
+		//scale
+		var mw=Math.round(config.options.font*0.6); //SourceCodePro
+		var mh=Math.round(config.options.font*1.3); //SourceCodePro 
+		var kx = config.options.zoom=="sticky" ? (w / n.dx) : 1;
+		var ky = config.options.zoom=="sticky" ? (h / n.dy) : 1;
+
 		//select
 		var labelled;
 		if(config.options.label=="rank" && rank!=-1) { //show selected group || upper leaves
@@ -1060,7 +1083,19 @@
 		else { //label for each tags
 			labelled=d3layout.nodes(root).filter(function(d){return !d.children;})
 		}
-		
+		//filter
+		labelled = labelled.filter(function(d) {
+			var rw = kx * d.dx - 1;
+			var rh = ky * d.dy - 1;
+			console.log("v"+d.id,"r",rw,rh,"m",mw,mh,"n",x(d.x),y(d.y),x(d.x+d.dx),y(d.y+d.dy))
+			if( (rw>0 && rh>0) //rectangle visible
+			&& (
+				( (rw<rh) && (rw>mh) && (y(d.y+d.dy)-y(d.y)-2*mw>0) ) //Vertical + marge
+				|| ( (rw>rh) && (rh>mh) && (x(d.x+d.dx)-x(d.x)-2*mw>0) ) //Horizontal + marge
+				)
+			) {return d;}
+			
+		})
 		//guides
 		var sel = d3.select("#mtm-treemap").select(".mtm-labels")
 			.selectAll("path").data(labelled,function(d){return d.id+d.data.sample;});
@@ -1070,9 +1105,38 @@
 				.attr("d","M0,0L0,0")
 				.style("opacity",0)
 				.style("pointer-events","none")
+			//update all
+			sel.transition().duration(1500)
+				.attr("d",function(d) {return line(d);})
 			//delete
 			sel.exit().remove()
 		
+		function line(d) {
+			var ax,ay,bx,by;
+			//rect width and heigth
+			var rw=kx * d.dx - 1;
+			var rh=ky * d.dy - 1;
+
+			if(rw<rh) {//vertical
+				ax=x(d.x+(d.dx/2));
+				ay=y(d.y)+mw;
+				bx=ax;
+				by=y(d.y+d.dy)-mw;
+			}
+			else { //horizontal
+				ax=x(d.x)+mw;
+				ay=y(d.y+(d.dy/2));
+				bx=x(d.x+d.dx)-mw;
+				by=ay;				
+			}
+			
+			var path = d3.svg.line()
+			.x(function(t) {return t[0];})
+			.y(function(t) {return t[1];})
+			.interpolate("linear");
+			return path([[ax,ay],[bx,by]]);
+		}
+
 		//text
 		var sel = d3.select("#mtm-treemap").select(".mtm-labels")
 			.selectAll("text").data(labelled,function(d){return d.id+d.data.sample;});
@@ -1123,22 +1187,22 @@
 		}
 		else {//default (config.options.color=="taxon")
 			getColor = function(d) {
-				d.data.color = d.children ? color(d.name) : color(d.parent.name);
+				d.data.color = color(d.id);
 				return d.data.color;
 			}
 		}
 		//Affect color
-		if(config.treemap.display) { //call treemap + affect
-			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
-				.style("fill",function(d){return getColor(d);})
-			if(config.table.display) { //affect table
-				d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
-					.style("background-color",function(d){ return d.data.color;})
-			}
-		}
-		else if(config.table.display) { //call table + affect
+		if(config.table.display) { //call table + affect treemap
 			d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
 				.style("background-color",function(d){ return getColor(d); })
+			if(config.treemap.display) { //call treemap + affect
+				d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
+					.style("fill",function(d){return d.data.color;})
+			}
+		}
+		else if (config.treemap.display) { //call treemap
+			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
+				.style("fill",function(d){return getColor(d);})
 		}
 	}
 
@@ -1153,19 +1217,19 @@
 
 				if(rankC>r) { //missing rank
 					getSubtree(n.children[i],[]).forEach(function(d) {
-						d.data.color = color("sub"+n.name);
+						d.data.color = color("sub"+n.id);
 					})
 				}
 				else if(rankC==r) { //color node + subtree
 					getSubtree(n.children[i],[]).forEach(function(d) {
-						d.data.color = color(n.children[i].name);
+						d.data.color = color(n.children[i].id);
 					})
 				}
 				else  { //if(rankC==0 || rankC<r) //search deeper
 					if(config.options.upper=="gray") {
 						n.children[i].data.color = "#888";
 					}
-					else {n.children[i].data.color = n.children[i].children ? color(n.children[i].name) : color(n.name);} //taxon
+					else {n.children[i].data.color = color(n.children[i].id);} //taxon
 					colorByRank(r,p,n.children[i]);
 				}
 			}//end foreach
@@ -1381,19 +1445,10 @@
 		if(config.treemap.display) {
 
 			if(config.options.zoom=="fluid") {computeLayout(n);}
-			//else (sticky) d3layout.nodes() never change
 
-			updateRects(); //Create rectangle elements
-			updatePaths(); //Create path and text element
+			updateRects(n); //Create rectangle elements and position
+			updatePaths(n); //Create path and text element and position
 			
-			//In zoom fluid, need to affect color to new rect, not in zoom stiky
-			if(config.options.zoom=="fluid") { //Update color for new rect
-				d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
-					.style("fill",function(d){return d.data.color;})
-			}
-
-			positionRects(n); //set x,y,w,h of rects
-			positionPaths(n); //set x1,y1,x2,y2 of paths
 		}
 
 		//update table
@@ -1417,84 +1472,15 @@
 			node = n;
 	}
 
-	function positionRects(n) {
-		x.domain([n.x, n.x + n.dx]);
-		y.domain([n.y, n.y + n.dy]);
-
-		var sel = d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
-		sel.transition().duration(1500)
-			.attr("transform", function(d) {return "translate("+x(d.x)+","+y(d.y)+")";})
-
-		if(config.options.zoom=="sticky") {
-			var kx = w / n.dx, ky = h / n.dy;
-			sel.attr("width", function(d) { return kx * d.dx - 1; })
-				.attr("height", function(d) { return ky * d.dy - 1; })
-		}
-		else {//fluid
-			sel.attr("width", function(d) { return d.dx - 1; })
-				.attr("height", function(d) { return d.dy - 1; })
-		}
-	}
-
-	function positionPaths(n) {
-		//labels positions
-		var sel = d3.select("#mtm-treemap").select(".mtm-labels").selectAll("path")
-			.transition().duration(1500)
-
-		if(config.options.zoom=="sticky") {
-			var kx = w / n.dx, ky = h / n.dy;
-			sel.attr("d",function(d) {return line(d,kx,ky);})	
-		}
-		else { //fluid
-			sel.attr("d",function(d) {return line(d,1,1);})	
-		}
-
-		function line(d,kx,ky) {
-			var ax,ay,bx,by;
-			//margin width and height
-			var mw=Math.round(config.options.font*0.6); //SourceCodePro
-			var mh=Math.round(config.options.font*1.3); //SourceCodePro 
-			//rect width and heigth
-			var rw=kx * d.dx - 1;
-			var rh=ky * d.dy - 1;
-
-			if(rw<rh) {//vertical
-				ax=x(d.x+(d.dx/2));
-				ay=y(d.y);
-				bx=ax;
-				by=y(d.y+d.dy);
-				//margin && min width
-				if(ay+mw<by-mw && rw>mh) { ay=ay+mw; by=by-mw;} 
-				else {by=ay;}
-			}
-			else { //horizontal
-				ax=x(d.x);
-				ay=y(d.y+(d.dy/2));
-				bx=x(d.x+d.dx);
-				by=ay;
-				//margin && min height
-				if(ax+mw<bx-mw && rh>mh) { ax=ax+mw; bx=bx-mw;}
-				else {bx=ax;}					
-			}
-			
-			var path = d3.svg.line()
-			.x(function(t) {return t[0];})
-			.y(function(t) {return t[1];})
-			.interpolate("linear");
-	
-			return path([[ax,ay],[bx,by]]);
-		}
-	}
-
 	function getSubtree(n,ns) {
+		//exclude root because id not exist
+		if(n!=root) { ns.push(n); }
 		//get a list of all nodes in subtree of n, n included
 		if(n.children) {
 			n.children.forEach(function(c){
 				ns = getSubtree(c,ns); 
 			}); 
 		}
-		//exclude root because id not exist
-		if(n!=root) { ns.push(n); }
 		return ns;
 	}
 	
