@@ -726,6 +726,14 @@
 				e.append("option").attr("value","gray").text("gray")
 				e.node().value=config[i].label;
 			}
+			if(config[i].hasOwnProperty("depth")) {
+				var row = part.append("tr")
+				row.append("td").text("depth")
+				var e = row.append("td").append("select").attr("id",i+"_depth").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","null").text("--all--")
+				for (var k in ranks) { e.append("option").attr("value",ranks[k]).text(ranks[k])}
+				e.node().value=config[i].depth;
+			}
 			if(config[i].hasOwnProperty("font")) {
 				var row = part.append("tr")
 				row.append("td").text("font")
@@ -1026,13 +1034,12 @@
 			displayed=d3layout.nodes().filter(function(d) {return d.parent && (kx*d.dx-1 > 0) && (ky*d.dy-1 > 0);})
 		}
 		else { // leaves
-			displayed=d3layout.nodes(root).filter(function(d){return !d.children && (kx*d.dx-1 > 0) && (ky*d.dy-1 > 0);})
+			displayed=d3layout.nodes().filter(function(d){return !d.children && (kx*d.dx-1 > 0) && (ky*d.dy-1 > 0);})
 		}
 
 		//rect
 		var sel = d3.select("#mtm-treemap").select(".mtm-view")
 			.selectAll("rect").data(displayed,function(d){return d.id+d.data.sample;});
-		console.log("rect sel",sel,"enter",sel.enter(),"exit",sel.exit());
 		//create new
 		sel.enter().insert("rect")
 			.attr("class",function(d){ return "v"+d.id+d.data.sample;})
@@ -1087,7 +1094,6 @@
 		labelled = labelled.filter(function(d) {
 			var rw = kx * d.dx - 1;
 			var rh = ky * d.dy - 1;
-			console.log("v"+d.id,"r",rw,rh,"m",mw,mh,"n",x(d.x),y(d.y),x(d.x+d.dx),y(d.y+d.dy))
 			if( (rw>0 && rh>0) //rectangle visible
 			&& (
 				( (rw<rh) && (rw>mh) && (y(d.y+d.dy)-y(d.y)-2*mw>0) ) //Vertical + marge
