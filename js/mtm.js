@@ -246,7 +246,7 @@
 		
 		//Add tag node
 		if(n.data.assigned!="0"){
-			var tag={"name":n.name,
+			var tag={"name":n.name+" #"+s,
 				"children":[],
 				"data":{"hits":+n.data.assigned,
 					"rank":n.data.rank,
@@ -254,8 +254,6 @@
 					"percent":+n.data.assigned*100/h[s]},
 				"id":n.id
 			}
-
-			if (n.children.length>0) {tag.name+="*";}
 			nsk.children.push(tag);
 		}
 		
