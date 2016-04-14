@@ -9,6 +9,7 @@
 	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"];
 	var config; //object configuration
 	var root; //object root (all tree)
+	var tree; //object root (treemap cutoff)
 	var bkeys; //list of keys for bridges
 	var bobjs; //list of node -object- for bridge
 	
@@ -33,7 +34,7 @@
 	mtm.load = function(files,conf) {
 		if(verbose){console.time("load");}
 		//root init.
-		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"index":0,"color":"#888"},"id":"1"}; //skeleton tree
+		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"color":"#888"},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
 		bobjs = [root]; //list of node -object-
 		
@@ -364,13 +365,89 @@
 			.sticky(true) //keep child position when transform
 			.padding(function(){return config.treemap.border ? 2 : 0;})
 			.value(setMode(config.options.mode))
-		var nodes = d3layout.nodes(n)
+
+		//manage cut
+		tree = n;
+		if(config.options.depth!="null") {
+			tree = cutTree(ranks.indexOf(config.options.depth),n,n);
+		}
+
+console.log("origin",n);
+console.log("clone",tree);
+
+		var nodes = d3layout.nodes(tree)
 
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
 		
 		if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
+	}
+
+	function cutTree(r,p,n){
+		//r is the rank we need
+		//p is the root
+		//n is the current node. Test on n.children
+		//clone n
+		var clone = {"name":n.name,
+				"children":[],
+				"data":{"hits":+n.data.hits,
+					"rank":n.data.rank,
+					"sample":n.data.sample,
+					"percent":n.data.percent,
+					"color":n.data.color,
+					"count":n.data.count.slice(0)},
+				"id":n.id
+			};
+//console.log("clone node",p)
+		//selected rank
+		if(ranks.indexOf(n.data.rank)==r) {
+			addLeaves(clone,p,n.data.count)
+		}
+		else {//test children
+			var count = n.data.count.map(function(c){return 0;})
+			if(n.children && n.children.length>0) {
+				for (var i in n.children) {
+					if(n.children[i].data.sample==0) {//skeleton
+						var rankC=ranks.indexOf(n.children[i].data.rank);
+						if(rankC>r) { //add sub count
+							count = count.map(function(c,i){return c+n.children[i].data.count[i];})
+						}
+						else { clone.children.push(cutTree(r,p,n.children[i]));}
+					}
+					else { //leaf
+						count[n.children[i].data.sample]+=n.children[i].data.hits;
+					}
+				}
+				//create leaves
+				addLeaves(clone,p,count)
+			}
+		}
+		return clone;
+	}
+
+	function addLeaves(n,p,count) {
+		for(var i in count) {
+			if(count[i]>0) {
+				n.children.push({
+					"name":n.name+" #"+i,
+					"id":n.id,
+					"children":[],
+					"data":{
+						"hits":count[i],
+						"rank":n.data.rank,
+						"sample":i,
+						"percent":count[i]*100/p.data.count[i],
+						"color":n.data.color,
+						"count":n.data.count.map(function(c,j) { return j==i ? c : 0; })
+
+						//n.data.percent=+n.data.hits*100/h[n.data.sample];
+					}
+					
+				})
+//	console.log("clone leaf",n.children[n.children.length-1]);
+			}
+		}
 	}
 	
 	function setMode(confMode) {
@@ -1176,12 +1253,16 @@
 		//color by rank : top-down
 		if(config.options.color=="rank" && rank!=-1) {
 			colorByRank(rank,root,root);
+			if(config.options.depth!="null") {
+				colorByRank(rank,tree,tree);
+			}
 			getColor = function(d){return d.data.color;}
 		}
 		//set color
 		else if(config.options.color=="max") { //colorByMajority
 			getColor = function(d) {
-				d.data.color = color(d.data.count.indexOf(Math.max(...d.data.count)));
+				if(!d.children) {d.data.color = color(d.parent.data.count.indexOf(Math.max(...d.parent.data.count)));}
+				else {d.data.color = color(d.data.count.indexOf(Math.max(...d.data.count)));}
 				return d.data.color;
 			}
 		}
@@ -1201,12 +1282,14 @@
 		if(config.table.display) { //call table + affect treemap
 			d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
 				.style("background-color",function(d){ return getColor(d); })
-			if(config.treemap.display) { //call treemap + affect
+/*			if(config.treemap.display) { //call treemap + affect
 				d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
 					.style("fill",function(d){return d.data.color;})
 			}
+*/
 		}
-		else if (config.treemap.display) { //call treemap
+		/*else*/
+		if (config.treemap.display) { //call treemap
 			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
 				.style("fill",function(d){return getColor(d);})
 		}
