@@ -12,6 +12,9 @@
 	var bkeys; //list of keys for bridges
 	var bobjs; //list of node -object- for bridge
 	
+
+	var tree; //tree after depth cutOff
+	var fluid; //tree displayed on treemap
 	//neet to initiate layout
 	//functions setLayout, computeLayout
 	var node; //current node displayed
@@ -33,7 +36,7 @@
 	mtm.load = function(files,conf) {
 		if(verbose){console.time("load");}
 		//root init.
-		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"index":0,"color":"#888"},"id":"1"}; //skeleton tree
+		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"color":"#888"},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
 		bobjs = [root]; //list of node -object-
 		
@@ -49,6 +52,7 @@
 				hundreds[(i-queue+1)]=+di.data.sum;
 				merge(di,"",(i-queue+1),hundreds); //Create skeleton and leaves (root,parent,sample)
 				if(!--queue) {
+					bkeys=bobjs=false;//clean variable
 					hundreds[0]= hundreds.reduce(function(a,b) {return a + b;});
 					sumHits(root,hundreds);
 					setLayout();
@@ -292,7 +296,6 @@
 	//VIEW CREATION//
 	function setLayout() {
 		if(verbose){console.time("layout");}
-		node=root;
 		
 		//style
 		d3.select("head").append("style").text(
@@ -309,23 +312,34 @@
 		+"#mtm-table table{border-collapse:collapse;width:100%;}\n"
 		)
 		
-		//set color palette
-		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
-		
 		//Delete previous views
 		d3.selectAll(".mtm-container").html("")
 		param={};
+		tree=false;
+		fluid=false;
+
 		
 		//hidden div
 		d3.select("body").append("div").attr("id","mtm-tip")
 		d3.select("body").append("div").attr("id","mtm-canvas").style("display","none")
 
-		//build d3.layout
-		computeLayout(root);
-		//sort nodes for search
-		sorted = d3layout.nodes().slice(0); //clone
-		sorted.sort(function(a,b) { return a.name.length<b.name.length ? -1 : a.name.length>b.name.length ? 1 : a.name<b.name ? -1 : a.name>b.name ? 1 : 0  ; });
-		
+		//compute tree: root or cutOff
+		if(!tree && config.options.depth!="null") {
+			var rank = ranks.indexOf(config.options.depth);
+			//check depth > n.rank
+			if(rank <= ranks.indexOf(config.options.rank)) { 
+				rank++; 
+				config.options.depth = ranks[rank];
+			}
+			tree = cutTree(rank,root,root);
+			computeLayout(tree);
+			sorted = d3layout.nodes().slice(0); //clone
+		}
+		else { 
+			computeLayout(root); 
+			sorted = d3layout.nodes().slice(0); //clone
+		}
+
 		//build views
 		if(config.bar) { bar(config.bar); }
 		if(config.configuration && config.configuration.display) {
@@ -334,29 +348,37 @@
 		if(config.table && config.table.display) {
 			param.table={};
 			table(config.table,param.table);
+			updateLines();
 		}
 		if(config.treemap && config.treemap.display) {
 			param.treemap={};
 			treemap(config.treemap,param.treemap);
+			if(!fluid && config.options.zoom=="fluid") {
+				fluid = config.options.depth!="null" ? tree : root ;
+			}
 		}
 
-		//update
-		zoom(node);
-		updateColor();
-		updateLabel();
+		console.log("hierarchies","r:",root,"t:",tree,"f:",fluid);
 
-		console.log(root);
+		//sort nodes for search
+		sorted.sort(function(a,b) { return a.name.length<b.name.length ? -1 : a.name.length>b.name.length ? 1 : a.name<b.name ? -1 : a.name>b.name ? 1 : 0  ; });
+		var domain = sorted.reduce(function(p,c) {if(p.indexOf(c.id)<0){p.push(c.id);}return p;}, []);
+		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/)).domain(domain);
+		
+		//update
+		//create rect + %view
+		tree ? zoom(tree) : zoom(root);
+		updateColor();
 		
 		if(verbose){console.timeEnd("layout");}
 	}
 	
 	function computeLayout(n) {
-		//console.log("border",config.treemap.border);
+		console.log("compute layout",n.name);
 		if(config.treemap.display) {
 			h = config.treemap.height - 20;  //margin top
 			w = config.treemap.width - 1; //margin left
 		}
-
 		//compute final json tree
 		d3layout = d3.layout.treemap() //array of all nodes
 			.size([w, h]) //size of map
@@ -364,13 +386,78 @@
 			.sticky(true) //keep child position when transform
 			.padding(function(){return config.treemap.border ? 2 : 0;})
 			.value(setMode(config.options.mode))
+
 		var nodes = d3layout.nodes(n)
 
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
-		
+
 		if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
+	}
+
+	function cutTree(r,p,n){
+		//r is the rank we need
+		//p is the root
+		//n is the current node. Test on n.children
+		//clone n
+		var clone = {"name":n.name,
+				"children":[],
+				"data":{"hits":+n.data.hits,
+					"rank":n.data.rank,
+					"sample":n.data.sample,
+					"percent":n.data.percent,
+					"color":n.data.color,
+					"count":n.data.count.slice(0)},
+				"id":n.id
+			};
+		//selected rank
+		if(ranks.indexOf(n.data.rank)==r) {
+			addLeaves(clone,p,n.data.count)
+		}
+		else {//test children
+			var count = n.data.count.map(function(c){return 0;})
+			if(n.children && n.children.length>0) {
+				for (var i in n.children) {
+					if(n.children[i].data.sample==0) {//skeleton
+						var rankC=ranks.indexOf(n.children[i].data.rank);
+						if(rankC>r) { //add sub count
+							count = count.map(function(c,j){return c+n.children[i].data.count[j];})
+						}
+						else { clone.children.push(cutTree(r,p,n.children[i]));}
+					}
+					else { //leaf
+						count[n.children[i].data.sample]+=n.children[i].data.hits;
+					}
+				}
+				//create leaves
+				addLeaves(clone,p,count)
+			}
+		}
+		return clone;
+	}
+
+	function addLeaves(n,p,count) {
+		for(var i in count) {
+			if(count[i]>0) {
+				n.children.push({
+					"name":n.name+" #"+i,
+					"id":n.id,
+					"children":[],
+					"data":{
+						"hits":count[i],
+						"rank":n.data.rank,
+						"sample":i,
+						"percent":count[i]*100/p.data.count[i],
+						"color":n.data.color,
+						"count":n.data.count.map(function(c,j) { return j==i ? c : 0; })
+
+						//n.data.percent=+n.data.hits*100/h[n.data.sample];
+					}
+					
+				})
+			}
+		}
 	}
 	
 	function setMode(confMode) {
@@ -470,7 +557,6 @@
 					.classed("mtm-on",function() { return config.options.label=="taxon"; })
 					.classed("mtm-off",function() { return config.options.label=="rank"; })
 				d3.select("#options_label").property('value',config.options.label);
-				updateLabel();
 				zoom(node);
 			});
 		
@@ -494,7 +580,8 @@
 			.classed("mtm-on",true)
 			.on("click", function() { 
 				d3.selectAll(".mtm-root").classed("mtm-on",true);
-				zoom(root);
+				if(config.options.depth=="null") { zoom(root);}
+				else { zoom(tree); }
 			})
 		
 		//Font//
@@ -726,6 +813,14 @@
 				e.append("option").attr("value","gray").text("gray")
 				e.node().value=config[i].label;
 			}
+			if(config[i].hasOwnProperty("depth")) {
+				var row = part.append("tr")
+				row.append("td").text("depth")
+				var e = row.append("td").append("select").attr("id",i+"_depth").on("change",function(){return configChange(this);})
+				e.append("option").attr("value","null").text("--all--")
+				for (var k in ranks) { e.append("option").attr("value",ranks[k]).text(ranks[k])}
+				e.node().value=config[i].depth;
+			}
 			if(config[i].hasOwnProperty("font")) {
 				var row = part.append("tr")
 				row.append("td").text("font")
@@ -902,78 +997,6 @@
 			.classed("mtm-labels",true)
 			.style("table-layout","fixed")
 
-		//Fill table
-		if(verbose){console.time("growTable");}
-		//var hundread = root.data.hits;
-		var nodes = getSubtree(root,[]);
-		
-		//create tr and td
-		view.selectAll("tr").data(nodes).enter().append("tr")
-				.attr("class",function(d){return "v"+d.id+d.data.sample;})
-				.on("mouseover",function(d) { 
-					highlight(d,true);
-					tip("show",d);
-				})
-				.on("mouseout",function(d) {
-					highlight(d,false);
-					tip("hide",d);
-				})
-				.on("mousemove", function(d) { tip("move"); })
-				.selectAll("td").data(["name","id","hits","percent","sample","rank"])
-					.enter().append("td").attr("class",function(d){return d;})
-
-		//fill name
-		view.selectAll(".name").data(nodes)
-			.style("white-space","nowrap")
-			.style("overflow","hidden")
-			.style("text-overflow","ellipsis")
-			.style("cursor","pointer")
-			.append("span")
-				.style("padding-left",function(d){//max(depth,rank)
-					return (+Math.max(d.depth,(d.children ? ranks.indexOf(d.data.rank) : ranks.indexOf(d.data.rank)+1))*4)+"px";
-				})
-				.html(function(d){return "<span class='fa'>&nbsp;</span>";})
-				.append("span")
-					.on("click", function(d){  
-						highlight(d,false);
-						return zoom(d);
-					})
-					.text(function(d){return d.name;})
-		//fill id
-		view.selectAll(".id").data(nodes)
-				.style("width","70px").style("text-align","right")
-				.append("span")
-				.filter(function(d){return +d.id>0})
-					.append("a")
-					.attr("href",function(d){ return "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id="+d.id;})
-					.attr("target", "taxonomy")
-					.text(function(d){return d.id})
-		//fill hits
-		view.selectAll(".hits").data(nodes)
-				.style("width","60px").style("text-align","right")
-				.append("span").text(function(d){return d.data.hits;})
-		//fill %
-		view.selectAll(".percent").data(nodes)
-				.style("width","60px").style("text-align","right")
-				.append("span")
-				//.text() fill in zoom()
-		//fill sample
-		view.selectAll(".sample").data(nodes)
-				.style("width","80px").style("text-align","right")
-				.append("span").html(function(d){
-					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
-				})
-		//fill rank
-		view.selectAll(".rank").data(nodes)
-				.style("width","130px")
-			.append("span").text(function(d){return d.data.rank;})
-
-		//internal nodes
-		view.selectAll("tr")
-			.filter(function(d){return d.children;})
-			.select(".fa")
-			.on("click",function(d){ return toggle(d); })
-				
 		if(verbose){console.timeEnd("table");}				
 	}
 	
@@ -1014,6 +1037,7 @@
 	
 	//VIEW UPDATE//
 	function updateRects(n) {
+		console.log("updateRects",n.name);
 		//scale
 		x.domain([n.x, n.x + n.dx]);
 		y.domain([n.y, n.y + n.dy]);
@@ -1026,13 +1050,12 @@
 			displayed=d3layout.nodes().filter(function(d) {return d.parent && (kx*d.dx-1 > 0) && (ky*d.dy-1 > 0);})
 		}
 		else { // leaves
-			displayed=d3layout.nodes(root).filter(function(d){return !d.children && (kx*d.dx-1 > 0) && (ky*d.dy-1 > 0);})
+			displayed=d3layout.nodes().filter(function(d){return !d.children && (kx*d.dx-1 > 0) && (ky*d.dy-1 > 0);})
 		}
 
 		//rect
 		var sel = d3.select("#mtm-treemap").select(".mtm-view")
 			.selectAll("rect").data(displayed,function(d){return d.id+d.data.sample;});
-		console.log("rect sel",sel,"enter",sel.enter(),"exit",sel.exit());
 		//create new
 		sel.enter().insert("rect")
 			.attr("class",function(d){ return "v"+d.id+d.data.sample;})
@@ -1087,7 +1110,6 @@
 		labelled = labelled.filter(function(d) {
 			var rw = kx * d.dx - 1;
 			var rh = ky * d.dy - 1;
-			console.log("v"+d.id,"r",rw,rh,"m",mw,mh,"n",x(d.x),y(d.y),x(d.x+d.dx),y(d.y+d.dy))
 			if( (rw>0 && rh>0) //rectangle visible
 			&& (
 				( (rw<rh) && (rw>mh) && (y(d.y+d.dy)-y(d.y)-2*mw>0) ) //Vertical + marge
@@ -1163,19 +1185,98 @@
 			sel.exit().remove();
 	}
 
+	function updateLines(n) {
+		//Fill table
+		if(verbose){console.time("growTable");}
+		//var hundread = root.data.hits;
+		var nodes = d3layout.nodes(); //getSubtree(root,[]);
+		
+		//delete old lines
+		var view = d3.select("#mtm-table").select(".mtm-view").html("");
+		//create tr and td
+		view.selectAll("tr").data(nodes).enter().append("tr")
+				.attr("class",function(d){return "v"+d.id+d.data.sample;})
+				.on("mouseover",function(d) { 
+					highlight(d,true);
+					tip("show",d);
+				})
+				.on("mouseout",function(d) {
+					highlight(d,false);
+					tip("hide",d);
+				})
+				.on("mousemove", function(d) { tip("move"); })
+				.selectAll("td").data(["name","id","hits","percent","sample","rank"])
+					.enter().append("td").attr("class",function(d){return d;})
+
+		//fill name
+		view.selectAll(".name").data(nodes)
+			.style("white-space","nowrap")
+			.style("overflow","hidden")
+			.style("text-overflow","ellipsis")
+			.style("cursor","pointer")
+			.append("span")
+				.style("padding-left",function(d){//max(depth,rank)
+					return (+Math.max(d.depth,(d.children ? ranks.indexOf(d.data.rank) : ranks.indexOf(d.data.rank)+1))*4)+"px";
+				})
+				.html(function(d){return "<span class='fa'>&nbsp;</span>";})
+				.append("span")
+					.on("click", function(d){  
+						highlight(d,false);
+						return zoom(d);
+					})
+					.text(function(d){return d.name;})
+		//fill id
+		view.selectAll(".id").data(nodes)
+				.style("width","70px").style("text-align","right")
+				.append("span")
+				.filter(function(d){return +d.id>0})
+					.append("a")
+					.attr("href",function(d){ return "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id="+d.id;})
+					.attr("target", "taxonomy")
+					.text(function(d){return d.id})
+		//fill hits
+		view.selectAll(".hits").data(nodes)
+				.style("width","60px").style("text-align","right")
+				.append("span").text(function(d){return d.data.hits;})
+		//fill %
+		view.selectAll(".percent").data(nodes)
+				.style("width","60px").style("text-align","right")
+				.append("span")
+				//.text() fill in zoom()
+		//fill sample
+		view.selectAll(".sample").data(nodes)
+				.style("width","80px").style("text-align","right")
+				.append("span").html(function(d){
+					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
+				})
+		//fill rank
+		view.selectAll(".rank").data(nodes)
+				.style("width","130px")
+			.append("span").text(function(d){return d.data.rank;})
+
+		//internal nodes
+		view.selectAll("tr")
+			.filter(function(d){return d.children;})
+			.select(".fa")
+			.on("click",function(d){ return toggle(d); })			
+	}
+
 	function updateColor() {
 		if(verbose){console.time("updateColor");}
 		rank = ranks.indexOf(config.options.rank) //selected rank
 		var getColor;
+		console.log("update color, rank:",rank);
 		//color by rank : top-down
 		if(config.options.color=="rank" && rank!=-1) {
-			colorByRank(rank,root,root);
+			if(config.options.depth=="null") {colorByRank(rank,root,root);}
+			else {colorByRank(rank,tree,tree);}
 			getColor = function(d){return d.data.color;}
 		}
 		//set color
 		else if(config.options.color=="max") { //colorByMajority
 			getColor = function(d) {
-				d.data.color = color(d.data.count.indexOf(Math.max(...d.data.count)));
+				if(!d.children) {d.data.color = color(d.parent.data.count.indexOf(Math.max(...d.parent.data.count)));}
+				else {d.data.color = color(d.data.count.indexOf(Math.max(...d.data.count)));}
 				return d.data.color;
 			}
 		}
@@ -1188,19 +1289,17 @@
 		else {//default (config.options.color=="taxon")
 			getColor = function(d) {
 				d.data.color = color(d.id);
+				//console.log(d.name,d.id,d.data.color);
 				return d.data.color;
+
 			}
 		}
 		//Affect color
 		if(config.table.display) { //call table + affect treemap
 			d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
 				.style("background-color",function(d){ return getColor(d); })
-			if(config.treemap.display) { //call treemap + affect
-				d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
-					.style("fill",function(d){return d.data.color;})
-			}
 		}
-		else if (config.treemap.display) { //call treemap
+		if (config.treemap.display) { //call treemap
 			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
 				.style("fill",function(d){return getColor(d);})
 		}
@@ -1236,32 +1335,6 @@
 		}//end children
 	}
 
-	function updateLabel() {
-		if(verbose){console.time("updateLabel");}
-
-		rank = ranks.indexOf(config.options.rank) //selected rank
-		//font size
-		if(config.treemap.display) {
-			d3.select("#mtm-treemap").select(".mtm-labels").style("font-size",config.options.font+"px")
-			d3.select("#mtm-tip").style("font-size",config.options.font+"px")
-			setLabelMap(rank);
-		}
-		if(config.table.display) { 
-			d3.select(".mtm-table").selectAll(".name").style("font-size",config.options.font+"px")
-			setLabelTable(rank);
-		}
-		if(verbose){console.timeEnd("updateLabel");}
-	}
-
-	function setLabelMap(rank) {
-		if(verbose){console.time("setLabelMap");}
-		//delete previous labels
-		//var labels = d3.select("#mtm-treemap").select(".mtm-labels").html("")
-		
-		/////////////////////////////////////////////
-		if(verbose){console.timeEnd("setLabelMap");}
-	}
-
 	function labeledByRank(r,p,n){
 		//r is the rank we need
 		//p is root
@@ -1284,33 +1357,6 @@
 			if(ranks.indexOf(n.data.rank)<r) { l.push(n); } 
 		}
 		return l;
-	}
-
-	function setLabelTable(rank) {
-		if(verbose){console.time("setLabelTable");}
-		var lines = d3.select("#mtm-table").select(".mtm-labels").selectAll("tr")
-		if(config.options.label=="rank" && rank!=-1){
-			var list = collapseByRank(rank,root,root);
-			//hide lower
-			lines.data(list[2],function(d){return "v"+d.id+d.data.sample;})
-				.style("display","none")
-			//collapse rank
-			lines.data(list[0],function(d){return "v"+d.id+d.data.sample;})
-				.style("display","table-row")
-				.select(".fa").attr("class","fa fa-plus-square-o")
-			//expand upper
-			lines.data(list[1],function(d){return "v"+d.id+d.data.sample;})
-				.style("display","table-row")
-				.select(".fa").attr("class","fa fa-minus-square-o")
-		}
-		else { //expand all
-			lines.style("display","table-row")
-				.select(".fa").attr("class","fa fa-minus-square-o")		
-		}
-		//leaf
-		lines.filter(function(d){return !d.children;})
-			.select(".fa").attr("class","fa fa-square-o")
-		if(verbose){console.timeEnd("setLabelTable");}
 	}
 
 	function collapseByRank(r,p,n){
@@ -1409,8 +1455,11 @@
 	}
 	
 	function zoom(n) {
+		//update current node
+		node = n;
+		//console.log("zoom",n.name, n)
 		//button root switch
-		if (n==root) {
+		if (!n.parent) { //root
 			d3.selectAll(".mtm-root").classed("mtm-on",true)
 			d3.selectAll(".mtm-root").classed("mtm-off",false)
 		}
@@ -1441,35 +1490,54 @@
 			.select("text")
 				.text(function(d) { return d.name; })
 
+		if(config.options.zoom=="fluid") {
+			computeLayout(n);
+			updateColor();
+		}
+
 		//update map
 		if(config.treemap.display) {
-
-			if(config.options.zoom=="fluid") {computeLayout(n);}
-
 			updateRects(n); //Create rectangle elements and position
 			updatePaths(n); //Create path and text element and position
-			
 		}
 
 		//update table
 		if(config.table.display) {
-			if(verbose){console.time("zoomTable");}
+			var lines = d3.select("#mtm-table").select(".mtm-labels").selectAll("tr")
 			//clear %
-			d3.select("#mtm-table").select(".mtm-labels")
-				.selectAll("tr").selectAll(".percent")
-				.text("-")
+			lines.selectAll(".percent").text("-")
 			
 			//set % of the subtree
-			d3.select("#mtm-table").select(".mtm-labels").selectAll("tr") //all lines
-				.data(getSubtree(n,[]),
+			lines.data(getSubtree(n,[]),
 					function(d){return "t"+d.id+d.data.sample;}) //lines of subtree
 				.selectAll(".percent") //column of %
 				.text( //new text
 					function(d){return (d.value*100/n.value).toFixed(2)+"%";}
 				)
+			//manage collapse
+			if(config.options.label=="rank" && rank!=-1){
+				var list = collapseByRank(rank,root,root);
+				//hide lower
+				lines.data(list[2],function(d){return "v"+d.id+d.data.sample;})
+					.style("display","none")
+				//collapse rank
+				lines.data(list[0],function(d){return "v"+d.id+d.data.sample;})
+					.style("display","table-row")
+					.select(".fa").attr("class","fa fa-plus-square-o")
+				//expand upper
+				lines.data(list[1],function(d){return "v"+d.id+d.data.sample;})
+					.style("display","table-row")
+					.select(".fa").attr("class","fa fa-minus-square-o")
+			}
+			else { //expand all
+				lines.style("display","table-row")
+					.select(".fa").attr("class","fa fa-minus-square-o")		
+			}
+			//leaf
+			lines.filter(function(d){return !d.children;})
+				.select(".fa").attr("class","fa fa-square-o")
+			if(verbose){console.timeEnd("setLabelTable");}
 		}
-			//update current node
-			node = n;
 	}
 
 	function getSubtree(n,ns) {
