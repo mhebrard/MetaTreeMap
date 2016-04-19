@@ -34,34 +34,110 @@
 	
 	//CONSTRUCTORS//
 	mtm.load = function(files,conf) {
-		if(verbose){console.time("load");}
+		//manage dependencies
+		var queue = [];
+		queue.push(linkload("http://fonts.googleapis.com/css?family=Source+Code+Pro:600"));
+		if (!window.jQuery) { //include jQ + bootstrap
+			queue.push(scriptload("http://code.jquery.com/jquery-1.12.0.min.js")); 
+			queue.push(linkload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"));
+			queue.push(scriptload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"));
+		}
+		else if (!$.fn.modal.Constructor.VERSION) { //include bootstrap
+			queue.push(linkload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"));
+			queue.push(scriptload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")); 
+		}
+		if(!window.d3) {queue.push(scriptload("https://d3js.org/d3.v3.min.js")); } //include d3
+
+		//run
+		Promise.resolve()
+		.then(function(){ return Promise.all(queue);}) //run loading
+		.catch(function(err){return Error("mtm.load.dependencies:",err);})
+		.then(function(){ 
+			console.log("mtm",mtm.version)
+			console.log("jQ",jQuery.fn.jquery);
+			console.log("bootstrap",$.fn.modal.Constructor.VERSION);
+			console.log("d3",d3.version);
+		}).catch(function(err) { return Error("mtm.load.versions:",err); })
+		.then(function() { return Promise.all([loadConf(conf),loadData(files)]); })
+		.catch(function(err) { return Error("mtm.load.data:",err); })
+		.then(function(load) { 
+			//hundreds + sumHits
+			load[1][0] = load[1].reduce(function(a,b) {return +a + +b;});
+			sumHits(root,load[1]);
+			console.log("root",root);
+			setLayout();
+		})
+	}
+
+	function scriptload(u) {
+		return new Promise(function(ful) {
+			var s = document.createElement('script');
+			s.type = 'text/javascript';
+			s.src = u;
+			s.onload = function(){ return ful(u+" loaded");}
+			document.getElementsByTagName('head')[0].appendChild(s);
+		});
+	}
+
+	function linkload(u) {
+		return new Promise(function(ful) {
+			var s = document.createElement('link');
+			s.rel = 'stylesheet';
+			s.href = u;
+			s.crossorigin = "anonymous";
+			s.onload = function(){ return ful(u+" loaded");};
+			document.getElementsByTagName('head')[0].appendChild(s);
+		});
+	} 
+
+	function loadConf(conf) {
+		return new Promise(function(ful) {
+			if(conf) { 
+				d3.json(URL.createObjectURL(conf),function(c) {
+					config=c;
+					return ful("config file loaded");
+				})
+			}
+			else if (!config) { 
+				d3.json("./mtm-config.json",function(c) {
+					config=c;
+					return ful("default config loaded");
+				}) 
+			}
+			else {
+				return ful("current config use");
+			}
+		})
+	}
+
+	function loadData(files) {
 		//root init.
 		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"color":"#888"},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
 		bobjs = [root]; //list of node -object-
-		
-		//loading config file
-		if(conf) { d3.json(URL.createObjectURL(conf),function(c) {config=c;}) }
-		else if (!config) { d3.json("./mtm-config.json",function(c) {config=c;}) }
-		
-		//Loading input files
-		var queue = files.length; //counter
 		var hundreds = []; //samples total reads
-		for (var i=0; i < files.length; i++) {
-			d3.json(files[i], function(di) {
-				hundreds[(i-queue+1)]=+di.data.sum;
-				merge(di,"",(i-queue+1),hundreds); //Create skeleton and leaves (root,parent,sample)
-				if(!--queue) {
-					bkeys=bobjs=false;//clean variable
-					hundreds[0]= hundreds.reduce(function(a,b) {return a + b;});
-					sumHits(root,hundreds);
-					setLayout();
-				} 
+		//sequential merge
+		var seq=Promise.resolve(hundreds);
+		files.forEach(function(f,i) {
+			seq = seq.then(function(h){
+				return readData(f,i,h);
 			})
-		}
-		if(verbose){console.timeEnd("load");}
-	}   
-	
+		})
+		//return global count	
+		seq = seq.then(function(h) { return h; })
+		return seq;
+	}
+
+	function readData(f,i,h) {
+		return new Promise(function(ful) {
+			d3.json(f, function(data) {
+				h[i+1]=data.data.sum;
+				merge(data,"",i+1) //Create skeleton and leaves (root,parent,sample)
+				return ful(h);
+			})
+		})
+	}
+
 	mtm.save = function(mode) {
 		//delete previous
 		d3.select("#mtm-canvas").html("")
@@ -210,63 +286,63 @@
 	
 	//SUB FUNCTIONS//
 	//DATA STRUCTURE//
-	function merge(n,p,s,h) {
-		//Create skeleton tree and leaves with assigned hits
-		//avoid space in id
-		n.id = (""+n.id).replace(/\s+/g, '_');
-		//avoid no rank
-		if(n.data.rank=="no rank" && p != ""){ n.data.rank=p.data.rank;}
-		
-		//update skeleton
-		var nsk; //skeleton node of n
-		var idx = bkeys.indexOf(n.id);
-		if(idx > -1) { // if node exist
-			nsk=bobjs[idx]; //existing node
+	function merge(n,p,s) {
+			//Create skeleton tree and leaves with assigned hits
+			//avoid space in id
+			n.id = (""+n.id).replace(/\s+/g, '_');
+			//avoid no rank
+			if(n.data.rank=="no rank" && p != ""){ n.data.rank=p.data.rank;}
 			
-			//New branch is deeper, need rebase
-			if(p!="" && ranks.indexOf(p.data.rank) > ranks.indexOf(nsk.parent.data.rank)) {
-				//disconnect skeleton
-				nsk.parent.children.splice(
-					nsk.parent.children.indexOf(nsk),1
-				);
+			//update skeleton
+			var nsk; //skeleton node of n
+			var idx = bkeys.indexOf(n.id);
+			if(idx > -1) { // if node exist
+				nsk=bobjs[idx]; //existing node
 				
-				//connect with deeper
-				var psk = bobjs[bkeys.indexOf(p.id)];
+				//New branch is deeper, need rebase
+				if(p!="" && ranks.indexOf(p.data.rank) > ranks.indexOf(nsk.parent.data.rank)) {
+					//disconnect skeleton
+					nsk.parent.children.splice(
+						nsk.parent.children.indexOf(nsk),1
+					);
+					
+					//connect with deeper
+					var psk = bobjs[bkeys.indexOf(p.id)];
+					psk.children.push(nsk);
+				}
+			}
+			else { //else new skeleton node
+				var psk=bobjs[bkeys.indexOf(p.id)];
+				nsk = {"name":n.name,
+					"children":[],
+					"parent":psk,
+					"data":{"hits":0,"rank":n.data.rank,"sample":0},
+					"id":n.id
+				};	
 				psk.children.push(nsk);
+				bkeys.push(nsk.id);
+				bobjs.push(nsk);
 			}
-		}
-		else { //else new skeleton node
-			var psk=bobjs[bkeys.indexOf(p.id)];
-			nsk = {"name":n.name,
-				"children":[],
-				"parent":psk,
-				"data":{"hits":0,"rank":n.data.rank,"sample":0},
-				"id":n.id
-			};	
-			psk.children.push(nsk);
-			bkeys.push(nsk.id);
-			bobjs.push(nsk);
-		}
-		
-		//Add tag node
-		if(n.data.assigned!="0"){
-			var tag={"name":n.name+" #"+s,
-				"children":[],
-				"data":{"hits":+n.data.assigned,
-					"rank":n.data.rank,
-					"sample":s,
-					"percent":+n.data.assigned*100/h[s]},
-				"id":n.id
+			
+			//Add tag node
+			if(n.data.assigned!="0"){
+				var tag={"name":n.name+" #"+s,
+					"children":[],
+					"data":{"hits":+n.data.assigned,
+						"rank":n.data.rank,
+						"sample":s,
+						"percent":+n.data.assigned*100/h[s]},
+					"id":n.id
+				}
+				nsk.children.push(tag);
 			}
-			nsk.children.push(tag);
-		}
-		
-		//recursive call
-		if (n.children.length>0) {
-			for (var i in n.children) {
-				merge(n.children[i],n,s,h);
+			
+			//recursive call
+			if (n.children.length>0) {
+				for (var i in n.children) {
+					merge(n.children[i],n,s,h);
+				}
 			}
-		}
 	}
 
 	function sumHits(n,h) {
@@ -286,9 +362,9 @@
 				*/
 			}
 		}
-			n.data.count[n.data.sample]+=n.data.hits;
-			n.data.hits = n.data.count.reduce(function(t,c){return t+c;},0);
-			n.data.percent=+n.data.hits*100/h[n.data.sample];
+		n.data.count[n.data.sample]+=n.data.hits;
+		n.data.hits = n.data.count.reduce(function(t,c){return t+c;},0);
+		n.data.percent=+n.data.hits*100/h[n.data.sample];
 		//return n.data.hits;
 		return n.data.count;
 	}
