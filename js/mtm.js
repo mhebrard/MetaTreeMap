@@ -47,7 +47,7 @@
 			queue.push(scriptload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")); 
 		}
 		if(!window.d3) {queue.push(scriptload("https://d3js.org/d3.v3.min.js")); } //include d3
-
+		
 		//run
 		Promise.resolve()
 		.then(function(){ return Promise.all(queue);}) //run loading
@@ -58,6 +58,13 @@
 			console.log("bootstrap",$.fn.modal.Constructor.VERSION);
 			console.log("d3",d3.version);
 		}).catch(function(err) { return Error("mtm.load.versions:",err); })
+		.then(function() {
+			queue=[];
+			//bootstrap-toogle
+			queue.push(linkload("https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css"));
+			queue.push(scriptload("https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"));
+			return Promise.all(queue);
+		}).catch(function(err){return Error("mtm.load.modules:",err);})
 		.then(function() { return Promise.all([loadConf(conf),loadData(files)]); })
 		.catch(function(err) { return Error("mtm.load.data:",err); })
 		.then(function(load) { 
@@ -575,9 +582,68 @@
 				.style("display","none")
 		}
 		
-		menu.style("position","relative")
-			.style("z-index","2") //menu is in the middle
+//		menu.style("position","relative")
+//			.style("z-index","2") //menu is in the middle
 		
+		var cont = menu.append("nav").attr("class","navbar navbar-default")
+		.append("div").attr("class","container-fluid")
+
+		var button = cont.append("div").attr("class","navbar-header")
+		.append("button").attr("type","button").attr("class","navbar-toggle collapsed")
+		.attr("data-toggle","collapse").attr("data-target","#mtm-barmenu")
+		
+		button.append("span").attr("class","icon-bar")
+		button.append("span").attr("class","icon-bar")
+		button.append("span").attr("class","icon-bar")
+
+		var list = cont.append("div").attr("class","collapse navbar-collapse")
+		.attr("id","mtm-barmenu")
+		.append("ul").attr("class","nav navbar-nav")
+
+		list.append("li").append("a").text("Colors")
+		list.append("li").append("a").text("Labels")
+		list.append("li").append("a").text("Zooms")
+
+		//Treemap
+		var drop = list.append("li").attr("class","dropdown").attr("id","mtm-bar-treemap")
+		drop.append("a").attr("href","#")
+		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
+		.html("Treemap <span class='caret'></span>")
+
+		var ul = drop.append("ul").attr("class","dropdown-menu").style("width","250px")
+		var li = ul.append("li")
+		li.append("label").attr("class","col-xs-6").text("hierarchy:")
+		li.append("input").attr("type","checkbox").attr("class","mtm-switch")
+		.attr("data-toggle","toggle").attr("data-on","rugged").attr("data-off","flat")
+		.attr("data-size","small").attr("data-width","70")
+
+		li.append("label").attr("class","col-xs-6").text("zoom:")
+		li.append("input").attr("type","checkbox").attr("class","mtm-switch")
+		.attr("data-toggle","toggle").attr("data-on","fluid").attr("data-off","sticky")
+		.attr("data-size","small").attr("data-width","70")
+
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").attr("class","col-xs-6").text("proportion:")
+		var s = li.append("select").attr("class","form-control mtm-select")
+		s.append("option").attr("value","norm").text("by sample")
+		s.append("option").attr("value","hits").text("by hits")
+		s.append("option").attr("value","nodes").text("by taxon")
+
+		//activate
+		$(function() { $('.mtm-switch').bootstrapToggle(); })
+		//manage hide
+		$('#mtm-bar-treemap').on({
+			"show.bs.dropdown":  function() { this.closable=true},
+		 	"hide.bs.dropdown":  function() { if(!this.closable) {this.closable=true; return false;} else {return true;} }
+		});
+		$('.mtm-switch').on({
+		  "change":	function() { $('#mtm-bar-treemap')[0].closable=false;}
+		});
+		$('.mtm-select').on({
+		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
+		});
+		
+		/*OLD
 		//Color By//
 		var s = menu.append("span").attr("class","mtm-button mtm-on")
 			.append("span").attr("class","fa fa-link")
@@ -704,8 +770,8 @@
 						//action
 						d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
 							.selectAll("li").remove()
-						color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
-						updateColor(); 
+		*///				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
+		/*				updateColor(); 
 					})
 					.text(function(d){ return d[0]; }) 
 			})
@@ -717,8 +783,8 @@
 				//action
 				d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
 					.selectAll("li").remove()
-				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
-				updateColor(); 
+		*///		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
+		/*		updateColor(); 
 			})
 		s.append("div").attr("class","mtm-colorbox mtm-box")
 			.append("ul")
@@ -806,9 +872,9 @@
 			})
 		s.append("div").attr("class","mtm-searchbox mtm-box")
 			.append("ul")
-
+		*/
 		if(verbose){console.timeEnd("bar");}
-		return menu.node().offsetHeight;
+		//return menu.node().offsetHeight;
 	}
 	
 	function configuration(c) {
