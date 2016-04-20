@@ -419,7 +419,7 @@
 			sorted = d3layout.nodes().slice(0); //clone
 		}
 		else { 
-			computeLayout(root); 
+			computeLayout(root);
 			sorted = d3layout.nodes().slice(0); //clone
 		}
 
@@ -457,7 +457,7 @@
 	}
 	
 	function computeLayout(n) {
-		console.log("compute layout",n.name);
+		console.log("compute layout",n.name,"mode");
 		if(config.treemap.display) {
 			h = config.treemap.height - 20;  //margin top
 			w = config.treemap.width - 1; //margin left
@@ -475,6 +475,8 @@
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
+
+		console.log(config.options.mode,"root",root,"tree",tree,"fluid",fluid);
 
 		if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
 	}
@@ -609,35 +611,72 @@
 		drop.append("a").attr("href","#")
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Treemap <span class='caret'></span>")
-
 		var ul = drop.append("ul").attr("class","dropdown-menu").style("width","250px")
 		var li = ul.append("li")
+		//Hierarchy
 		li.append("label").attr("class","col-xs-6").text("hierarchy:")
-		li.append("input").attr("type","checkbox").attr("class","mtm-switch")
+		li.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-border")
 		.attr("data-toggle","toggle").attr("data-on","rugged").attr("data-off","flat")
 		.attr("data-size","small").attr("data-width","70")
+		.property("checked",function() { return config.treemap.border;})
+		$('#mtm-bar-border').on({ "change": function() { 
+	  		$('#mtm-bar-treemap')[0].closable=false;
+	  		//change all button
+			config.treemap.border=d3.select("#mtm-bar-border").property("checked");
+			//d3.selectAll(".mtm-mode").property('value',this.value)
+			d3.select("#options_border").property('value',config.treemap.border)
+			//action
+			d3layout.padding(function(){return config.treemap.border ? 2 : 0;})
+			tree ? d3layout.nodes(tree) : d3layout.nodes(root) ;
+			zoom(node);
+	  	} });
 
+		//Zoom
 		li.append("label").attr("class","col-xs-6").text("zoom:")
-		li.append("input").attr("type","checkbox").attr("class","mtm-switch")
+		li.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-zoom")
 		.attr("data-toggle","toggle").attr("data-on","fluid").attr("data-off","sticky")
 		.attr("data-size","small").attr("data-width","70")
+		.property("checked",function() { return config.options.zoom=="fluid" ? true : false;})
+		$('#mtm-bar-zoom').on({ "change": function() { 
+	  		$('#mtm-bar-treemap')[0].closable=false;
+	  		//change all button
+			config.options.zoom=d3.select("#mtm-bar-zoom").property("checked") ? "fluid" : "sticky" ;
+			//d3.selectAll(".mtm-mode").property('value',this.value)
+			d3.select("#options_zoom").property('value',config.options.zoom)
+			//action
+			if(config.options.zoom=="fluid") { fluid = tree ? tree : root ; }
+			else {
+				fluid=false;
+				tree ? computeLayout(tree) : computeLayout(root) ;
+			}
+			zoom(node);
+	  	} });
 
+		//Proportion
 		li = ul.append("li").attr("class","form-inline")
 		li.append("label").attr("class","col-xs-6").text("proportion:")
 		var s = li.append("select").attr("class","form-control mtm-select")
 		s.append("option").attr("value","norm").text("by sample")
 		s.append("option").attr("value","hits").text("by hits")
 		s.append("option").attr("value","nodes").text("by taxon")
+			//value
+			s.property("value",config.options.mode)
+			s.on("change",function() { 
+				//change all button
+				config.options.mode=this.value;
+				d3.select("#options_mode").property('value',this.value)
+				//action
+				d3layout.value(setMode(config.options.mode))
+				tree ? d3layout.nodes(tree) : d3layout.nodes(root) ;
+				zoom(node);
+			});
 
-		//activate
+		//activate toogles
 		$(function() { $('.mtm-switch').bootstrapToggle(); })
 		//manage hide
 		$('#mtm-bar-treemap').on({
 			"show.bs.dropdown":  function() { this.closable=true},
 		 	"hide.bs.dropdown":  function() { if(!this.closable) {this.closable=true; return false;} else {return true;} }
-		});
-		$('.mtm-switch').on({
-		  "change":	function() { $('#mtm-bar-treemap')[0].closable=false;}
 		});
 		$('.mtm-select').on({
 		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
