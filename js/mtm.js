@@ -22,8 +22,8 @@
 	var d3layout; //d3 layout
 	var color=""; //color set for leaves
 	var colors=[ //default set of colors
-		["colorbrewer.Set3(12)","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
-		["d3.category20(20)","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
+		["brewer(12)","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
+		["d3(20)","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
 	];
 	
 	//need to update
@@ -441,8 +441,6 @@
 			}
 		}
 
-		console.log("hierarchies","r:",root,"t:",tree,"f:",fluid);
-
 		//sort nodes for search
 		sorted.sort(function(a,b) { return a.name.length<b.name.length ? -1 : a.name.length>b.name.length ? 1 : a.name<b.name ? -1 : a.name>b.name ? 1 : 0  ; });
 		var domain = sorted.reduce(function(p,c) {if(p.indexOf(c.id)<0){p.push(c.id);}return p;}, []);
@@ -457,7 +455,6 @@
 	}
 	
 	function computeLayout(n) {
-		console.log("compute layout",n.name,"mode");
 		if(config.treemap.display) {
 			h = config.treemap.height - 20;  //margin top
 			w = config.treemap.width - 1; //margin left
@@ -475,8 +472,6 @@
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
-
-		console.log(config.options.mode,"root",root,"tree",tree,"fluid",fluid);
 
 		if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
 	}
@@ -602,17 +597,116 @@
 		.attr("id","mtm-barmenu")
 		.append("ul").attr("class","nav navbar-nav")
 
-		list.append("li").append("a").text("Colors")
+		//Colors
+		var drop = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-colors")
+		drop.append("a").attr("href","#")
+		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
+		.html("Colors <span class='caret'></span>")
+		var ul = drop.append("ul").attr("class","dropdown-menu").style("width","300px")
+		//Colored
+		var li = ul.append("li").attr("class","form-inline")
+		li.append("label").attr("class","col-xs-5").text("colored:")
+		var s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-colored")
+		s.append("option").attr("value","taxon").text("by taxon")
+			s.append("option").attr("value","rank").text("by rank")
+			s.append("option").attr("value","sample").text("by sample")
+			s.append("option").attr("value","max").text("by majority")
+			//value
+			s.property("value",config.options.color)
+			s.on("change",function() { 
+				//change all button
+				config.options.color=this.value;
+				d3.select("#options_color").property('value',this.value)
+				//$('.collapse').collapse()
+				d3.select("#mtm-bar-colored-block").classed("in",function(){ return config.options.color=="rank" ? true : false;})
+				//action
+				updateColor();
+			});
+		$('#mtm-bar-colored').on({
+		  "click":	function() { $('#mtm-bar-colors')[0].closable=false;}
+		});
+		//By rank block
+		li = ul.append("li").attr("class","collapse").attr("id","mtm-bar-colored-block")
+		//select rank
+		var block = li.append("div").attr("class","form-inline")
+		block.append("label").attr("class","col-xs-5").text("rank:")
+		var s = block.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-colored-rank")
+			s.append("option").attr("value","init").text("--Phylogenic rank--")
+			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
+			//value
+			s.property("value",config.options.rank)
+			s.on("change",function() { 
+				//change all button
+				config.options.rank=this.value;
+				d3.select("#options_rank").property('value',this.value)
+				//action
+				updateColor();
+			});
+		$('#mtm-bar-colored-rank').on({
+		  "click":	function() { $('#mtm-bar-colors')[0].closable=false;}
+		});
+		//gray upper
+		block = li.append("div").attr("class","form-inline")
+		block.append("label").attr("class","col-xs-5").text("ancestors:")
+		block.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-upper")
+		.attr("data-toggle","toggle").attr("data-on","enable").attr("data-off","disable")
+		.attr("data-size","small").attr("data-width","70")
+		.property("checked",function() { return config.options.upper=="gray" ? false : true;})
+		$('#mtm-bar-upper').on({ "change": function() { 
+	  		$('#mtm-bar-colors')[0].closable=false;
+	  		//change all button
+			config.options.upper=d3.select("#mtm-bar-upper").property("checked") ? "color" : "gray";
+			//d3.selectAll(".mtm-mode").property('value',this.value)
+			d3.select("#options_upper").property('value',config.options.upper)
+			//action
+			updateColor();
+	  	} });
+	  	li = ul.append("li").attr("class","divider")
+		//Palette
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").attr("class","col-xs-5").text("palette:")
+		var s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-palette")
+		for (var k in colors) { s.append("option").attr("value",colors[k][1]).text(colors[k][0]) }
+		s.property("value",config.options.palette)
+			s.on("change",function() { 
+				//change all button
+				config.options.palette=this.value;
+				d3.select("#options_palette").property('value',this.value)
+				//action
+				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
+				updateColor(); 
+			});
+		$('#mtm-bar-palette').on({
+		  "click":	function() { $('#mtm-bar-colors')[0].closable=false;}
+		});
+		//BG
+		li.append("label").attr("class","col-xs-5").text("Background:")
+		li.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-background")
+		.attr("data-toggle","toggle").attr("data-on","black").attr("data-off","white")
+		.attr("data-size","small").attr("data-width","70")
+		.property("checked",function() { return config.options.background=="black" ? true : false;})
+		$('#mtm-bar-background').on({ "change": function() { 
+	  		$('#mtm-bar-colors')[0].closable=false;
+	  		//change all button
+			config.options.background=d3.select("#mtm-bar-background").property("checked") ? "black" : "white";
+			d3.select("#options_background").property('value',config.options.background)
+			//action
+			d3.selectAll(".mtm-bg").attr("fill",config.options.background)
+			d3.selectAll(".mtm-header rect").style("stroke",config.options.background)
+			d3.selectAll(".mtm-view rect").style("stroke",config.options.background)
+			d3.select("#mtm-table").style("background-color",config.options.background)
+	  	} });
+
 		list.append("li").append("a").text("Labels")
 		list.append("li").append("a").text("Zooms")
 
 		//Treemap
-		var drop = list.append("li").attr("class","dropdown").attr("id","mtm-bar-treemap")
+		drop = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-treemap")
 		drop.append("a").attr("href","#")
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Treemap <span class='caret'></span>")
-		var ul = drop.append("ul").attr("class","dropdown-menu").style("width","250px")
-		var li = ul.append("li")
+		ul = drop.append("ul").attr("class","dropdown-menu").style("width","250px")
+		li = ul.append("li")
 		//Hierarchy
 		li.append("label").attr("class","col-xs-6").text("hierarchy:")
 		li.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-border")
@@ -630,7 +724,6 @@
 			tree ? d3layout.nodes(tree) : d3layout.nodes(root) ;
 			zoom(node);
 	  	} });
-
 		//Zoom
 		li.append("label").attr("class","col-xs-6").text("zoom:")
 		li.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-zoom")
@@ -651,11 +744,10 @@
 			}
 			zoom(node);
 	  	} });
-
 		//Proportion
 		li = ul.append("li").attr("class","form-inline")
 		li.append("label").attr("class","col-xs-6").text("proportion:")
-		var s = li.append("select").attr("class","form-control mtm-select")
+		var s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-proportion")
 		s.append("option").attr("value","norm").text("by sample")
 		s.append("option").attr("value","hits").text("by hits")
 		s.append("option").attr("value","nodes").text("by taxon")
@@ -670,16 +762,16 @@
 				tree ? d3layout.nodes(tree) : d3layout.nodes(root) ;
 				zoom(node);
 			});
+		$('#mtm-bar-proportion').on({
+		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
+		});
 
 		//activate toogles
 		$(function() { $('.mtm-switch').bootstrapToggle(); })
 		//manage hide
-		$('#mtm-bar-treemap').on({
+		$('.mtm-dropdown').on({
 			"show.bs.dropdown":  function() { this.closable=true},
 		 	"hide.bs.dropdown":  function() { if(!this.closable) {this.closable=true; return false;} else {return true;} }
-		});
-		$('.mtm-select').on({
-		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
 		});
 		
 		/*OLD
@@ -1218,7 +1310,6 @@
 	
 	//VIEW UPDATE//
 	function updateRects(n) {
-		console.log("updateRects",n.name);
 		//scale
 		x.domain([n.x, n.x + n.dx]);
 		y.domain([n.y, n.y + n.dy]);
@@ -1446,7 +1537,6 @@
 		if(verbose){console.time("updateColor");}
 		rank = ranks.indexOf(config.options.rank) //selected rank
 		var getColor;
-		console.log("update color, rank:",rank);
 		//color by rank : top-down
 		if(config.options.color=="rank" && rank!=-1) {
 			if(config.options.depth=="null") {colorByRank(rank,root,root);}
