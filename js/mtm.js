@@ -18,7 +18,7 @@
 	//neet to initiate layout
 	//functions setLayout, computeLayout
 	var node; //current node displayed
-	var sorted; //taxa names for search
+	var searchable; //list of taxa names for search
 	var d3layout; //d3 layout
 	var color=""; //color set for leaves
 	var colors=[ //default set of colors
@@ -63,6 +63,10 @@
 			//bootstrap-toogle
 			queue.push(linkload("https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css"));
 			queue.push(scriptload("https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"));
+			//bootstrap-select
+			queue.push(linkload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css"));
+			queue.push(scriptload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"));
+			//include
 			return Promise.all(queue);
 		}).catch(function(err){return Error("mtm.load.modules:",err);})
 		.then(function() { return Promise.all([loadConf(conf),loadData(files)]); })
@@ -456,11 +460,11 @@
 			}
 			tree = cutTree(rank,root,root);
 			computeLayout(tree);
-			sorted = d3layout.nodes().slice(0); //clone
+			searchable = d3layout.nodes().slice(0); //clone
 		}
 		else { 
 			computeLayout(root);
-			sorted = d3layout.nodes().slice(0); //clone
+			searchable = d3layout.nodes().slice(0); //clone
 		}
 
 		//build views
@@ -475,6 +479,7 @@
 		}
 		if(config.treemap && config.treemap.display) {
 			param.treemap={};
+			updateSearch();
 			treemap(config.treemap,param.treemap);
 			if(!fluid && config.options.zoom) {
 				fluid = config.options.depth_rank!="init" ? tree : root ;
@@ -482,8 +487,8 @@
 		}
 
 		//sort nodes for search
-		sorted.sort(function(a,b) { return a.name.length<b.name.length ? -1 : a.name.length>b.name.length ? 1 : a.name<b.name ? -1 : a.name>b.name ? 1 : 0  ; });
-		var domain = sorted.reduce(function(p,c) {if(p.indexOf(c.id)<0){p.push(c.id);}return p;}, []);
+		//sorted.sort(function(a,b) { return a.name.length<b.name.length ? -1 : a.name.length>b.name.length ? 1 : a.name<b.name ? -1 : a.name>b.name ? 1 : 0  ; });
+		var domain = d3layout.nodes().reduce(function(p,c) {if(p.indexOf(c.id)<0){p.push(c.id);}return p;}, []);
 		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/)).domain(domain);
 		
 		//update
@@ -508,7 +513,7 @@
 			.value(setMode(config.options.proportion))
 
 		var nodes = d3layout.nodes(n)
-
+		
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
@@ -911,12 +916,17 @@
 			.append("span").attr("class","glyphicon glyphicon-backward")
 
 		//search
-		li = list.append("li").append("div").attr("class","navbar-form form-inline input-group")
+		li = list.append("li").append("div").attr("class","navbar-form form-inline")
+			.append("div").attr("class","input-group")
 		li.append("div").attr("class","input-group-addon")
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","search")
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","zoom to selected node")
 			.append("span").attr("class","glyphicon glyphicon-search")
-		li.append("input").attr("class","form-control").attr("type","text").style("width","120px")
-
+		var s = li.append("select").attr("class","selectpicker").attr("data-live-search","true").attr("data-width","120px")
+			s.on("change",function() { 
+				//action
+				zoom(searchable[this.value]);
+			});
+		
 		list.append("li").append("a").text("Import")
 		list.append("li").append("a").text("Export")
 		list.append("li").append("a").text("About")
@@ -925,6 +935,7 @@
 		$(function() { $('[data-toggle="toggle"]').bootstrapToggle(); })
 		$(function () { $('[data-toggle="popover"]').popover();})
 		$(function () { $('[data-toggle="tooltip"]').tooltip();})
+		$(function () { $('.selectpicker').selectpicker();})
 		//manage hide
 		$('.mtm-dropdown').on({
 			"show.bs.dropdown":  function() { this.closable=true},
@@ -1614,16 +1625,24 @@
 			sel.exit().remove();
 	}
 
-	function updateLines(n) {
+	function updateSearch() {
+		var sel = d3.select(".selectpicker").selectAll("option")
+			.data(searchable,function(d) {return d.id;})
+		sel.enter().append("option")
+			.attr("value",function(d,i){return i;})
+			.text(function(d){return d.name;})
+		sel.exit().remove()
+		$('.selectpicker').selectpicker('refresh');
+	}
+
+	function updateLines() {
 		//Fill table
 		if(verbose){console.time("growTable");}
-		//var hundread = root.data.hits;
-		var nodes = d3layout.nodes(); //getSubtree(root,[]);
-		
+
 		//delete old lines
 		var view = d3.select("#mtm-table").select(".mtm-view").html("");
 		//create tr and td
-		view.selectAll("tr").data(nodes).enter().append("tr")
+		view.selectAll("tr").data(searchable).enter().append("tr")
 				.attr("class",function(d){return "v"+d.id+d.data.sample;})
 				.on("mouseover",function(d) { 
 					highlight(d,true);
@@ -1638,7 +1657,7 @@
 					.enter().append("td").attr("class",function(d){return d;})
 
 		//fill name
-		view.selectAll(".name").data(nodes)
+		view.selectAll(".name").data(searchable)
 			.style("white-space","nowrap")
 			.style("overflow","hidden")
 			.style("text-overflow","ellipsis")
@@ -1655,7 +1674,7 @@
 					})
 					.text(function(d){return d.name;})
 		//fill id
-		view.selectAll(".id").data(nodes)
+		view.selectAll(".id").data(searchable)
 				.style("width","70px").style("text-align","right")
 				.append("span")
 				.filter(function(d){return +d.id>0})
@@ -1664,22 +1683,22 @@
 					.attr("target", "taxonomy")
 					.text(function(d){return d.id})
 		//fill hits
-		view.selectAll(".hits").data(nodes)
+		view.selectAll(".hits").data(searchable)
 				.style("width","60px").style("text-align","right")
 				.append("span").text(function(d){return d.data.hits;})
 		//fill %
-		view.selectAll(".percent").data(nodes)
+		view.selectAll(".percent").data(searchable)
 				.style("width","60px").style("text-align","right")
 				.append("span")
 				//.text() fill in zoom()
 		//fill sample
-		view.selectAll(".sample").data(nodes)
+		view.selectAll(".sample").data(searchable)
 				.style("width","80px").style("text-align","right")
 				.append("span").html(function(d){
 					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
 				})
 		//fill rank
-		view.selectAll(".rank").data(nodes)
+		view.selectAll(".rank").data(searchable)
 				.style("width","130px")
 			.append("span").text(function(d){return d.data.rank;})
 
@@ -1687,7 +1706,7 @@
 		view.selectAll("tr")
 			.filter(function(d){return d.children;})
 			.select(".fa")
-			.on("click",function(d){ return toggle(d); })			
+			.on("click",function(d){ return toggle(d); })
 	}
 
 	function updateColor() {
