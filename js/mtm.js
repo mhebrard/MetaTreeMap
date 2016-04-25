@@ -22,8 +22,8 @@
 	var d3layout; //d3 layout
 	var color=""; //color set for leaves
 	var colors=[ //default set of colors
-		["brewer(12)","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
-		["d3(20)","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
+		["brewer","#8dd3c7,#ffffb3,#bebada,#fb8072,#80b1d3,#fdb462,#b3de69,#fccde5,#d9d9d9,#bc80bd,#ccebc5,#ffed6f"], 
+		["d3","#1f77b4,#aec7e8,#ff7f0e,#ffbb78,#2ca02c,#98df8a,#d62728,#ff9896,#9467bd,#c5b0d5,#8c564b,#c49c94,#e377c2,#f7b6d2,#7f7f7f,#c7c7c7,#bcbd22,#dbdb8d,#17becf,#9edae5" ]
 	];
 	
 	//need to update
@@ -68,10 +68,12 @@
 		.then(function() { return Promise.all([loadConf(conf),loadData(files)]); })
 		.catch(function(err) { return Error("mtm.load.data:",err); })
 		.then(function(load) { 
+			console.log(load);
 			//hundreds + sumHits
 			load[1][0] = load[1].reduce(function(a,b) {return +a + +b;});
 			sumHits(root,load[1]);
 			console.log("root",root);
+			setConfig();
 			setLayout();
 		})
 	}
@@ -118,6 +120,14 @@
 	}
 
 	function loadData(files) {
+		//manages filesname
+		var ul = d3.select("body").append("div").attr("id","mtm-samples")
+			.style("display","none").append("ul").attr("class","list-unstyled")
+		var paths = document.getElementById("data").files;
+		if(paths.length==0) { paths=["data/HuFS.json","data/HuFU.json"]; }
+		for(var i=0; i<paths.length; i++) {
+			ul.append("li").text("#"+(i+1)+"."+paths[i].name);
+		}
 		//root init.
 		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"color":"#888"},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
@@ -358,35 +368,64 @@
 		if (n.children.length>0) {
 			for (var i in n.children) {
 				var count = sumHits(n.children[i],h);
-				//n.data.hits=+n.data.hits+count[0];
-				//n.data.percent=+n.data.hits*100/h[n.data.sample];
 				for(var j in count) {
 					n.data.count[j]+=count[j];
 				}
-				/*var hits=sumHits(n.children[i],h);
-				n.data.hits=+n.data.hits+hits;
-				n.data.percent=+n.data.hits*100/h[n.data.sample];
-				*/
 			}
 		}
 		n.data.count[n.data.sample]+=n.data.hits;
 		n.data.hits = n.data.count.reduce(function(t,c){return t+c;},0);
 		n.data.percent=+n.data.hits*100/h[n.data.sample];
-		//return n.data.hits;
 		return n.data.count;
 	}
 
 	//VIEW CREATION//
+	function setConfig() {
+		//check the choices and transform to boolean
+		var vals = [];
+		vals=["rugged","flat"];
+		if(vals.indexOf(config.options.hierarchy) == 0) {config.options.hierarchy=true;}
+		else if (vals.indexOf(config.options.hierarchy) == 1) {config.options.hierarchy=false;}
+
+		vals=["fluid","sticky"];
+		if(vals.indexOf(config.options.zoom) == 0) {config.options.zoom=true;}
+		else if (vals.indexOf(config.options.zoom) == 1) {config.options.zoom=false;}
+
+		vals=["sample","hits","taxon"]
+		if(vals.indexOf(config.options.proportion) < 0)
+		{ alert("please set config.options.proportion: "+vals.toString());}
+
+		vals=["taxon","rank","sample","majority"]
+		if(vals.indexOf(config.options.colored) < 0)
+		{ alert("please set config.options.colored: "+vals.toString());}
+
+		vals=["enable","disable"];
+		if(vals.indexOf(config.options.ancestors) == 0) {config.options.ancestors=true;}
+		else if (vals.indexOf(config.options.ancestors) == 1) {config.options.ancestors=false;}
+
+		vals=["brewer","d3"];
+		if(vals.indexOf(config.options.palette) == 0) {config.options.palette=colors[0][1];}
+		else if (vals.indexOf(config.options.palette) == 1) {config.options.palette=colors[1][1];}
+
+		vals=["black","white"];
+		if(vals.indexOf(config.options.background) == 0) {config.options.background=true;}
+		else if (vals.indexOf(config.options.background) == 1) {config.options.background=false;}
+
+		vals=["taxon","rank","no"]
+		if(vals.indexOf(config.options.labelled) < 0)
+		{ alert("please set config.options.labelled: "+vals.toString());}
+	}
+
 	function setLayout() {
 		if(verbose){console.time("layout");}
 		
 		//style
 		d3.select("head").append("style").text(
 		"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14pt;pointer-events:none;opacity:0}\n"
-		+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
-		+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
-		+".mtm-on{color:#000;border:3px solid #000;}\n"
-		+".mtm-off{color:#888;border:3px solid #888;}\n"
+		//+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
+		//+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
+		//+".mtm-on{color:#000;border:3px solid #000;}\n"
+		//+".mtm-off{color:#888;border:3px solid #888;}\n"
 		+".mtm-box{position:absolute;z-index:3;background-color:#888;border:1px solid #fff;border-radius:.2em;}\n"
 		+".mtm-box:hover{border: 1px solid black;}\n"
 		+".mtm-box ul{margin:0px;padding:0px 5px;}\n"
@@ -407,12 +446,13 @@
 		d3.select("body").append("div").attr("id","mtm-canvas").style("display","none")
 
 		//compute tree: root or cutOff
-		if(!tree && config.options.depth!="null") {
-			var rank = ranks.indexOf(config.options.depth);
+		if(!tree && config.options.depth_rank!="init") {
+			var rank = ranks.indexOf(config.options.depth_rank);
+			var rankN = ranks.indexOf(root.data.rank);
 			//check depth > n.rank
-			if(rank <= ranks.indexOf(config.options.rank)) { 
-				rank++; 
-				config.options.depth = ranks[rank];
+			if(rank <= rankN) { 
+				rankN++; 
+				config.options.depth_rank = ranks[rankN];
 			}
 			tree = cutTree(rank,root,root);
 			computeLayout(tree);
@@ -425,9 +465,9 @@
 
 		//build views
 		if(config.bar) { bar(config.bar); }
-		if(config.configuration && config.configuration.display) {
-			configuration(config.configuration);
-		}
+		//if(config.configuration && config.configuration.display) {
+		//	configuration(config.configuration);
+		//}
 		if(config.table && config.table.display) {
 			param.table={};
 			table(config.table,param.table);
@@ -436,8 +476,8 @@
 		if(config.treemap && config.treemap.display) {
 			param.treemap={};
 			treemap(config.treemap,param.treemap);
-			if(!fluid && config.options.zoom=="fluid") {
-				fluid = config.options.depth!="null" ? tree : root ;
+			if(!fluid && config.options.zoom) {
+				fluid = config.options.depth_rank!="init" ? tree : root ;
 			}
 		}
 
@@ -464,8 +504,8 @@
 			.size([w, h]) //size of map
 			.round(false) //round the value (for scale)
 			.sticky(true) //keep child position when transform
-			.padding(function(){return config.treemap.border ? 2 : 0;})
-			.value(setMode(config.options.mode))
+			.padding(function(){return config.options.hierarchy ? 2 : 0;})
+			.value(setMode(config.options.proportion))
 
 		var nodes = d3layout.nodes(n)
 
@@ -542,9 +582,9 @@
 	
 	function setMode(confMode) {
 		var mode;
-		if(confMode=="norm") { mode=sizeNorm; }
+		if(confMode=="sample") { mode=sizeNorm; }
 		else if(confMode=="hits") { mode=sizeHits; }
-		else if(confMode=="nodes") { mode=sizeNodes;}
+		else if(confMode=="taxon") { mode=sizeNodes;}
 		else {console.log("ERROR: unvalide size mode"); mode=sizeNorm; }
 		return mode;
 	}
@@ -554,18 +594,11 @@
 	function sizeNodes(d) { return 1; }
 
 	//LAYOUTS//
-	function bar(c,location,width) {
+	function bar(c) {
 		if(verbose){console.time("bar");}
 		//create menu bar//
 		var menu;
-		if(location) {
-			menu = d3.select("#"+location)
-				.classed("mtm-container",true)
-				.append("div")
-				.classed("mtm-menu",true)
-				.style("width",width+"px")
-		}
-		else if(c.display) {
+		if(c.display) {
 			menu = d3.select("#"+c.location)
 				.classed("mtm-container",true)
 				.append("div")
@@ -579,46 +612,56 @@
 				.style("display","none")
 		}
 		
-//		menu.style("position","relative")
-//			.style("z-index","2") //menu is in the middle
-		
 		var cont = menu.append("nav").attr("class","navbar navbar-default")
 		.append("div").attr("class","container-fluid")
 
-		var button = cont.append("div").attr("class","navbar-header")
-		.append("button").attr("type","button").attr("class","navbar-toggle collapsed")
+		var list = cont.append("div").attr("class","navbar-header")
+		//collapsed button
+		var item = list.append("button").attr("type","button").attr("class","navbar-toggle collapsed")
 		.attr("data-toggle","collapse").attr("data-target","#mtm-barmenu")
-		
-		button.append("span").attr("class","icon-bar")
-		button.append("span").attr("class","icon-bar")
-		button.append("span").attr("class","icon-bar")
+		item.append("span").attr("class","icon-bar")
+		item.append("span").attr("class","icon-bar")
+		item.append("span").attr("class","icon-bar")
+		//info
+		list.append("button").attr("type","button").attr("class","btn btn-default navbar-brand").attr("id","mtm-info")
+		.append("span").attr("class","glyphicon glyphicon-info-sign")
+    	$("#mtm-info").popover({
+	        html : true, 
+	        content: function() { return $('#mtm-samples').html(); },
+	        title: "Samples:"
+   		});
+   		$("#mtm-info").tooltip({ 
+	        placement: "bottom",
+	        title: "Click to see samples names"
+   		});
 
-		var list = cont.append("div").attr("class","collapse navbar-collapse")
+    	//Bar content
+		list = cont.append("div").attr("class","collapse navbar-collapse")
 		.attr("id","mtm-barmenu")
 		.append("ul").attr("class","nav navbar-nav")
 
 		//Colors
-		var drop = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-colors")
-		drop.append("a").attr("href","#")
+		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-colors")
+		item.append("a").attr("href","#")
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Colors <span class='caret'></span>")
-		var ul = drop.append("ul").attr("class","dropdown-menu").style("width","300px")
+		var ul = item.append("ul").attr("class","dropdown-menu")
+			.style("width","290px").style("padding","5px")
 		//Colored
 		var li = ul.append("li").attr("class","form-inline")
-		li.append("label").attr("class","col-xs-5").text("colored:")
+		li.append("label").style("width","100px").text("colored:")
 		var s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-colored")
-		s.append("option").attr("value","taxon").text("by taxon")
+		.style("width","120px")
+			s.append("option").attr("value","taxon").text("by taxon")
 			s.append("option").attr("value","rank").text("by rank")
 			s.append("option").attr("value","sample").text("by sample")
-			s.append("option").attr("value","max").text("by majority")
+			s.append("option").attr("value","majority").text("by majority")
 			//value
-			s.property("value",config.options.color)
+			s.property("value",config.options.colored)
 			s.on("change",function() { 
 				//change all button
-				config.options.color=this.value;
-				d3.select("#options_color").property('value',this.value)
-				//$('.collapse').collapse()
-				d3.select("#mtm-bar-colored-block").classed("in",function(){ return config.options.color=="rank" ? true : false;})
+				config.options.colored=this.value;
+				d3.select("#mtm-bar-colored-block").classed("in",function(){ return config.options.colored=="rank" ? true : false;})
 				//action
 				updateColor();
 			});
@@ -629,16 +672,15 @@
 		li = ul.append("li").attr("class","collapse").attr("id","mtm-bar-colored-block")
 		//select rank
 		var block = li.append("div").attr("class","form-inline")
-		block.append("label").attr("class","col-xs-5").text("rank:")
-		var s = block.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-colored-rank")
+		block.append("label").style("width","100px").text("rank:")
+		s = block.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-colored-rank")
 			s.append("option").attr("value","init").text("--Phylogenic rank--")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
-			s.property("value",config.options.rank)
+			s.property("value",config.options.colored_rank)
 			s.on("change",function() { 
 				//change all button
-				config.options.rank=this.value;
-				d3.select("#options_rank").property('value',this.value)
+				config.options.colored_rank=this.value;
 				//action
 				updateColor();
 			});
@@ -647,31 +689,29 @@
 		});
 		//gray upper
 		block = li.append("div").attr("class","form-inline")
-		block.append("label").attr("class","col-xs-5").text("ancestors:")
-		block.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-upper")
+		block.append("label").style("width","100px").text("ancestors:")
+		block.append("input").attr("type","checkbox").attr("id","mtm-bar-ancestors")
 		.attr("data-toggle","toggle").attr("data-on","enable").attr("data-off","disable")
-		.attr("data-size","small").attr("data-width","70")
-		.property("checked",function() { return config.options.upper=="gray" ? false : true;})
-		$('#mtm-bar-upper').on({ "change": function() { 
+		.attr("data-width","80")
+		.property("checked",function() { return config.options.ancestors; })
+		$('#mtm-bar-ancestors').on({ "change": function() { 
 	  		$('#mtm-bar-colors')[0].closable=false;
 	  		//change all button
-			config.options.upper=d3.select("#mtm-bar-upper").property("checked") ? "color" : "gray";
-			//d3.selectAll(".mtm-mode").property('value',this.value)
-			d3.select("#options_upper").property('value',config.options.upper)
+			config.options.ancestors=d3.select("#mtm-bar-ancestors").property("checked");
 			//action
 			updateColor();
 	  	} });
 	  	li = ul.append("li").attr("class","divider")
 		//Palette
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").attr("class","col-xs-5").text("palette:")
-		var s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-palette")
+		li.append("label").style("width","100px").text("palette:")
+		s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-palette")
+		.style("width","120px")
 		for (var k in colors) { s.append("option").attr("value",colors[k][1]).text(colors[k][0]) }
 		s.property("value",config.options.palette)
 			s.on("change",function() { 
 				//change all button
 				config.options.palette=this.value;
-				d3.select("#options_palette").property('value',this.value)
 				//action
 				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
 				updateColor(); 
@@ -680,64 +720,141 @@
 		  "click":	function() { $('#mtm-bar-colors')[0].closable=false;}
 		});
 		//BG
-		li.append("label").attr("class","col-xs-5").text("Background:")
-		li.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-background")
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","100px").text("background:")
+		li.append("input").attr("type","checkbox").attr("id","mtm-bar-background")
 		.attr("data-toggle","toggle").attr("data-on","black").attr("data-off","white")
-		.attr("data-size","small").attr("data-width","70")
-		.property("checked",function() { return config.options.background=="black" ? true : false;})
+		.attr("data-width","80")
+		.property("checked",function() { return config.options.background; })
 		$('#mtm-bar-background').on({ "change": function() { 
 	  		$('#mtm-bar-colors')[0].closable=false;
 	  		//change all button
-			config.options.background=d3.select("#mtm-bar-background").property("checked") ? "black" : "white";
-			d3.select("#options_background").property('value',config.options.background)
+			config.options.background=d3.select("#mtm-bar-background").property("checked");
 			//action
-			d3.selectAll(".mtm-bg").attr("fill",config.options.background)
-			d3.selectAll(".mtm-header rect").style("stroke",config.options.background)
-			d3.selectAll(".mtm-view rect").style("stroke",config.options.background)
-			d3.select("#mtm-table").style("background-color",config.options.background)
+			d3.selectAll(".mtm-bg").attr("fill",function() {return config.options.background ? "#000" : "#FFF"; })
+			d3.selectAll(".mtm-header rect").style("stroke",function() {return config.options.background ? "#000" : "#FFF"; })
+			d3.selectAll(".mtm-view rect").style("stroke",function() {return config.options.background ? "#000" : "#FFF"; })
+			d3.select("#mtm-table").style("background-color",function() {return config.options.background ? "#000" : "#FFF"; })
 	  	} });
 
-		list.append("li").append("a").text("Labels")
-		list.append("li").append("a").text("Zooms")
+		//Labels
+		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-labels")
+		item.append("a").attr("href","#")
+		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
+		.html("Labels <span class='caret'></span>")
+		ul = item.append("ul").attr("class","dropdown-menu")
+			.style("width","270px").style("padding","5px")
+		//labelled
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","80px").text("labelled:")
+		s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-labelled")
+			.style("width","120px")
+			s.append("option").attr("value","taxon").text("by taxon")
+			s.append("option").attr("value","rank").text("by rank")
+			s.append("option").attr("value","no").text("no label")
+			//value
+			s.property("value",config.options.labelled)
+			s.on("change",function() { 
+				//change all button
+				config.options.labelled=this.value;
+				d3.select("#mtm-bar-labelled-block").classed("in",function(){ return config.options.labelled=="rank" ? true : false;})
+				//action
+				updatePaths();
+			});
+		$('#mtm-bar-labelled').on({
+		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
+		});
+		//By rank block
+		li = ul.append("li").attr("class","collapse").attr("id","mtm-bar-labelled-block")
+		//select rank
+		block = li.append("div").attr("class","form-inline")
+		block.append("label").style("width","80px").text("rank:")
+		s = block.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-labelled-rank")
+			s.append("option").attr("value","init").text("--Phylogenic rank--")
+			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
+			//value
+			s.property("value",config.options.labelled_rank)
+			s.on("change",function() { 
+				//change all button
+				config.options.labelled_rank=this.value;
+				//action
+				zoom(node);
+			});
+		$('#mtm-bar-labelled-rank').on({
+		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
+		});
+	  	li = ul.append("li").attr("class","divider")
+		//Pattern
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","80px").text("pattern:")
+		li.append("input").attr("class","form-control").attr("id","mtm-bar-pattern")
+		.attr("type","text").style("width","172px")
+		.property("value",config.options.pattern)
+			s.on("change",function() { 
+				//change all button
+				config.options.pattern=this.value;
+				//action
+				updatePaths(); 
+			});
+		$('#mtm-bar-pattern').on({
+		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
+		});
+		//Font
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","80px").text("font size:")
+		s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-font")
+			.style("width","120px")
+			for (var i=8; i<40; i=i+2) { s.append("option").attr("value",i).text(i); }
+			//value
+			s.property("value",config.options.font)
+			s.on("change",function() { 
+				//change all button
+				config.options.font=this.value;
+				//action
+				updateLabel();
+				zoom(n);
+			});
+		$('#mtm-bar-font').on({
+		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
+		});
 
 		//Treemap
-		drop = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-treemap")
-		drop.append("a").attr("href","#")
+		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-treemap")
+		item.append("a").attr("href","#")
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Treemap <span class='caret'></span>")
-		ul = drop.append("ul").attr("class","dropdown-menu").style("width","250px")
-		li = ul.append("li")
+		ul = item.append("ul").attr("class","dropdown-menu")
+			.style("width","280px").style("padding","5px")
+
 		//Hierarchy
-		li.append("label").attr("class","col-xs-6").text("hierarchy:")
-		li.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-border")
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","90px").text("hierarchy:")
+		li.append("input").attr("type","checkbox").attr("id","mtm-bar-hierarchy")
 		.attr("data-toggle","toggle").attr("data-on","rugged").attr("data-off","flat")
-		.attr("data-size","small").attr("data-width","70")
-		.property("checked",function() { return config.treemap.border;})
-		$('#mtm-bar-border').on({ "change": function() { 
+		.attr("data-width","80")
+		.property("checked",function() { return config.options.hierarchy;})
+		$('#mtm-bar-hierarchy').on({ "change": function() { 
 	  		$('#mtm-bar-treemap')[0].closable=false;
 	  		//change all button
-			config.treemap.border=d3.select("#mtm-bar-border").property("checked");
-			//d3.selectAll(".mtm-mode").property('value',this.value)
-			d3.select("#options_border").property('value',config.treemap.border)
+			config.options.hierarchy=d3.select("#mtm-bar-hierarchy").property("checked");
 			//action
-			d3layout.padding(function(){return config.treemap.border ? 2 : 0;})
+			d3layout.padding(function(){return config.options.hierarchy ? 2 : 0;})
 			tree ? d3layout.nodes(tree) : d3layout.nodes(root) ;
 			zoom(node);
 	  	} });
 		//Zoom
-		li.append("label").attr("class","col-xs-6").text("zoom:")
-		li.append("input").attr("type","checkbox").attr("class","mtm-switch").attr("id","mtm-bar-zoom")
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","90px").text("zoom:")
+		li.append("input").attr("type","checkbox").attr("id","mtm-bar-zoom")
 		.attr("data-toggle","toggle").attr("data-on","fluid").attr("data-off","sticky")
-		.attr("data-size","small").attr("data-width","70")
-		.property("checked",function() { return config.options.zoom=="fluid" ? true : false;})
+		.attr("data-width","80")
+		.property("checked",function() { return config.options.zoom;})
 		$('#mtm-bar-zoom').on({ "change": function() { 
 	  		$('#mtm-bar-treemap')[0].closable=false;
 	  		//change all button
-			config.options.zoom=d3.select("#mtm-bar-zoom").property("checked") ? "fluid" : "sticky" ;
-			//d3.selectAll(".mtm-mode").property('value',this.value)
-			d3.select("#options_zoom").property('value',config.options.zoom)
+			config.options.zoom=d3.select("#mtm-bar-zoom").property("checked");
 			//action
-			if(config.options.zoom=="fluid") { fluid = tree ? tree : root ; }
+			if(config.options.zoom) { fluid = tree ? tree : root ; }
 			else {
 				fluid=false;
 				tree ? computeLayout(tree) : computeLayout(root) ;
@@ -746,34 +863,74 @@
 	  	} });
 		//Proportion
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").attr("class","col-xs-6").text("proportion:")
-		var s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-proportion")
-		s.append("option").attr("value","norm").text("by sample")
-		s.append("option").attr("value","hits").text("by hits")
-		s.append("option").attr("value","nodes").text("by taxon")
+		li.append("label").style("width","90px").text("proportion:")
+		s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-proportion")
+			.style("width","120px")
+			s.append("option").attr("value","norm").text("by sample")
+			s.append("option").attr("value","hits").text("by hits")
+			s.append("option").attr("value","nodes").text("by taxon")
 			//value
-			s.property("value",config.options.mode)
+			s.property("value",config.options.proportion)
 			s.on("change",function() { 
 				//change all button
-				config.options.mode=this.value;
-				d3.select("#options_mode").property('value',this.value)
+				config.options.proportion=this.value;
 				//action
-				d3layout.value(setMode(config.options.mode))
+				d3layout.value(setMode(config.options.proportion))
 				tree ? d3layout.nodes(tree) : d3layout.nodes(root) ;
 				zoom(node);
 			});
 		$('#mtm-bar-proportion').on({
 		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
 		});
+		//Depth
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","90px").text("depth:")
+		var s = li.append("select").attr("class","form-control mtm-select").attr("id","mtm-bar-depth-rank")
+			s.append("option").attr("value","init").text("--Phylogenic rank--")
+			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
+			//value
+			s.property("value",config.options.depth_rank)
+			s.on("change",function() { 
+				//change all button
+				config.options.depth_rank=this.value;
+				//action
+				//updateColor();
+			});
+		$('#mtm-bar-depth-rank').on({
+		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
+		});
+
+		//Zoom out
+		li = list.append("li").append("div").attr("class","form-inline")
+			.append("div").attr("class","btn-group")
+		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","zoom to root")
+			.append("span").attr("class","glyphicon glyphicon-step-backward")
+		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","zoom to parent node")
+			.append("span").attr("class","glyphicon glyphicon-backward")
+
+		//search
+		li = list.append("li").append("div").attr("class","navbar-form form-inline input-group")
+		li.append("div").attr("class","input-group-addon")
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","search")
+			.append("span").attr("class","glyphicon glyphicon-search")
+		li.append("input").attr("class","form-control").attr("type","text").style("width","120px")
+
+		list.append("li").append("a").text("Import")
+		list.append("li").append("a").text("Export")
+		list.append("li").append("a").text("About")
 
 		//activate toogles
-		$(function() { $('.mtm-switch').bootstrapToggle(); })
+		$(function() { $('[data-toggle="toggle"]').bootstrapToggle(); })
+		$(function () { $('[data-toggle="popover"]').popover();})
+		$(function () { $('[data-toggle="tooltip"]').tooltip();})
 		//manage hide
 		$('.mtm-dropdown').on({
 			"show.bs.dropdown":  function() { this.closable=true},
 		 	"hide.bs.dropdown":  function() { if(!this.closable) {this.closable=true; return false;} else {return true;} }
 		});
-		
+
 		/*OLD
 		//Color By//
 		var s = menu.append("span").attr("class","mtm-button mtm-on")
@@ -1008,7 +1165,7 @@
 		//return menu.node().offsetHeight;
 	}
 	
-	function configuration(c) {
+/*	function configuration(c) {
 		if(verbose){console.time("config");}
 		var loc = d3.select("#"+c.location).classed("mtm-container",true)
 		for (var i in config) {
@@ -1146,7 +1303,7 @@
 
 		if(verbose){console.timeEnd("config");}
 	}
-	
+*/	
 	function treemap(c,p) {
 		if(verbose){console.time("treemap");}
 		//CONTAINER//
@@ -1155,9 +1312,9 @@
 			.classed("mtm-container",true)
 			
 		//Menu//
-		if(c.options) {
-			bar(config.bar,c.location,c.width);
-		}
+		//if(c.options) {
+		//	bar(config.bar,c.location,c.width);
+		//}
 		
 		//SVG//
 		var svg = container.append("svg") //general SVG
@@ -1172,7 +1329,7 @@
 		svg.append("rect")
 			.attr("width","100%")
 			.attr("height","100%")
-			.attr("fill",function(){return config.options.background;})
+			.attr("fill",function() {return config.options.background ? "#000" : "#FFF"; })
 			.attr("class","mtm-bg")
 		
 		//group for visual elements
@@ -1197,7 +1354,7 @@
 			.attr("width", c.width - 1)
 			.attr("height", 20-1) //border-bottom
 			.style("fill","#888")
-			.style("stroke",function(){return config.options.background;})
+			.style("stroke",function() {return config.options.background ? "#000" : "#FFF"; })
 			.style("cursor","pointer")
 			//.on('mouseover', function(d){ tip("show",d); })
 			//.on('mouseout', function(d){ tip("hide",d); })
@@ -1228,9 +1385,9 @@
 			.classed("mtm-container",true)
 		
 		//Menu//
-		if(c.options) {
-			bar(config.bar,c.location,c.width);
-		}
+		//if(c.options) {
+		//	bar(config.bar,c.location,c.width);
+		//}
 		
 		//table//
 		var tab=container.append("div")
@@ -1238,7 +1395,7 @@
 				.style("height", c.height)
 				.attr("width", c.width)
 				.style("overflow","auto")
-				.style("background-color",function(){return config.options.background;})
+				.style("background-color",function() {return config.options.background ? "#000" : "#FFF"; })
 				.style("display","inline-block")
 				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")
 				.style("font-size","14px")
@@ -1313,12 +1470,12 @@
 		//scale
 		x.domain([n.x, n.x + n.dx]);
 		y.domain([n.y, n.y + n.dy]);
-		var kx = config.options.zoom=="sticky" ? (w / n.dx) : 1;
-		var ky = config.options.zoom=="sticky" ? (h / n.dy) : 1;
+		var kx = config.options.zoom ? 1 : (w / n.dx) ; //True=fluid, False=sticky
+		var ky = config.options.zoom ? 1 : (h / n.dy) ; //True=fluid, False=sticky
 
 		//select
 		var displayed;
-		if(config.treemap.border) { //ancestor + leaves (w>0 & h>0)
+		if(config.options.hierarchy) { //ancestor + leaves (w>0 & h>0)
 			displayed=d3layout.nodes().filter(function(d) {return d.parent && (kx*d.dx-1 > 0) && (ky*d.dy-1 > 0);})
 		}
 		else { // leaves
@@ -1331,7 +1488,7 @@
 		//create new
 		sel.enter().insert("rect")
 			.attr("class",function(d){ return "v"+d.id+d.data.sample;})
-			.style("stroke",function(){return config.options.background;})
+			.style("stroke",function() {return config.options.background ? "#000" : "#FFF"; })
 			.style("fill",function(d){return d.data.color;})
 			.style("cursor","pointer")
 			.attr("transform","translate(0,0)")
@@ -1367,12 +1524,12 @@
 		//scale
 		var mw=Math.round(config.options.font*0.6); //SourceCodePro
 		var mh=Math.round(config.options.font*1.3); //SourceCodePro 
-		var kx = config.options.zoom=="sticky" ? (w / n.dx) : 1;
-		var ky = config.options.zoom=="sticky" ? (h / n.dy) : 1;
+		var kx = config.options.zoom ? 1 : (w / n.dx) ; //True=fluid, False=sticky
+		var ky = config.options.zoom ? 1 : (h / n.dy) ; //True=fluid, False=sticky
 
 		//select
 		var labelled;
-		if(config.options.label=="rank" && rank!=-1) { //show selected group || upper leaves
+		if(config.options.labelled=="rank" && rank!=-1) { //show selected group || upper leaves
 			labelled=labeledByRank(rank,root,root);
 		}
 		else { //label for each tags
@@ -1535,34 +1692,32 @@
 
 	function updateColor() {
 		if(verbose){console.time("updateColor");}
-		rank = ranks.indexOf(config.options.rank) //selected rank
+		rank = ranks.indexOf(config.options.colored_rank) //selected rank
 		var getColor;
 		//color by rank : top-down
-		if(config.options.color=="rank" && rank!=-1) {
-			if(config.options.depth=="null") {colorByRank(rank,root,root);}
+		if(config.options.colored=="rank" && rank!=-1) {
+			if(config.options.depth_rank=="init") {colorByRank(rank,root,root);}
 			else {colorByRank(rank,tree,tree);}
 			getColor = function(d){return d.data.color;}
 		}
 		//set color
-		else if(config.options.color=="max") { //colorByMajority
+		else if(config.options.colored=="majority") { //colorByMajority
 			getColor = function(d) {
 				if(!d.children) {d.data.color = color(d.parent.data.count.indexOf(Math.max(...d.parent.data.count)));}
 				else {d.data.color = color(d.data.count.indexOf(Math.max(...d.data.count)));}
 				return d.data.color;
 			}
 		}
-		else if(config.options.color=="sample") {
+		else if(config.options.colored=="sample") {
 			getColor = function(d) {
 				d.data.color = color(d.data.sample);
 				return d.data.color;
 			}
 		}
-		else {//default (config.options.color=="taxon")
+		else {//default (config.options.colored=="taxon")
 			getColor = function(d) {
 				d.data.color = color(d.id);
-				//console.log(d.name,d.id,d.data.color);
 				return d.data.color;
-
 			}
 		}
 		//Affect color
@@ -1596,10 +1751,10 @@
 					})
 				}
 				else  { //if(rankC==0 || rankC<r) //search deeper
-					if(config.options.upper=="gray") {
-						n.children[i].data.color = "#888";
+					if(config.options.ancestor) { //enable
+						n.children[i].data.color = color(n.children[i].id); //taxon
 					}
-					else {n.children[i].data.color = color(n.children[i].id);} //taxon
+					else {n.children[i].data.color = "#888";} //gray
 					colorByRank(r,p,n.children[i]);
 				}
 			}//end foreach
@@ -1761,7 +1916,7 @@
 			.select("text")
 				.text(function(d) { return d.name; })
 
-		if(config.options.zoom=="fluid") {
+		if(config.options.zoom) { //fluid
 			computeLayout(n);
 			updateColor();
 		}
@@ -1786,7 +1941,7 @@
 					function(d){return (d.value*100/n.value).toFixed(2)+"%";}
 				)
 			//manage collapse
-			if(config.options.label=="rank" && rank!=-1){
+			if(config.options.labelled=="rank" && rank!=-1){
 				var list = collapseByRank(rank,root,root);
 				//hide lower
 				lines.data(list[2],function(d){return "v"+d.id+d.data.sample;})
