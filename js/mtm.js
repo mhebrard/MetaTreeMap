@@ -34,9 +34,16 @@
 	
 	//CONSTRUCTORS//
 	mtm.load = function(files,conf) {
+		//container for dependencies
+		if(!document.getElementById("mtm-mods")) {
+			var s = document.createElement('div');
+			s.id = "mtm-mods";
+			var p = document.getElementsByTagName('body')[0];
+			if(p.firstChild) { p.insertBefore(s,p.firstChild); }
+			else { p.appendChild(s); }
+		}
 		//manage dependencies
 		var queue = [];
-		queue.push(linkload("http://fonts.googleapis.com/css?family=Source+Code+Pro:600"));
 		if (!window.jQuery) { //include jQ + bootstrap
 			queue.push(scriptload("http://code.jquery.com/jquery-1.12.0.min.js")); 
 			queue.push(linkload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"));
@@ -60,25 +67,36 @@
 		}).catch(function(err) { return Error("mtm.load.versions:",err); })
 		.then(function() {
 			queue=[];
-			//bootstrap-toogle
-			queue.push(linkload("https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css"));
-			queue.push(scriptload("https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"));
-			//bootstrap-select
-			queue.push(linkload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css"));
-			queue.push(scriptload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"));
+			if(!d3.select('#mtm-mods').attr("data-subs")) {
+				d3.select('#mtm-mods').attr("data-subs",true)
+	
+				//font
+				queue.push(linkload("http://fonts.googleapis.com/css?family=Source+Code+Pro:600"));
+				//bootstrap-toogle
+				queue.push(linkload("https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css"));
+				queue.push(scriptload("https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"));
+				//bootstrap-select
+				queue.push(linkload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css"));
+				queue.push(scriptload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"));
+			}
 			//include
 			return Promise.all(queue);
 		}).catch(function(err){return Error("mtm.load.modules:",err);})
-		.then(function() { return Promise.all([loadConf(conf),loadData(files)]); })
+		.then(function(){ return loadConf(conf); })
+		.catch(function(err){return Error("mtm.load.config:",err);})
+		.then(function() { 
+			return Promise.all([setConfig(),setLayout()]);
+		})
+		.catch(function(err) { return Error("mtm.load.layout:",err); })
+		.then(function() { return loadData(files); })
 		.catch(function(err) { return Error("mtm.load.data:",err); })
 		.then(function(load) { 
-			console.log(load);
+			console.log("load",load);
 			//hundreds + sumHits
-			load[1][0] = load[1].reduce(function(a,b) {return +a + +b;});
-			sumHits(root,load[1]);
+			load[0] = load.reduce(function(a,b) {return +a + +b;});
+			sumHits(root,load);
 			console.log("root",root);
-			setConfig();
-			setLayout();
+			updateLayout();
 		})
 	}
 
@@ -88,25 +106,26 @@
 			s.type = 'text/javascript';
 			s.src = u;
 			s.onload = function(){ return ful(u+" loaded");}
-			document.getElementsByTagName('head')[0].appendChild(s);
+			document.getElementById('mtm-mods').appendChild(s);
 		});
 	}
 
-	function linkload(u) {
+	function linkload(u,id) {
 		return new Promise(function(ful) {
 			var s = document.createElement('link');
 			s.rel = 'stylesheet';
 			s.href = u;
 			s.crossorigin = "anonymous";
+			if(id) {s.id=id;}
 			s.onload = function(){ return ful(u+" loaded");};
-			document.getElementsByTagName('head')[0].appendChild(s);
+			document.getElementById('mtm-mods').appendChild(s);
 		});
 	} 
 
 	function loadConf(conf) {
 		return new Promise(function(ful) {
 			if(conf) { 
-				d3.json(URL.createObjectURL(conf),function(c) {
+				d3.json(conf.data,function(c) {
 					config=c;
 					return ful("config file loaded");
 				})
@@ -125,17 +144,19 @@
 
 	function loadData(files) {
 		//manages filesname
-		var ul = d3.select("body").append("div").attr("id","mtm-samples")
-			.style("display","none").append("ul").attr("class","list-unstyled")
-		var paths = document.getElementById("data").files;
-		if(paths.length==0) { 
-			paths=["data/HuFS.json","data/HuFU.json"]; 
+		d3.select("#mtm-samples").text("");
+		var ul = d3.select("#mtm-samples").append("ul").attr("class","list-unstyled")
+
+		var data = [];
+		if(!files || files.length==0) { 
+			data=["data/HuFS.json","data/HuFU.json"]; 
 			ul.append("li").text("#1.HuFS.json");
 			ul.append("li").text("#2.HuFU.json");
 		}
 		else {
-			for(var i=0; i<paths.length; i++) {
-				ul.append("li").text("#"+(i+1)+"."+paths[i].name);
+			for(var i=0; i<files.length; i++) {
+				ul.append("li").text("#"+(i+1)+"."+files[i].name);
+				data.push(files[i].data);
 			}
 		}
 		//root init.
@@ -145,7 +166,7 @@
 		var hundreds = []; //samples total reads
 		//sequential merge
 		var seq=Promise.resolve(hundreds);
-		files.forEach(function(f,i) {
+		data.forEach(function(f,i) {
 			seq = seq.then(function(h){
 				return readData(f,i,h);
 			})
@@ -392,112 +413,118 @@
 	//VIEW CREATION//
 	function setConfig() {
 		//check the choices and transform to boolean
-		var vals = [];
-		vals=["rugged","flat"];
-		if(vals.indexOf(config.options.hierarchy) == 0) {config.options.hierarchy=true;}
-		else if (vals.indexOf(config.options.hierarchy) == 1) {config.options.hierarchy=false;}
+		return new Promise(function(ful) {
+			var vals = [];
+			vals=["rugged","flat"];
+			if(vals.indexOf(config.options.hierarchy) == 0) {config.options.hierarchy=true;}
+			else if (vals.indexOf(config.options.hierarchy) == 1) {config.options.hierarchy=false;}
 
-		vals=["fluid","sticky"];
-		if(vals.indexOf(config.options.zoom) == 0) {config.options.zoom=true;}
-		else if (vals.indexOf(config.options.zoom) == 1) {config.options.zoom=false;}
+			vals=["fluid","sticky"];
+			if(vals.indexOf(config.options.zoom) == 0) {config.options.zoom=true;}
+			else if (vals.indexOf(config.options.zoom) == 1) {config.options.zoom=false;}
 
-		vals=["sample","hits","taxon"]
-		if(vals.indexOf(config.options.proportion) < 0)
-		{ alert("please set config.options.proportion: "+vals.toString());}
+			vals=["sample","hits","taxon"]
+			if(vals.indexOf(config.options.proportion) < 0)
+			{ alert("please set config.options.proportion: "+vals.toString());}
 
-		vals=["taxon","rank","sample","majority"]
-		if(vals.indexOf(config.options.colored) < 0)
-		{ alert("please set config.options.colored: "+vals.toString());}
+			vals=["taxon","rank","sample","majority"]
+			if(vals.indexOf(config.options.colored) < 0)
+			{ alert("please set config.options.colored: "+vals.toString());}
 
-		vals=["enable","disable"];
-		if(vals.indexOf(config.options.ancestors) == 0) {config.options.ancestors=true;}
-		else if (vals.indexOf(config.options.ancestors) == 1) {config.options.ancestors=false;}
+			vals=["enable","disable"];
+			if(vals.indexOf(config.options.ancestors) == 0) {config.options.ancestors=true;}
+			else if (vals.indexOf(config.options.ancestors) == 1) {config.options.ancestors=false;}
 
-		vals=["brewer","d3"];
-		if(vals.indexOf(config.options.palette) == 0) {config.options.palette=colors[0][1];}
-		else if (vals.indexOf(config.options.palette) == 1) {config.options.palette=colors[1][1];}
+			vals=["brewer","d3"];
+			if(vals.indexOf(config.options.palette) == 0) {config.options.palette=colors[0][1];}
+			else if (vals.indexOf(config.options.palette) == 1) {config.options.palette=colors[1][1];}
 
-		vals=["black","white"];
-		if(vals.indexOf(config.options.background) == 0) {config.options.background=true;}
-		else if (vals.indexOf(config.options.background) == 1) {config.options.background=false;}
+			vals=["black","white"];
+			if(vals.indexOf(config.options.background) == 0) {config.options.background=true;}
+			else if (vals.indexOf(config.options.background) == 1) {config.options.background=false;}
 
-		vals=["taxon","rank","no"]
-		if(vals.indexOf(config.options.labelled) < 0)
-		{ alert("please set config.options.labelled: "+vals.toString());}
+			vals=["taxon","rank","no"]
+			if(vals.indexOf(config.options.labelled) < 0)
+			{ alert("please set config.options.labelled: "+vals.toString());}
+
+			ful("Config checked");
+		})
 	}
 
 	function setLayout() {
-		if(verbose){console.time("layout");}
-		
-		//style
-		d3.select("head").append("style").text(
-		"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14pt;pointer-events:none;opacity:0}\n"
-		//+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
-		//+".mtm-button{background-color:#fff;border-radius:.2em;margin:1px;padding:2px ;font-size:14pt;cursor:pointer;display:inline-table;}\n"
-		//+".mtm-on{color:#000;border:3px solid #000;}\n"
-		//+".mtm-off{color:#888;border:3px solid #888;}\n"
-		+".mtm-box{position:absolute;z-index:3;background-color:#888;border:1px solid #fff;border-radius:.2em;}\n"
-		+".mtm-box:hover{border: 1px solid black;}\n"
-		+".mtm-box ul{margin:0px;padding:0px 5px;}\n"
-		+".mtm-box ul li {list-style-type:none;list-style-position:outside;}\n"
-		+".mtm-box ul li:hover{background-color:#666;cursor:pointer;}\n"
-		+"#mtm-table table{border-collapse:collapse;width:100%;}\n"
-		)
-		
-		//Delete previous views
-		d3.selectAll(".mtm-container").html("")
-		param={};
-		tree=false;
-		fluid=false;
+		return new Promise(function(ful) {		
+			//hidden divs
+			if(!d3.select("#mtm-mods").attr("data-hidden")) {
+				var mods = d3.select("#mtm-mods").attr("data-hidden",true);
+				//style
+				mods.append("style").attr("type","text/css").text(
+						"<!--\t"
+						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14pt;pointer-events:none;opacity:0}\n"
+						+"#mtm-table table{border-collapse:collapse;width:100%;}\n"
+						+"\t-->"
+					)
+				//divs
+				mods.append("div").attr("id","mtm-tip")
+				mods.append("div").attr("id","mtm-canvas").style("display","none")
+				mods.append("div").attr("id","mtm-samples").style("display","none")
+				//pattern
+				var ul = mods.append("div").attr("id","mtm-tags").attr("width","140px")
+					.style("display","none").append("ul").attr("class","list-unstyled")
+				ul.append("li").text("#N: name");
+				ul.append("li").text("#I: id");
+				ul.append("li").text("#H: hits");
+				ul.append("li").text("#R: rank");
+				ul.append("li").text("#S: sample");
+				ul.append("li").text("#P: % by sample");
+				ul.append("li").text("#V: % by view");
+			}
 
-		
-		//hidden div
-		d3.select("body").append("div").attr("id","mtm-tip")
-		d3.select("body").append("div").attr("id","mtm-canvas").style("display","none")
-		//pattern
-		var ul = d3.select("body").append("div").attr("id","mtm-tags").attr("width","140px")
-			.style("display","none").append("ul").attr("class","list-unstyled")
-		ul.append("li").text("#N: name");
-		ul.append("li").text("#I: id");
-		ul.append("li").text("#H: hits");
-		ul.append("li").text("#R: rank");
-		ul.append("li").text("#S: sample");
-		ul.append("li").text("#P: % by sample");
-		ul.append("li").text("#V: % by view");
+			//Delete previous views
+			d3.selectAll(".mtm-container").html("")
+			param={};
+			tree=false;
+			fluid=false;
 
+			
+
+			//build views
+			if(config.bar) { bar(config.bar); }
+			if(config.table && config.table.display) {
+				param.table={};
+				table(config.table,param.table);
+				//updateLines();
+			}
+			if(config.treemap && config.treemap.display) {
+				param.treemap={};
+				//updateSearch();
+				treemap(config.treemap,param.treemap);
+			}
+
+			ful("Layout ready");
+		})
+	}
+
+	function updateLayout() {
 		//manage cutOff
 		refTree();
 
-		//build views
-		if(config.bar) { bar(config.bar); }
-		//if(config.configuration && config.configuration.display) {
-		//	configuration(config.configuration);
-		//}
 		if(config.table && config.table.display) {
-			param.table={};
-			table(config.table,param.table);
 			updateLines();
 		}
 		if(config.treemap && config.treemap.display) {
-			param.treemap={};
 			updateSearch();
-			treemap(config.treemap,param.treemap);
 			if(config.options.zoom) {
 				fluid = config.options.depth_rank!="init" ? tree : root ;
 			}
 		}
 
-		//sort nodes for search
-		//sorted.sort(function(a,b) { return a.name.length<b.name.length ? -1 : a.name.length>b.name.length ? 1 : a.name<b.name ? -1 : a.name>b.name ? 1 : 0  ; });
 		var domain = d3layout.nodes().reduce(function(p,c) {if(p.indexOf(c.id)<0){p.push(c.id);}return p;}, []);
 		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/)).domain(domain);
 		
 		//update
-		//create rect + %view
 		tree ? zoom(tree) : zoom(root);
 		updateColor();
-		
-		if(verbose){console.timeEnd("layout");}
+
 	}
 
 	function refTree() {
@@ -660,6 +687,9 @@
 	        placement: "bottom",
 	        title: "Click to see samples names"
    		});
+   		$('#mtm-info').on({
+		  "click":	function() { $('#mtm-info').tooltip("hide"); }
+		});
 
     	//Bar content
 		list = cont.append("div").attr("class","collapse navbar-collapse")
@@ -839,7 +869,7 @@
 	        html : true, 
 	        content: function() { return $('#mtm-tags').html(); },
 	        title: "Tags:",
-	        container: "#mtm-barmenu",
+	        container: "#mtm-barmenu"
    		});
    		$("#mtm-pattern").tooltip({ 
 	        placement: "bottom",
@@ -862,7 +892,6 @@
 				d3.select("#mtm-treemap").style("font-size",config.options.font+"px")
 				d3.select("#mtm-table").style("font-size",config.options.font+"px")
 				d3.select("#mtm-tip").style("font-size",config.options.font+"px")
-				//zoom(n);
 			});
 		$('#mtm-bar-font').on({
 		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
@@ -970,10 +999,12 @@
 		li = list.append("li").append("div").attr("class","form-inline")
 			.append("div").attr("class","btn-group")
 		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","zoom to root")
+			.on("click",function(){return config.options.depth_rank!="init" ? zoom(tree) : zoom(root) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","zoom to root")
 			.append("span").attr("class","glyphicon glyphicon-step-backward")
 		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","zoom to parent node")
+			.on("click",function(){return node.parent ? zoomSkip(node.parent) : zoom(node) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","zoom to parent node")
 			.append("span").attr("class","glyphicon glyphicon-backward")
 
 		//search
@@ -987,9 +1018,134 @@
 				//action
 				zoom(searchable[this.value]);
 			});
+
+		//Import
+		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-import")
+		item.append("a").attr("href","#")
+		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
+		.html("Import <span class='caret'></span>")
+		ul = item.append("ul").attr("class","dropdown-menu")
+			.style("width","250px").style("padding","5px")
+
+		//Data
+		li = ul.append("li").attr("class","form-inline")
+			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
+		li.append("label").text("data:").style("width","70px")
+		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-data-btn")
+			.style("width","90px")
+		s.text("Browse...")
+		s.append("input").attr("type","file").style("display","none").attr("id","mtm-data-input")
+			.attr("name","dataFiles[]").property("multiple",true)
+			.on("change",function(){
+				var names=[];
+				for (var i=0; i<this.files.length;i++) {
+					names.push(this.files[i].name);
+				}
+				d3.select("#mtm-data-help").text(names.join(","));
+			})
+		$('#mtm-data-btn').on({ "click": function() {
+	  		$('#mtm-bar-import')[0].closable=false;
+	  	} });
+		li.append("label").attr("class","help-block small").attr("id","mtm-data-help").style("display","inline")
+
+		//Config
+		li = ul.append("li").attr("class","form-inline")
+			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
+		li.append("label").text("config:").style("width","70px")
+		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-config-btn")
+			.style("width","90px")
+		s.text("Browse...")
+		s.append("input").attr("type","file").style("display","none").attr("id","mtm-config-input")
+			.attr("name","confFiles[]").property("multiple",true)
+			.on("change",function(){
+				var names=[];
+				for (var i=0; i<this.files.length;i++) {
+					names.push(this.files[i].name);
+				}
+				d3.select("#mtm-config-help").text(names.join(","));
+			})
+		$('#mtm-config-btn').on({ "click": function() {
+	  		$('#mtm-bar-import')[0].closable=false;
+	  	} });
+		li.append("label").attr("class","help-block small").attr("id","mtm-config-help").style("display","inline")
+
+		//load
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","70px")
+		li.append("button").attr("class","btn btn-primary")
+			.attr("type","button").style("width","90px")
+			.text("Load")
+			.on("click",function(){
+				var files = d3.select("#mtm-data-input").node().files
+				var data = [];
+				for(var i=0; i<files.length; i++) {
+					data.push({name:files[i].name,data:URL.createObjectURL(files[i])});
+				}
 		
-		list.append("li").append("a").text("Import")
-		list.append("li").append("a").text("Export")
+				//manage config
+				var files = d3.select("#mtm-config-input").node().files
+				var conf="";
+				if(files[0]) { conf = {name:files[0].name,data:URL.createObjectURL(files[0])}; }
+				
+				//call
+				mtm.load(data,conf);
+			})
+		li = ul.append("li").attr("class","divider")
+
+		//Convert
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").text("convert:").style("width","70px")
+		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-convert")
+			.style("width","90px")
+		s.text("Format...")
+		
+		$('#mtm-convert').on({ "click": function() {
+	  		$('#mtm-bar-import')[0].closable=false;
+	  	} });
+
+	  	//Export
+		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-export")
+		item.append("a").attr("href","#")
+		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
+		.html("Export <span class='caret'></span>")
+		ul = item.append("ul").attr("class","dropdown-menu")
+			.style("width","160px").style("padding","5px")
+
+		//json
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").text("tree:").style("width","70px")
+		li.append("button").attr("class","btn btn-default").attr("id","mtm-json")
+			.attr("type","button").style("width","70px")
+			.text(".json");
+
+		//svg
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").text("treemap:").style("width","70px")
+		li.append("button").attr("class","btn btn-default").attr("id","mtm-svg")
+			.attr("type","button").style("width","70px")
+			.text(".svg");
+
+		//png
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").text("treemap:").style("width","70px")
+		li.append("button").attr("class","btn btn-default").attr("id","mtm-png")
+			.attr("type","button").style("width","70px")
+			.text(".png");
+
+		//txt
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").text("table:").style("width","70px")
+		li.append("button").attr("class","btn btn-default").attr("id","mtm-txt")
+			.attr("type","button").style("width","70px")
+			.text(".txt");
+
+		//config
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").text("config:").style("width","70px")
+		li.append("button").attr("class","btn btn-default").attr("id","mtm-config")
+			.attr("type","button").style("width","70px")
+			.text(".config");
+	
 		list.append("li").append("a").text("About")
 
 		//activate toogles
@@ -1003,379 +1159,9 @@
 		 	"hide.bs.dropdown":  function() { if(!this.closable) {this.closable=true; return false;} else {return true;} }
 		});
 
-		/*OLD
-		//Color By//
-		var s = menu.append("span").attr("class","mtm-button mtm-on")
-			.append("span").attr("class","fa fa-link")
-			.attr("title","Color by...")
-			.append("select").attr("class","mtm-color")
-			//options//
-			s.append("option").attr("value","taxon").text("by taxon")
-			s.append("option").attr("value","rank").text("by rank")
-			s.append("option").attr("value","sample").text("by sample")
-			s.append("option").attr("value","max").text("majority")
-			//value//
-			s.property("value",config.options.color)
-			s.on("change",function() { 
-				//change all button
-				config.options.color=this.value;
-				d3.selectAll(".mtm-color").property('value',this.value)
-				d3.select("#options_color").property('value',this.value)
-				//action
-				updateColor();
-			});
-		
-		//Phylogenic Rank//
-		var s = menu.append("span").attr("class","mtm-button mtm-on")
-			.append("select").attr("class","mtm-phylogeny")
-			//options//
-			s.append("option").attr("value","init").text("--Phylogenic rank--")
-			for (var k in ranks) {
-				s.append("option").attr("value",ranks[k]).text(ranks[k])
-			}
-			//value//
-			s.property("value",config.options.rank)
-			s.on("change",function() {
-				//change all button
-				config.options.rank=this.value;
-				d3.selectAll(".mtm-phylogeny").property('value',this.value)
-				d3.select("#options_rank").property('value',this.value)
-				//action
-				if(config.options.color=="rank") { updateColor(); }
-				if(config.options.label=="rank") {
-					updateLabel();
-					zoom(node);
-				}
-			});
-		
-		//Labels//
-		menu.append("span").attr("class","mtm-button fa fa-tag mtm-label")
-			.attr("title","Labelling leaves or ranks")
-			.classed("mtm-on",function() { return config.options.label=="taxon"; })
-			.classed("mtm-off",function() { return config.options.label=="rank"; })
-			.on("click", function() {
-				config.options.label=config.options.label=="taxon"?"rank":"taxon";
-				d3.selectAll(".mtm-label")
-					.classed("mtm-on",function() { return config.options.label=="taxon"; })
-					.classed("mtm-off",function() { return config.options.label=="rank"; })
-				d3.select("#options_label").property('value',config.options.label);
-				zoom(node);
-			});
-		
-		//Parents//	
-		menu.append("span").attr("class","mtm-button fa fa-sitemap mtm-upper")
-			.attr("title","Grayed or colored upper ranks")
-			.classed("mtm-on",function() { return config.options.upper=="color"; })
-			.classed("mtm-off",function() { return config.options.upper=="gray"; })
-			.on("click", function() {
-				config.options.upper=config.options.upper=="color"?"gray":"color";
-				d3.selectAll(".mtm-upper")
-					.classed("mtm-on",function() { return config.options.upper=="color"; })
-					.classed("mtm-off",function() { return config.options.upper=="gray"; })
-				d3.select("#options_upper").property('value',config.options.upper)
-				updateColor();
-			});
-			
-		//Home//
-		menu.append("span").attr("class","mtm-button fa fa-home mtm-root")
-			.attr("title","Back to root")
-			.classed("mtm-on",true)
-			.on("click", function() { 
-				d3.selectAll(".mtm-root").classed("mtm-on",true);
-				if(config.options.depth=="null") { zoom(root);}
-				else { zoom(tree); }
-			})
-		
-		//Font//
-		var s = menu.append("span").attr("class","mtm-button mtm-on")
-			.append("span").attr("class","fa fa-text-height")
-			.attr("title","Font size")
-			.append("select").attr("class","mtm-font")
-			//options//
-			for (var i=8; i<40; i=i+2) {
-				s.append("option").attr("value",i).text(i);
-			}
-			//value//
-			s.property("value",config.options.font)
-			s.on("change",function() { 
-				//change all button
-				config.options.font=this.value;
-				d3.selectAll(".mtm-font").property('value',this.value)
-				d3.select("#options_font").property('value',this.value)
-				//action
-				updateLabel();
-				zoom(node);
-			})
-
-		//Palette//
-		var s = menu.append("span").attr("class","mtm-button mtm-on")
-			.style("position","relative").style("z-index","1")
-			.append("span").attr("class","fa fa-eyedropper")
-			.attr("title","Color palette")
-		s.append("input").attr("type","text")
-			.attr("class","mtm-palette")
-			.attr("size","7")
-			.attr("value",config.options.palette)
-			.on("click",function() {
-				d3.selectAll('.mtm-colorbox').select('ul')
-					.style("padding","5px")
-					.selectAll("li")
-					.data(colors)
-					.enter().append("li")
-					.on("click",function(d) {
-						//change all button
-						config.options.palette=d[1];
-						d3.selectAll(".mtm-palette").property("value",d[1])
-						d3.select("#options_palette").property('value',d[1])
-						//action
-						d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
-							.selectAll("li").remove()
-		*///				color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
-		/*				updateColor(); 
-					})
-					.text(function(d){ return d[0]; }) 
-			})
-			.on("change", function() {
-				//change all button
-				config.options.palette=this.value;
-				d3.selectAll(".mtm-palette").property("value",this.value)
-				d3.select("#options_palette").property('value',this.value)
-				//action
-				d3.selectAll('.mtm-colorbox').select('ul').style("padding","0px 5px")
-					.selectAll("li").remove()
-		*///		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/))
-		/*		updateColor(); 
-			})
-		s.append("div").attr("class","mtm-colorbox mtm-box")
-			.append("ul")
-			
-		//Background//
-		menu.append("span").attr("class","mtm-button fa fa-adjust mtm-background")
-			.attr("title","Background black or white")
-			.classed("mtm-on",function() { return config.options.background=="black"; })
-			.classed("mtm-off",function() { return config.options.background=="white"; })
-			.on("click", function() {
-				config.options.background=config.options.background=="black"?"white":"black";
-				d3.selectAll(".mtm-background")
-					.classed("mtm-on",function() { return config.options.background=="black"; })
-					.classed("mtm-off",function() { return config.options.background=="white"; })
-				d3.select("#options_background").property('value',config.options.background)
-				//action
-				d3.selectAll(".mtm-bg").attr("fill",config.options.background)
-				d3.selectAll(".mtm-header rect").style("stroke",config.options.background)
-				d3.selectAll(".mtm-view rect").style("stroke",config.options.background)
-				d3.select("#mtm-table").style("background-color",config.options.background)
-			});
-			
-		//Mode//
-		var s = menu.append("span").attr("class","mtm-button mtm-on")
-			.append("span").attr("class","fa fa-th")
-			.attr("title","Size mode")
-			.append("select").attr("class","mtm-mode")
-			//options//
-			s.append("option").attr("value","norm").text("norm")
-			s.append("option").attr("value","hits").text("hits")
-			s.append("option").attr("value","nodes").text("nodes")
-			//value//
-			s.property("value",config.options.mode)
-			s.on("change",function() { 
-				//change all button
-				config.options.mode=this.value;
-				d3.selectAll(".mtm-mode").property('value',this.value)
-				d3.select("#options_mode").property('value',this.value)
-				//action
-				d3layout.value(setMode(config.options.mode))
-				d3layout.nodes(root)
-				zoom(node);
-			});
-		
-		//Search bar//
-		var s = menu.append("span").attr("class","mtm-button mtm-on")
-			.style("position","relative").style("z-index","1")
-			.append("span").attr("class","fa fa-search")
-			.attr("title","Search a taxon")
-		s.append("input").attr("type","text")
-			.attr("class","mtm-search")
-			.attr("size","7")
-			.on("keyup",function() {
-				var word = this.value;
-				var matches=[];
-				var i=0;
-				//build regext with input
-				regexp = new RegExp(word,'i');
-				//search 10 first results (sort by length & alpha)
-				while(i<sorted.length && matches.length<10) {
-					if(regexp.test(sorted[i].name)) {
-						matches.push(sorted[i]);
-					}
-					i++;
-				}
-				//update list of options
-				d3.selectAll('.mtm-searchbox').select('ul')
-					.selectAll("li").remove()
-				d3.selectAll('.mtm-searchbox').select('ul')
-					.style("padding","5px")
-					.selectAll("li")
-					.data(matches)
-					.enter().append("li")
-					.on("click",function(d) {
-						d3.selectAll(".mtm-search").property("value",d.name)
-						d3.selectAll('.mtm-searchbox').select('ul').style("padding","0px 5px")
-							.selectAll("li").remove()
-						tip("hide",d);
-						zoomSkip(d); 
-					})
-					.on('mouseover', function(d){ tip("show",d); })
-					.on('mouseout', function(d){ tip("hide",d); })
-					.on("mousemove", function(d) { tip("move"); })
-					.text(function(d){ return d.name; }) 
-			})
-		s.append("div").attr("class","mtm-searchbox mtm-box")
-			.append("ul")
-		*/
 		if(verbose){console.timeEnd("bar");}
-		//return menu.node().offsetHeight;
 	}
-	
-/*	function configuration(c) {
-		if(verbose){console.time("config");}
-		var loc = d3.select("#"+c.location).classed("mtm-container",true)
-		for (var i in config) {
-			var part=loc.append("div").style("display","inline-block").style("vertical-align","top").append("table")
-			part.append("tr").append("th").attr("colspan",2).text(i)
-			if(config[i].hasOwnProperty("display")) {
-				var row = part.append("tr")
-				row.append("td").text("display")
-				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_display").on("change",function(){return configChange(this);})
-				if(config[i].display) {e.property("checked",true)}
-			}
-			if(config[i].hasOwnProperty("location")) {
-				var row = part.append("tr")
-				row.append("td").text("location")
-				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_location").style("width","120px").on("change",function(){return configChange(this);})
-				e.attr("value",config[i].location)
-			}
-			if(config[i].hasOwnProperty("width")) {
-				var row = part.append("tr")
-				row.append("td").text("width")
-				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_width").style("width","64px").on("change",function(){return configChange(this);})
-				e.attr("value",config[i].width)
-			}
-			if(config[i].hasOwnProperty("height")) {
-				var row = part.append("tr")
-				row.append("td").text("height")
-				var e = row.append("td").append("input").attr("type","number").attr("id",i+"_height").style("width","64px").on("change",function(){return configChange(this);})
-				e.attr("value",config[i].height)
-			}
-			if(config[i].hasOwnProperty("border")) {
-				var row = part.append("tr")
-				row.append("td").text("border")
-				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_border").on("change",function(){return configChange(this);})
-				if(config[i].border) {e.property("checked",true)}
-			}
-			if(config[i].hasOwnProperty("options")) {
-				var row = part.append("tr")
-				row.append("td").text("options")
-				var e = row.append("td").append("input").attr("type","checkbox").attr("id",i+"_options").on("change",function(){return configChange(this);})
-				if(config[i].options) {e.property("checked",true)}
-			}
-			//options//
-			if(config[i].hasOwnProperty("color")) {
-				var row = part.append("tr")
-				row.append("td").text("color by")
-				var e = row.append("td").append("select").attr("id",i+"_color").style("width","70px").on("change",function(){return configChange(this);})
-				e.append("option").attr("value","taxon").text("taxon")
-				e.append("option").attr("value","rank").text("rank")
-				e.append("option").attr("value","sample").text("sample")
-				e.append("option").attr("value","max").text("majority")
-				e.node().value=config[i].color;
-			}
-			if(config[i].hasOwnProperty("rank")) {
-				var row = part.append("tr")
-				row.append("td").text("rank")
-				var e = row.append("td").append("select").attr("id",i+"_rank").on("change",function(){return configChange(this);})
-				e.append("option").attr("value","null").text("--empty--")
-				for (var k in ranks) { e.append("option").attr("value",ranks[k]).text(ranks[k])}
-				e.node().value=config[i].rank;
-			}
-			if(config[i].hasOwnProperty("label")) {
-				var row = part.append("tr")
-				row.append("td").text("labeling")
-				var e = row.append("td").append("select").attr("id",i+"_label").style("width","70px").on("change",function(){return configChange(this);})
-				e.append("option").attr("value","taxon").text("taxon")
-				e.append("option").attr("value","rank").text("rank")
-				//e.append("option").attr("value","none").text("none")
-				e.node().value=config[i].label;
-			}
-			if(config[i].hasOwnProperty("upper")) {
-				var row = part.append("tr")
-				row.append("td").text("upper")
-				var e = row.append("td").append("select").attr("id",i+"_upper").style("width","70px").on("change",function(){return configChange(this);})
-				e.append("option").attr("value","color").text("color")
-				e.append("option").attr("value","gray").text("gray")
-				e.node().value=config[i].label;
-			}
-			if(config[i].hasOwnProperty("depth")) {
-				var row = part.append("tr")
-				row.append("td").text("depth")
-				var e = row.append("td").append("select").attr("id",i+"_depth").on("change",function(){return configChange(this);})
-				e.append("option").attr("value","null").text("--all--")
-				for (var k in ranks) { e.append("option").attr("value",ranks[k]).text(ranks[k])}
-				e.node().value=config[i].depth;
-			}
-			if(config[i].hasOwnProperty("font")) {
-				var row = part.append("tr")
-				row.append("td").text("font")
-				var e = row.append("td").append("select").attr("id",i+"_font").style("width","70px").on("change",function(){return configChange(this);})
-				for (var j=8; j<40; j=j+2) {
-					e.append("option").attr("value",j).text(j)
-				}
-				e.node().value=config[i].font;
-			}
-			if(config[i].hasOwnProperty("palette")) {
-				var row = part.append("tr")
-				row.append("td").text("palette")
-				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_palette").style("width","120px").on("change",function(){return configChange(this);})
-				e.node().value=config[i].palette;
-			}
-			if(config[i].hasOwnProperty("background")) {
-				var row = part.append("tr")
-				row.append("td").text("background")
-				var e = row.append("td").append("select").attr("id",i+"_background").style("width","70px").on("change",function(){return configChange(this);})
-				e.append("option").attr("value","black").text("black")
-				e.append("option").attr("value","white").text("white")
-				e.node().value=config[i].background;
-			}
-			if(config[i].hasOwnProperty("mode")) {
-				var row = part.append("tr")
-				row.append("td").text("mode")
-				var e = row.append("td").append("select").attr("id",i+"_mode").style("width","70px").on("change",function(){return configChange(this);})
-				e.append("option").attr("value","norm").text("norm")
-				e.append("option").attr("value","hits").text("hits")
-				e.append("option").attr("value","nodes").text("nodes")
-				e.node().value=config[i].mode;
-			}
-			if(config[i].hasOwnProperty("zoom")) {
-				var row = part.append("tr")
-				row.append("td").text("zoom")
-				var e = row.append("td").append("select").attr("id",i+"_zoom").style("width","70px").on("change",function(){return configChange(this);})
-				e.append("option").attr("value","sticky").text("sticky")
-				e.append("option").attr("value","fluid").text("fluid")
-				e.node().value=config[i].zoom;
-			}
-			if(config[i].hasOwnProperty("pattern")) {
-				var row = part.append("tr")
-				row.append("td").text("pattern")
-				var e = row.append("td").append("input").attr("type","text").attr("id",i+"_pattern").style("width","120px").on("change",function(){return configChange(this);})
-				e.attr("value",config[i].pattern)
-			}
-		}
-		loc.append("div").style("display","inline-block").style("vertical-align","top").append("p").html("<b>Pattern keys</b><br/>#N: name<br/>#I: id<br/>#H: hits<br/>#R: rank<br/>#S: sample<br/>#P: % by sample<br/>#V: % by view").style("margin","0px")
-		loc.append("input").attr("type","button").attr("value","Update view").on("click",function(){return setLayout();})
-
-		if(verbose){console.timeEnd("config");}
-	}
-*/	
+		
 	function treemap(c,p) {
 		if(verbose){console.time("treemap");}
 		//CONTAINER//
