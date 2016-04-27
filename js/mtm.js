@@ -256,80 +256,84 @@
 	mtm.convertor = function(location) {
 		//CONTAINER//
 		var container = d3.select("#"+location) //container div
-			.append("table")
-		var row = container.append("tr");
-		row.append("td")
-			.text("Other.json")
-			.append("input")
-			.attr("type","radio")
-			.attr("name","mtm-format")
-			.attr("value","json")
-			.property('checked', true)
-			.on("click",function(){format(this);})
-		row.append("td")
-			.text("[OR] Tabular.txt")
-			.append("input")
-			.attr("type","radio")
-			.attr("name","mtm-format")
-			.attr("value","tab")
-			.on("click",function(){format(this);})
-		row = container.append("tr");
-		row.append("td")
-			.text("data file:")
-		row.append("td")
-			.append("input")
-			.attr("type","file")
+		var form = container.append("form")
+		//datafile
+		var li = form.append("div").attr("class","form-inline")
+			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
+		li.append("label").text("data:").style("width","90px")
+		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-convert-data")
+			//.style("width","90px")
+		s.text("Browse...")
+		s.append("input").attr("type","file").style("display","none").attr("id","mtm-convert")
 			.attr("name","mtm-convertFile")
-			.attr("id","mtm-convert")
-			.style("width","155px")
-		row = container.append("tr");
-		row.append("th")
-			.text("Fields")
-		row.append("th")
-			.attr("id","mtm-fieldhead")
+			.on("change",function(){
+				d3.select("#mtm-convert-help").text(this.files[0].name);
+			})
+		$('#mtm-convert-data').on({ "click": function() {
+	  		$("#"+location)[0].closable=false;
+	  	} });
+		li.append("label").attr("class","help-block small").attr("id","mtm-convert-help").style("display","inline")
+		//json or tab
+		li = form.append("div").attr("class","form-inline")
+		li.append("label").text("format:").style("width","90px")
+		var sub = li.append("label").attr("class","radio-inline")
+		sub.append("input").attr("type","radio").property("checked",true)
+			.attr("name","mtm-format").attr("value","json")
+			.on("click",function(){format(this);})
+		sub.append("span").text("Other.json")
+
+		var sub = li.append("label").attr("class","radio-inline")
+		sub.append("input").attr("type","radio")
+			.attr("name","mtm-format").attr("value","tab")
+			.on("click",function(){format(this);})
+		sub.append("span").text("Tabular.txt")
+		//
+		/**/
+		//fields title
+		li = form.append("div").attr("class","form-inline")
+		li.append("label").text("fields").style("width","90px")
+		li.append("label").attr("id","mtm-fieldhead")
 			.text("Object property")
-		row = container.append("tr");
-		row.append("td")
-			.text("Taxon id:")
-		row.append("td")
-			.append("input")
-			.attr("type","text")
-			.attr("name","mtm-tid")
-			.attr("value","id")
-		row = container.append("tr");
-		row.append("td")
-			.text("Taxon name:")
-		row.append("td")
-			.append("input")
-			.attr("type","text")
-			.attr("name","mtm-tname")
-			.attr("value","name")
-		row = container.append("tr");
-		row.append("td")
-			.text("Hits:")
-		row.append("td")
-			.append("input")
-			.attr("type","text")
-			.attr("name","mtm-hits")
-			.attr("value","data.assigned")
-		row = container.append("tr")
-			.attr("id","mtm-headrow")
-			.style("display","none");
-		row.append("td")
-			.attr("colspan","2")
-			.text("Ignore 1st line (header)")
-			.append("input")
-			.attr("type","checkbox")
-			.attr("name","mtm-head")
-			.attr("value","false")
-		row = container.append("tr")
-		row.append("td")
-			.attr("colspan","2")
-			.append("input")
-			.attr("type","button")
-			.attr("name","convert")
-			.attr("value","Convert")
+		//id
+		li = form.append("div").attr("class","form-inline")
+		li.append("label").text("taxon id:").style("width","90px")
+		li.append("input").attr("type","text")
+			.attr("class","form-control")//.style("width","70px")
+			.attr("name","mtm-tid").attr("value","id")
+		//name
+		li = form.append("div").attr("class","form-inline")
+		li.append("label").text("taxon name:").style("width","90px")
+		li.append("input").attr("type","text")
+			.attr("class","form-control")//.style("width","70px")
+			.attr("name","mtm-tname").attr("value","name")
+		//hits
+		li = form.append("div").attr("class","form-inline")
+		li.append("label").text("hits:").style("width","90px")
+		li.append("input").attr("type","text")
+			.attr("class","form-control")//.style("width","70px")
+			.attr("name","mtm-hits").attr("value","data.assigned")
+		//header
+		li = form.append("div").attr("class","form-inline")
+			.attr("id","mtm-headrow").style("display","none")
+		li.append("label").text("header:").style("width","90px")
+		var sub = li.append("label").attr("class","checkbox-inline")
+		sub.append("input").attr("type","checkbox")
+			.attr("name","mtm-head").attr("value","false")
+		sub.append("span").text("Ignore 1st line")
+		//submit
+		li = form.append("div").attr("class","form-inline")
+		//li.append("label")//.style("width","70px")
+		li.append("button").attr("class","btn btn-primary")
+			.attr("type","button").style("width","90px")
+			.text("Convert")
 			.on("click",function(){convert();})
+		
+
+		//manage hide
+		$("#"+location).on({
+			"show.bs.modal":  function() { this.closable=true},
+		 	"hide.bs.modal":  function() { if(!this.closable) {this.closable=true; return false;} else {return true;} }
+		});
 	}
 	
 	//SUB FUNCTIONS//
@@ -477,6 +481,21 @@
 				ul.append("li").text("#S: sample");
 				ul.append("li").text("#P: % by sample");
 				ul.append("li").text("#V: % by view");
+
+				//convert
+				//Modal
+				var modal = mods.append("div").attr("id","mtm-modal")
+					.attr("class","modal fade")
+					.append("div").attr("class","modal-dialog")
+					.append("div").attr("class","modal-content")
+				var head = modal.append("div").attr("class","modal-header")
+				head.append("button").attr("class","close")
+					.attr("type","button").attr("data-dismiss","modal")
+					.append("span").html("&times;")
+       			head.append("h4").attr("class","modal-title").text("Convert data file")
+				var body = modal.append("div").attr("class","modal-body")
+					.attr("id","mtm-modal-body")
+				mtm.convertor("mtm-modal-body");
 			}
 
 			//Delete previous views
@@ -1097,6 +1116,8 @@
 		li.append("label").text("convert:").style("width","70px")
 		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-convert")
 			.style("width","90px")
+			//.on("click",function(d){ $(this).tooltip('hide'); })
+			.attr("data-toggle","modal").attr("data-target","#mtm-modal")
 		s.text("Format...")
 		
 		$('#mtm-convert').on({ "click": function() {
@@ -1225,7 +1246,7 @@
 			.attr("y", -18)
 			.attr("dy", ".75em")
 			.style("pointer-events","none")
-			.text("Please load json file")
+			.text("Data loading...")
 		
 		//rect for highlight//
 		svg.append("rect")
@@ -1962,6 +1983,7 @@
 	function convert() {
 		var format = d3.select("[name=mtm-format]:checked").node().value
 		var file=d3.select("#mtm-convert").node().files[0]
+		console.log(file);
 		
 		//root init.
 		root={"name":"root","children":[],"data":{"assigned":0,"rank":"no rank"},"id":1}; //skeleton tree
