@@ -3,170 +3,32 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 	<title>MetaTreeMap</title>
-<!--Prod -->
-	<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:600' rel='stylesheet' type='text/css'>
-	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-
-<!--Dev -->
-	<link rel="stylesheet" type="text/css" href="./font-awesome-4.3.0/css/font-awesome.min.css" />
-
-	<style type="text/css">
-<!--
-	.options {
-		display:inline-table;
-		border: 3px solid #000;
-		border-radius: .2em;
-		padding: 3px;
-	}
--->
-	</style>
-
-	</head>
+  </head>
   <body>
-	<h1>MetaTreeMap</h1>
-	<div style="display:inline-block">
-		<div>
-			<button class="idx mtm-button mtm-on" onclick="menu('import',this)">Import</button>
-			<button class="idx mtm-button mtm-off" onclick="menu('config',this)">Config</button>
-			<button class="idx mtm-button mtm-off" onclick="menu('export',this)">Export</button>
-			<a href="html/feedback.htm" target="feedback"><button class="idx mtm-button mtm-off">Feedback</button></a>
-			<a href="html/documentation.htm" target="mtm-doc"><button class="idx mtm-button mtm-off">User Guide</button></a>
-			<button class="idx mtm-button mtm-off" onclick="menu('about',this)">About</button>
-			<button class="idx mtm-button mtm-off" onclick="menu('none',this)"><span class="fa fa-times"></span></button>
-		</div>
-		<div id="import" class="options">
-			Current samples:
-			<div id="samples"></div>
-			Upload data files (.json): <input type="file" name="dataFiles[]" id="data" multiple/>
-			<br/>Upload config file (optional): <input type="file" name="confFile" id="conf"/>
-			<br/><input type="button" value="Update View" onclick="update()"/>
-			<br/>
-			<br/>Or convert from other format <span class="fa fa-caret-square-o-right" onclick="toggle(this,'convertor')" style="cursor:pointer"></span>
-			<div id="convertor" style="display:none"></div>
-			<br/>
-			<br/>Or use examples <span class="fa fa-caret-square-o-right" onclick="toggle(this,'examples')" style="cursor:pointer"></span>
-			<div id="examples" style="display:none">
-			HuFS: Human gut - 30y old - 
-				[<a href="http://www.ncbi.nlm.nih.gov/pubmed/17916580" target="_blank" title="see article on PubMed">citation</a>] - [<a href="http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525311.3" target="_blank" title="see data on MG-RAST">data</a>] - [<a href="./data/HuFS.json" target="_blank" title="download json file">json</a>]
-			<br/>HuFU: Human gut - 3m old - 
-				[<a href="http://www.ncbi.nlm.nih.gov/pubmed/17916580" target="_blank" title="see article on PubMed">citation</a>] - [<a href="http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3" target="_blank" title="see data on MG-RAST">data</a>] - [<a href="./data/HuFU.json" target="_blank" title="download json file">json</a>]
-			</div>
-		</div>
-		<div id="config" class="options"></div>
-		<div id="export" class="options">
-			Export data: <select name="export" onchange="mtm.save(this.value)">
-				<option value="null">--choose a file--</option>
-				<option value="json">Tree (.json)</option>
-				<option value="svg">Treemap (.svg)</option>
-				<option value="png">Treemap (.png)</option>
-				<option value="txt">Table (.txt)</option>
-				<option value="config">Config (config.json)</option>
-			</select>
-		</div>
-		<div id="about" class="options">
-			MTM version <span id="version"></span>. <a href="./LICENSE" target="_blank">License</a>.
-			<br/>Development <a href="http://metasystems.riken.jp/wiki/Maxime_Hebrard"  target="_blank">Maxime HEBRARD</a>
-			<br/>Thanks to <a href="http://bost.ocks.org/mike/" target="_blank">Mike BOSTOCK</a>,
-			<a href="http://fortawesome.github.io/Font-Awesome/" target="_blank">Dave GANDY</a>,
-			<a href="http://colorbrewer2.org/" target="_blank">Cynthia BREWER</a>,
-			<br/>View sources on <a href="https://github.com/mhebrard/MetaTreeMap" target="_blank">github</a>. Download <a href="./mtm.min.js" target="_blank">mtm.min.js</a>.
-		</div>
-		<div id="none" class="options" style="border:0px;padding:0px;"></diV>
-	</div>
+	<center><h1>MetaTreeMap</h1></center>
 	<div>
 		<table style="width:100%">
-			<tr><td id="top" colspan="3" class="container"></td></tr>
-			<tr><td id="left" class="container"></td>
-				<td id="center" class="container"></td>
-				<td id="right" class="container"></td>
+			<tr><td id="top" colspan="3"></td></tr>
+			<tr><td id="left"></td>
+				<td id="center"></td>
+				<td id="right"></td>
 			</tr>
-			<tr><td id="bottom" colspan="3" class="container"></td></tr>
+			<tr><td id="bottom" colspan="3"></td></tr>
 		</table>
 	</div>
 	<div class="off"><center>
 		Copyright © 2015 Laboratory for Integrated Bioinformatics, RIKEN, Japan. All rights reserved. 
 	</center></div>	
-	
 <!--Prod 
 	<script src="./mtm.min.js"></script>
 -->
 <!--Dev -->
-	<script type="text/javascript" src="./js/d3.min.js"></script>
 	<script type="text/javascript" src="./js/mtm.js"></script>
 	<script type="text/javascript" src="./js/log4javascript.js"></script>
 	<script type="text/javascript">var log = log4javascript.getDefaultLogger();</script>
 
 	<script type="text/javascript">// MTM //
-//test libs
-console.log("d3",d3.version);
-console.log("mtm",mtm.version);
-
-		//print version
-		document.getElementById("version").innerHTML=mtm.version;
-		//set default tab for index menu
-		menu("import");
-		//convert
-		mtm.convertor("convertor");
-		
-		//Update
-		update();
-
-		function menu(sel,button) { //Manage index menu options//
-			//hide options
-			var os = document.getElementsByClassName("options");
-			for (var i = 0; i < os.length; i++) {
-				os[i].style.display="none";
-			}
-			//show selected option
-			var o = document.getElementById(sel);
-			o.style.display="block";
-			
-			// button
-			if(button) {
-				//turn buttons off
-				var bs = document.getElementsByClassName("idx mtm-button mtm-on");
-				for (var i = 0; i < bs.length; i++) {
-					bs[i].className="idx mtm-button mtm-off";
-				}
-				//turn button on
-				button.className="idx mtm-button mtm-on"
-			}
-			
-		}
-		
-		function update() { //Load config file call init//
-			//Manage data files
-			var files = document.getElementById("data").files;
-			var data = [];
-			var filenames = "<ol>";
-			if(files.length==0) { 
-				filenames += "<li>HuFS.json</li><li>HuFU.json</li>";
-				data=["data/HuFS.json","data/HuFU.json"]; 
-			}
-			else {
-				for(var i=0; i<files.length; i++) {
-					data.push(URL.createObjectURL(files[i]));
-					filenames += "<li>"+files[i].name+"</li>";
-				}
-			}
-			filenames+="</ol>"
-			document.getElementById("samples").innerHTML=filenames;
-		
-			//manage config
-			var conf="";
-			if(document.getElementById("conf").files[0]) {
-				conf = document.getElementById("conf").files[0];
-			}
-			
-			//call
-			mtm.load(data,conf);
-		}
-
-		function toggle(e,id) {
-			var div = document.getElementById(id);
-			div.style.display = (div.style.display=="block" ? "none" : "block");
-			e.className = (e.className=="fa fa-caret-square-o-right" ? "fa fa-caret-square-o-down" : "fa fa-caret-square-o-right");
-		}
+		mtm.load();
 	</script>
   </body>
 </html>
