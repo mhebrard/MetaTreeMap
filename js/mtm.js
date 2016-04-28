@@ -195,7 +195,7 @@
 			//create file
 			var url = 'data:text/json;charset=utf8;filename=output.json,' + encodeURIComponent(JSON.stringify(out));
 			//Direct DownLoad call
-			ddl("merge.json",url);
+			ddl("tree.json",url);
 		}
 		else if(mode=="svg") {
 			var html = d3.select("svg")
@@ -492,10 +492,9 @@
 				head.append("button").attr("class","close")
 					.attr("type","button").attr("data-dismiss","modal")
 					.append("span").html("&times;")
-       			head.append("h4").attr("class","modal-title").text("Convert data file")
+       			head.append("h4").attr("class","modal-title").attr("id","mtm-modal-title")
 				var body = modal.append("div").attr("class","modal-body")
 					.attr("id","mtm-modal-body")
-				mtm.convertor("mtm-modal-body");
 			}
 
 			//Delete previous views
@@ -673,9 +672,11 @@
 		if(c.display) {
 			menu = d3.select("#"+c.location)
 				.classed("mtm-container",true)
+				.style("text-align","center")
 				.append("div")
 				.classed("mtm-menu",true)
 				.style("width",c.width+"px")
+				.style("display","inline-block")
 		}
 		else { 
 			menu = d3.select("body")
@@ -714,6 +715,92 @@
 		list = cont.append("div").attr("class","collapse navbar-collapse")
 		.attr("id","mtm-barmenu")
 		.append("ul").attr("class","nav navbar-nav")
+
+		//Import
+		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-import")
+		item.append("a").attr("href","#")
+		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
+		.html("Import <span class='caret'></span>")
+		ul = item.append("ul").attr("class","dropdown-menu")
+			.style("width","250px").style("padding","5px")
+
+		//Data
+		li = ul.append("li").attr("class","form-inline")
+			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
+		li.append("label").text("data:").style("width","70px")
+		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-data-btn")
+			.style("width","90px")
+		s.text("Browse...")
+		s.append("input").attr("type","file").style("display","none").attr("id","mtm-data-input")
+			.attr("name","dataFiles[]").property("multiple",true)
+			.on("change",function(){
+				var names=[];
+				for (var i=0; i<this.files.length;i++) {
+					names.push(this.files[i].name);
+				}
+				d3.select("#mtm-data-help").text(names.join(","));
+			})
+		$('#mtm-data-btn').on({ "click": function() {
+	  		$('#mtm-bar-import')[0].closable=false;
+	  	} });
+		li.append("label").attr("class","help-block small").attr("id","mtm-data-help").style("display","inline")
+
+		//Config
+		li = ul.append("li").attr("class","form-inline")
+			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
+		li.append("label").text("config:").style("width","70px")
+		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-config-btn")
+			.style("width","90px")
+		s.text("Browse...")
+		s.append("input").attr("type","file").style("display","none").attr("id","mtm-config-input")
+			.attr("name","confFiles[]").property("multiple",true)
+			.on("change",function(){
+				var names=[];
+				for (var i=0; i<this.files.length;i++) {
+					names.push(this.files[i].name);
+				}
+				d3.select("#mtm-config-help").text(names.join(","));
+			})
+		$('#mtm-config-btn').on({ "click": function() {
+	  		$('#mtm-bar-import')[0].closable=false;
+	  	} });
+		li.append("label").attr("class","help-block small").attr("id","mtm-config-help").style("display","inline")
+
+		//load
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","70px")
+		li.append("button").attr("class","btn btn-primary")
+			.attr("type","button").style("width","90px")
+			.text("Load")
+			.on("click",function(){
+				var files = d3.select("#mtm-data-input").node().files
+				var data = [];
+				for(var i=0; i<files.length; i++) {
+					data.push({name:files[i].name,data:URL.createObjectURL(files[i])});
+				}
+		
+				//manage config
+				var files = d3.select("#mtm-config-input").node().files
+				var conf="";
+				if(files[0]) { conf = {name:files[0].name,data:URL.createObjectURL(files[0])}; }
+				
+				//call
+				mtm.load(data,conf);
+			})
+		li = ul.append("li").attr("class","divider")
+
+		//Convert
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").text("convert:").style("width","70px")
+		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-convert")
+			.style("width","90px")
+			.attr("data-toggle","modal").attr("data-target","#mtm-modal")
+		s.text("Format...")
+		
+		$('#mtm-convert').on({ "click": function() {
+	  		$('#mtm-bar-import')[0].closable=false;
+	  		updateModal("convert");
+	  	} });
 
 		//Colors
 		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-colors")
@@ -1038,92 +1125,6 @@
 				zoom(searchable[this.value]);
 			});
 
-		//Import
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-import")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Import <span class='caret'></span>")
-		ul = item.append("ul").attr("class","dropdown-menu")
-			.style("width","250px").style("padding","5px")
-
-		//Data
-		li = ul.append("li").attr("class","form-inline")
-			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
-		li.append("label").text("data:").style("width","70px")
-		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-data-btn")
-			.style("width","90px")
-		s.text("Browse...")
-		s.append("input").attr("type","file").style("display","none").attr("id","mtm-data-input")
-			.attr("name","dataFiles[]").property("multiple",true)
-			.on("change",function(){
-				var names=[];
-				for (var i=0; i<this.files.length;i++) {
-					names.push(this.files[i].name);
-				}
-				d3.select("#mtm-data-help").text(names.join(","));
-			})
-		$('#mtm-data-btn').on({ "click": function() {
-	  		$('#mtm-bar-import')[0].closable=false;
-	  	} });
-		li.append("label").attr("class","help-block small").attr("id","mtm-data-help").style("display","inline")
-
-		//Config
-		li = ul.append("li").attr("class","form-inline")
-			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
-		li.append("label").text("config:").style("width","70px")
-		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-config-btn")
-			.style("width","90px")
-		s.text("Browse...")
-		s.append("input").attr("type","file").style("display","none").attr("id","mtm-config-input")
-			.attr("name","confFiles[]").property("multiple",true)
-			.on("change",function(){
-				var names=[];
-				for (var i=0; i<this.files.length;i++) {
-					names.push(this.files[i].name);
-				}
-				d3.select("#mtm-config-help").text(names.join(","));
-			})
-		$('#mtm-config-btn').on({ "click": function() {
-	  		$('#mtm-bar-import')[0].closable=false;
-	  	} });
-		li.append("label").attr("class","help-block small").attr("id","mtm-config-help").style("display","inline")
-
-		//load
-		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","70px")
-		li.append("button").attr("class","btn btn-primary")
-			.attr("type","button").style("width","90px")
-			.text("Load")
-			.on("click",function(){
-				var files = d3.select("#mtm-data-input").node().files
-				var data = [];
-				for(var i=0; i<files.length; i++) {
-					data.push({name:files[i].name,data:URL.createObjectURL(files[i])});
-				}
-		
-				//manage config
-				var files = d3.select("#mtm-config-input").node().files
-				var conf="";
-				if(files[0]) { conf = {name:files[0].name,data:URL.createObjectURL(files[0])}; }
-				
-				//call
-				mtm.load(data,conf);
-			})
-		li = ul.append("li").attr("class","divider")
-
-		//Convert
-		li = ul.append("li").attr("class","form-inline")
-		li.append("label").text("convert:").style("width","70px")
-		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-convert")
-			.style("width","90px")
-			//.on("click",function(d){ $(this).tooltip('hide'); })
-			.attr("data-toggle","modal").attr("data-target","#mtm-modal")
-		s.text("Format...")
-		
-		$('#mtm-convert').on({ "click": function() {
-	  		$('#mtm-bar-import')[0].closable=false;
-	  	} });
-
 	  	//Export
 		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-export")
 		item.append("a").attr("href","#")
@@ -1133,41 +1134,50 @@
 			.style("width","160px").style("padding","5px")
 
 		//json
-		li = ul.append("li").attr("class","form-inline")
-		li.append("label").text("tree:").style("width","70px")
-		li.append("button").attr("class","btn btn-default").attr("id","mtm-json")
-			.attr("type","button").style("width","70px")
-			.text(".json");
-
+		li = ul.append("li").append("a").attr("href","#")
+			.text("tree.json")
+			.on("click",function(){return mtm.save("json");})
 		//svg
-		li = ul.append("li").attr("class","form-inline")
-		li.append("label").text("treemap:").style("width","70px")
-		li.append("button").attr("class","btn btn-default").attr("id","mtm-svg")
-			.attr("type","button").style("width","70px")
-			.text(".svg");
-
+		li = ul.append("li").append("a").attr("href","#")
+			.text("treemap.svg")
+			.on("click",function(){return mtm.save("svg");})
 		//png
-		li = ul.append("li").attr("class","form-inline")
-		li.append("label").text("treemap:").style("width","70px")
-		li.append("button").attr("class","btn btn-default").attr("id","mtm-png")
-			.attr("type","button").style("width","70px")
-			.text(".png");
-
+		li = ul.append("li").append("a").attr("href","#")
+			.text("treemap.png")
+			.on("click",function(){return mtm.save("png");})
 		//txt
-		li = ul.append("li").attr("class","form-inline")
-		li.append("label").text("table:").style("width","70px")
-		li.append("button").attr("class","btn btn-default").attr("id","mtm-txt")
-			.attr("type","button").style("width","70px")
-			.text(".txt");
-
+		li = ul.append("li").append("a").attr("href","#")
+			.text("table.txt")
+			.on("click",function(){return mtm.save("txt");})
 		//config
-		li = ul.append("li").attr("class","form-inline")
-		li.append("label").text("config:").style("width","70px")
-		li.append("button").attr("class","btn btn-default").attr("id","mtm-config")
-			.attr("type","button").style("width","70px")
-			.text(".config");
+		li = ul.append("li").append("a").attr("href","#")
+			.text("mtm-config.json")
+			.on("click",function(){return mtm.save("config");})
 	
-		list.append("li").append("a").text("About")
+		//About
+		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-about")
+		item.append("a").attr("href","#")
+		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
+		.html("About <span class='caret'></span>")
+		ul = item.append("ul").attr("class","dropdown-menu")
+			.style("width","160px").style("padding","5px")
+
+		//guide
+		li = ul.append("li").append("a").attr("href","html/documentation.htm")
+			.attr("target","mtm-doc").text("User Guide")//.style("width","70px")
+		//feedback
+		li = ul.append("li").append("a").attr("href","html/feedback.htm")
+			.attr("target","mtm-feedback").text("Feedback")//.style("width","70px")
+		//examples
+		li = ul.append("li").append("a").attr("href","#")
+			.attr("data-toggle","modal").attr("data-target","#mtm-modal")
+			.text("Examples")//.style("width","70px")
+			.on("click",function(){return updateModal("examples");})
+		//about
+		li = ul.append("li").append("a").attr("href","#")
+			.attr("data-toggle","modal").attr("data-target","#mtm-modal")
+			.text("About MTM")//.style("width","70px")
+			.on("click",function(){return updateModal("about");})
 
 		//activate toogles
 		$(function() { $('[data-toggle="toggle"]').bootstrapToggle(); })
@@ -1189,6 +1199,7 @@
 		//create container div//
 		var container = d3.select("#"+c.location) //container div
 			.classed("mtm-container",true)
+			.style("text-align","center")
 			
 		//Menu//
 		//if(c.options) {
@@ -1262,6 +1273,7 @@
 		if(verbose){console.time("table");}		
 		var container = d3.select("#"+c.location) //container div
 			.classed("mtm-container",true)
+			.style("text-align","center")
 		
 		//table//
 		var tab=container.append("div")
@@ -1340,6 +1352,71 @@
 	function handleTouch(d) { touched==d ? touched="": touched=d; }
 	
 	//VIEW UPDATE//
+	function updateModal(mode) {
+		if(mode == "convert") {
+			d3.select("#mtm-modal-title").text("Convert data file")
+			d3.select("#mtm-modal-body").text("")
+			mtm.convertor("mtm-modal-body");
+		}
+		else if(mode == "examples") {
+			d3.select("#mtm-modal-title").text("Examples data files")
+			var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
+			ul.append("li").append("label").text("#1. HuFS: Human gut - 30y old").attr("width","210px")
+			var li = ul.append("li").attr("class","btn-group")
+			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
+				.attr("class","btn btn-default")
+				.attr("target","cite").text("citation")
+			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525311.3")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("data source")
+			li.append("a").attr("href","./data/HuFS.json")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("data file")
+
+			ul.append("li").append("label").text("#2. HuFU: Human gut - 3m old").attr("width","210px")
+			li = ul.append("li").attr("class","btn-group")
+			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
+				.attr("class","btn btn-default")
+				.attr("target","cite").text("citation")
+			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("data source")
+			li.append("a").attr("href","./data/HuFU.json")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("data file")
+		}
+		else if(mode == "about") {
+			d3.select("#mtm-modal-title").text("About MetaTreeMap")
+			var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
+			var li = ul.append("li")
+			li.append("strong").text("MetaTreeMap version ")
+			li.append("strong").text(function(){return mtm.version;})
+			li.append("strong").text(" under ")
+			li.append("a").attr("href","./LICENSE").attr("target","_blank").text("BSD License")
+			var li = ul.append("li")
+			li.append("strong").text("Development: ")
+			li.append("a").attr("href","http://metasystems.riken.jp/wiki/Maxime_Hebrard").attr("target","_blank").text("Maxime HEBRARD")
+			var li = ul.append("li")
+			li.append("strong").text("Thanks to ")
+			li.append("span").text("the libraries we use and their authors:")
+			var sub = li.append("ul")
+			sub.append("li").append("a").attr("href","https://d3js.org/").attr("target","_blank").text("D3")
+			sub.append("li").append("a").attr("href","http://colorbrewer2.org/").attr("target","_blank").text("ColorBrewer2")
+			sub.append("li").append("a").attr("href","https://jquery.com/").attr("target","_blank").text("jQuery")
+			sub.append("li").append("a").attr("href","http://getbootstrap.com/").attr("target","_blank").text("Bootstrap")
+			sub.append("li").append("a").attr("href","http://www.bootstraptoggle.com/").attr("target","_blank").text("Bootstrap Toggle")
+			sub.append("li").append("a").attr("href","https://silviomoreto.github.io/bootstrap-select/").attr("target","_blank").text("Bootstrap-select")
+			sub.append("li").append("a").attr("href","https://www.google.com/fonts/specimen/Source+Code+Pro").attr("target","_blank").text("Source Code Pro")
+			var li = ul.append("li")
+			li.append("strong").text("Source code ")
+			li.append("span").text("available on ")
+			li.append("a").attr("href","https://github.com/mhebrard/MetaTreeMap").attr("target","_blank").text("GitHub")
+			var li = ul.append("li")
+			li.append("strong").text("Download ")
+			li.append("span").text("minified version ")
+			li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
+		}
+	}
 	function updateRects(n) {
 		//scale
 		x.domain([n.x, n.x + n.dx]);

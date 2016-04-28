@@ -6,14 +6,14 @@
 "treemap":{
 	"display":true,
 	"location":"left",
-	"width":800,
+	"width":700,
 	"height":600
 },
 "table":{
 	"display":true,
 	"location":"right",
 	"width":700,
-	"height":650
+	"height":600
 },
 "options":{
 	"hierarchy":"rugged",
