@@ -8,6 +8,7 @@
 	//functions merge, sumHits
 	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"];
 	var config; //object configuration
+	var param;
 	var root; //object root (all tree)
 	var bkeys; //list of keys for bridges
 	var bobjs; //list of node -object- for bridge
@@ -463,8 +464,8 @@
 				//style
 				mods.append("style").attr("type","text/css").text(
 						"<!--\t"
-						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14pt;pointer-events:none;opacity:0}\n"
-						+"#mtm-table table{border-collapse:collapse;width:100%;}\n"
+						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}\n"
+						+".mtm-table table{border-collapse:collapse;width:100%;}\n"
 						+"\t-->"
 					)
 				//divs
@@ -499,24 +500,42 @@
 
 			//Delete previous views
 			d3.selectAll(".mtm-container").html("")
-			param={};
+			param={
+				"treemap":{"display":false},
+				"table":{"display":false}
+				 };
 			tree=false;
 			fluid=false;
-
-			
+			console.log("befor",param);
 
 			//build views
-			if(config.bar) { bar(config.bar); }
-			if(config.table && config.table.display) {
-				param.table={};
-				table(config.table,param.table);
-				//updateLines();
+			//menu
+			menu();
+			//table
+			var container = d3.select(".mtm-table").style("display","inline-flex")
+			if(!container.empty()) {
+				param.table={
+					"display":true,
+					"height": container.style("height")=="0px" ? 500 : container.style("height").replace("px",""),
+					"width": container.style("width")=="0px" ? 700 : container.style("width").replace("px","")
+				};
+				table(param.table);
 			}
-			if(config.treemap && config.treemap.display) {
-				param.treemap={};
-				//updateSearch();
-				treemap(config.treemap,param.treemap);
+
+			console.log("after table",param);
+
+			//treemap
+			container = d3.select(".mtm-treemap").style("display","inline-flex")
+			if(!container.empty()) {
+				param.treemap={
+					"display":true,
+					"height": container.style("height")=="0px" ? 500 : container.style("height").replace("px",""),
+					"width": container.style("width")=="0px" ? 700 : container.style("width").replace("px","")
+				};
+				treemap(param.treemap);
 			}
+
+			console.log("after treemap",param);
 
 			ful("Layout ready");
 		})
@@ -526,10 +545,10 @@
 		//manage cutOff
 		refTree();
 
-		if(config.table && config.table.display) {
+		if(param.table.display) {
 			updateLines();
 		}
-		if(config.treemap && config.treemap.display) {
+		if(param.treemap.display) {
 			updateSearch();
 			if(config.options.zoom) {
 				fluid = config.options.depth_rank!="init" ? tree : root ;
@@ -566,9 +585,10 @@
 	}
 	
 	function computeLayout(n) {
-		if(config.treemap.display) {
-			h = config.treemap.height - 20;  //margin top
-			w = config.treemap.width - 1; //margin left
+		console.log("compute layout",param);
+		if(param.treemap.display) {
+			h = +param.treemap.height - 20;  //margin top
+			w = +param.treemap.width; //margin left
 		}
 		//compute final json tree
 		d3layout = d3.layout.treemap() //array of all nodes
@@ -665,26 +685,17 @@
 	function sizeNodes(d) { return 1; }
 
 	//LAYOUTS//
-	function bar(c) {
-		if(verbose){console.time("bar");}
+	function menu() {
 		//create menu bar//
 		var menu;
-		if(c.display) {
-			menu = d3.select("#"+c.location)
-				.classed("mtm-container",true)
-				.style("text-align","center")
-				.append("div")
-				.classed("mtm-menu",true)
-				.style("width",c.width+"px")
-				.style("display","inline-block")
-		}
-		else { 
-			menu = d3.select("body")
-				.append("div")
-				.classed("mtm-menu",true)
+
+		menu = d3.select(".mtm-menu").style("display","inline-block")
+		if(menu.empty()) {
+			menu = d3.select("body").append("div").attr("class","mtm-menu")
 				.style("display","none")
 		}
-		
+		if(menu.style("width")=="0px"){menu.style("width","100%"); }
+
 		var cont = menu.append("nav").attr("class","navbar navbar-default")
 		.append("div").attr("class","container-fluid")
 
@@ -896,7 +907,7 @@
 			d3.selectAll(".mtm-bg").attr("fill",function() {return config.options.background ? "#000" : "#FFF"; })
 			d3.selectAll(".mtm-header rect").style("stroke",function() {return config.options.background ? "#000" : "#FFF"; })
 			d3.selectAll(".mtm-view rect").style("stroke",function() {return config.options.background ? "#000" : "#FFF"; })
-			d3.select("#mtm-table").style("background-color",function() {return config.options.background ? "#000" : "#FFF"; })
+			d3.select(".mtm-table").style("background-color",function() {return config.options.background ? "#000" : "#FFF"; })
 	  	} });
 
 		//Labels
@@ -995,8 +1006,8 @@
 				//change all button
 				config.options.font=this.value;
 				//action
-				d3.select("#mtm-treemap").style("font-size",config.options.font+"px")
-				d3.select("#mtm-table").style("font-size",config.options.font+"px")
+				d3.select(".mtm-treemap").style("font-size",config.options.font+"px")
+				d3.select(".mtm-table").style("font-size",config.options.font+"px")
 				d3.select("#mtm-tip").style("font-size",config.options.font+"px")
 			});
 		$('#mtm-bar-font').on({
@@ -1193,24 +1204,13 @@
 		if(verbose){console.timeEnd("bar");}
 	}
 		
-	function treemap(c,p) {
+	function treemap(p) {
 		if(verbose){console.time("treemap");}
-		//CONTAINER//
-		//create container div//
-		var container = d3.select("#"+c.location) //container div
-			.classed("mtm-container",true)
-			.style("text-align","center")
-			
-		//Menu//
-		//if(c.options) {
-		//	bar(config.bar,c.location,c.width);
-		//}
-		
 		//SVG//
-		var svg = container.append("svg") //general SVG
-				.attr("id","mtm-treemap")
-				.attr("height", c.height)
-				.attr("width", c.width)
+		var svg = d3.select(".mtm-treemap").append("svg") //general SVG
+				//.attr("id","mtm-treemap")
+				.attr("height", p.height)
+				.attr("width", p.width)
 				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")			
 				.style("font-size",config.options.font+"px")
 				.style("display","inline-block")//disable bottom padding
@@ -1242,8 +1242,8 @@
 		header.append("rect")
 			//.datum(node)
 			.attr("y", -20) //child of root g, moved on margin.top
-			.attr("width", c.width - 1)
-			.attr("height", 20-1) //border-bottom
+			.attr("width", p.width)
+			.attr("height", 20) //border-bottom
 			.style("fill","#888")
 			.style("stroke",function() {return config.options.background ? "#000" : "#FFF"; })
 			.style("cursor","pointer")
@@ -1254,7 +1254,7 @@
 		//create text element
 		header.append("text")
 			.attr("x", 6)
-			.attr("y", -18)
+			.attr("y", -16)
 			.attr("dy", ".75em")
 			.style("pointer-events","none")
 			.text("Data loading...")
@@ -1269,17 +1269,13 @@
 		if(verbose){console.timeEnd("treemap");}
 	}
 	
-	function table(c,p) {
-		if(verbose){console.time("table");}		
-		var container = d3.select("#"+c.location) //container div
-			.classed("mtm-container",true)
-			.style("text-align","center")
+	function table(p) {
+		if(verbose){console.time("table");}
 		
 		//table//
-		var tab=container.append("div")
-				.attr("id","mtm-table")
-				.style("height", c.height)
-				.attr("width", c.width)
+		var tab=d3.select(".mtm-table").append("div")
+				.style("height", p.height)
+				.style("width", p.width)
 				.style("overflow","auto")
 				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")			
 				.style("font-size",config.options.font+"px")
@@ -1304,8 +1300,8 @@
 
 		//tbody
 		var view = tab.append("div")
-			.style("height",(c.height-thead.node().offsetHeight)+"px")
-			.style("width", c.width+"px")
+			.style("height",(p.height-thead.node().offsetHeight)+"px")
+			.style("width", p.width+"px")
 			.style("overflow","auto")
 			.attr("class","mtm-scrollable")
 			.append("table")
@@ -1434,7 +1430,7 @@
 		}
 
 		//rect
-		var sel = d3.select("#mtm-treemap").select(".mtm-view")
+		var sel = d3.select(".mtm-treemap").select(".mtm-view")
 			.selectAll("rect").data(displayed,function(d){return d.id+d.data.sample;});
 		//create new
 		sel.enter().insert("rect")
@@ -1501,7 +1497,7 @@
 			
 		})
 		//guides
-		var sel = d3.select("#mtm-treemap").select(".mtm-labels")
+		var sel = d3.select(".mtm-treemap").select(".mtm-labels")
 			.selectAll("path").data(labelled,function(d){return d.id+d.data.sample;});
 			//create new
 			sel.enter().append("path")
@@ -1542,7 +1538,7 @@
 		}
 
 		//text
-		var sel = d3.select("#mtm-treemap").select(".mtm-labels")
+		var sel = d3.select(".mtm-treemap").select(".mtm-labels")
 			.selectAll("text").data(labelled,function(d){return d.id+d.data.sample;});
 			//create new
 			sel.enter().append("text")
@@ -1583,7 +1579,7 @@
 		if(verbose){console.time("growTable");}
 
 		//delete old lines
-		var view = d3.select("#mtm-table").select(".mtm-view").html("");
+		var view = d3.select(".mtm-table").select(".mtm-view").html("");
 		//create tr and td
 		view.selectAll("tr").data(searchable).enter().append("tr")
 				.attr("class",function(d){return "v"+d.id+d.data.sample;})
@@ -1683,12 +1679,12 @@
 			}
 		}
 		//Affect color
-		if(config.table.display) { //call table + affect treemap
-			d3.select("#mtm-table").select(".mtm-view").selectAll("tr")
+		if(param.table.display) { //call table + affect treemap
+			d3.select(".mtm-table").select(".mtm-view").selectAll("tr")
 				.style("background-color",function(d){ return getColor(d); })
 		}
-		if (config.treemap.display) { //call treemap
-			d3.select("#mtm-treemap").select(".mtm-view").selectAll("rect")
+		if (param.treemap.display) { //call treemap
+			d3.select(".mtm-treemap").select(".mtm-view").selectAll("rect")
 				.style("fill",function(d){return getColor(d);})
 		}
 	}
@@ -1856,7 +1852,7 @@
 			d3.selectAll(".mtm-root").classed("mtm-off",true)
 		}
 		//update header
-		d3.select("#mtm-treemap").select(".mtm-header")
+		d3.select(".mtm-treemap").select(".mtm-header")
 			.datum(n)
 			.on("click", function(d) {
 					if(touched=="") {//mouse click or 2nd touch
@@ -1884,14 +1880,14 @@
 		}
 
 		//update map
-		if(config.treemap.display) {
+		if(param.treemap.display) {
 			updateRects(n); //Create rectangle elements and position
 			updatePaths(n); //Create path and text element and position
 		}
 
 		//update table
-		if(config.table.display) {
-			var lines = d3.select("#mtm-table").select(".mtm-labels").selectAll("tr")
+		if(param.table.display) {
+			var lines = d3.select(".mtm-table").select(".mtm-labels").selectAll("tr")
 			//clear %
 			lines.selectAll(".percent").text("-")
 			
@@ -1941,7 +1937,7 @@
 	}
 	
 	function toggle(d) {
-		var span = d3.select("#mtm-table").select(".v"+d.id+d.data.sample).select(".fa")
+		var span = d3.select(".mtm-table").select(".v"+d.id+d.data.sample).select(".fa")
 		if(span.classed("fa-minus-square-o")) {
 			span.attr("class","fa fa-plus-square-o");
 			//hide children 
@@ -1964,7 +1960,7 @@
 	
 	function hide(n) {
 		//hide current raw and recursive
-		d3.select("#mtm-table").selectAll(".v"+n.id+n.data.sample)
+		d3.select(".mtm-table").selectAll(".v"+n.id+n.data.sample)
 			.style("display","none")
 		//recursive call
 		if (n.children) {
@@ -1976,7 +1972,7 @@
 		
 	function show(n) {
 		//show current raw and recursive
-		var t = d3.select("#mtm-table").select(".v"+n.id+n.data.sample)
+		var t = d3.select(".mtm-table").select(".v"+n.id+n.data.sample)
 					.style("display","table-row")
 		if(t.select(".fa").classed("fa-minus-square-o") && n.children) {
 			for (var i in n.children) {
