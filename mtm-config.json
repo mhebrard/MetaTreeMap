@@ -1,25 +1,19 @@
-{"bar":{
+{
+"treemap": {
 	"display":true,
-	"location":"top",
-	"width":900
-},
-"treemap":{
-	"display":true,
-	"location":"left",
 	"width":700,
-	"height":600
+	"height":500
 },
-"table":{
+"table": {
 	"display":true,
-	"location":"right",
 	"width":700,
-	"height":600
+	"height":500
 },
-"options":{
+"options": {
 	"hierarchy":"rugged",
 	"zoom":"fluid",
 	"proportion":"sample",
-	"depth_rank":"init",
+	"cutoff_rank":"genus",
 	"colored":"taxon",
 	"colored_rank":"init",
 	"ancestors":"enable",
@@ -29,4 +23,5 @@
 	"labelled_rank":"init",	
 	"pattern":"#N",
 	"font":14
-}}
+}
+}

@@ -8,7 +8,7 @@
 	//functions merge, sumHits
 	var ranks = ["no rank","superkingdom","kingdom","subkingdom","superphylum","phylum","subphylum","superclass","class","subclass","infraclass","superorder","order","suborder","infraorder","parvorder","superfamily","family","subfamily","tribe","subtribe","genus","subgenus","species group","species subgroup","species","subspecies","varietas","forma"];
 	var config; //object configuration
-	var param;
+	//var param;
 	var root; //object root (all tree)
 	var bkeys; //list of keys for bridges
 	var bobjs; //list of node -object- for bridge
@@ -499,43 +499,19 @@
 			}
 
 			//Delete previous views
-			d3.selectAll(".mtm-container").html("")
-			param={
-				"treemap":{"display":false},
-				"table":{"display":false}
-				 };
+			d3.selectAll(".mtm-menu").html("")
+			d3.selectAll(".mtm-treemap").html("")
+			d3.selectAll(".mtm-table").html("")
 			tree=false;
 			fluid=false;
-			console.log("befor",param);
 
 			//build views
 			//menu
 			menu();
 			//table
-			var container = d3.select(".mtm-table").style("display","inline-flex")
-			if(!container.empty()) {
-				param.table={
-					"display":true,
-					"height": container.style("height")=="0px" ? 500 : container.style("height").replace("px",""),
-					"width": container.style("width")=="0px" ? 700 : container.style("width").replace("px","")
-				};
-				table(param.table);
-			}
-
-			console.log("after table",param);
-
+			if(config.table.display) {table();}
 			//treemap
-			container = d3.select(".mtm-treemap").style("display","inline-flex")
-			if(!container.empty()) {
-				param.treemap={
-					"display":true,
-					"height": container.style("height")=="0px" ? 500 : container.style("height").replace("px",""),
-					"width": container.style("width")=="0px" ? 700 : container.style("width").replace("px","")
-				};
-				treemap(param.treemap);
-			}
-
-			console.log("after treemap",param);
+			if(config.treemap.display) {treemap();}
 
 			ful("Layout ready");
 		})
@@ -545,13 +521,16 @@
 		//manage cutOff
 		refTree();
 
-		if(param.table.display) {
+		searchable = getSubtree(root,[]);
+		console.log("update layout",config);
+
+		if(config.table.display) {
 			updateLines();
 		}
-		if(param.treemap.display) {
+		if(config.treemap.display) {
 			updateSearch();
 			if(config.options.zoom) {
-				fluid = config.options.depth_rank!="init" ? tree : root ;
+				fluid = config.options.cutoff_rank!="init" ? tree : root ;
 			}
 		}
 
@@ -561,34 +540,31 @@
 		//update
 		tree ? zoom(tree) : zoom(root);
 		updateColor();
-
 	}
 
 	function refTree() {
+
+		computeLayout(root);
+
 		//compute tree: root or cutOff
-		if(config.options.depth_rank!="init") {
-			var rank = ranks.indexOf(config.options.depth_rank);
+		if(config.options.cutoff_rank!="init") {
+			var rank = ranks.indexOf(config.options.cutoff_rank);
 			var rankN = ranks.indexOf(root.data.rank);
 			//check depth > n.rank
 			if(rank <= rankN) { 
 				rankN++; 
-				config.options.depth_rank = ranks[rankN];
+				config.options.cutoff_rank = ranks[rankN];
 			}
 			tree = cutTree(rank,root,root);
 			computeLayout(tree);
-			searchable = d3layout.nodes().slice(0); //clone
-		}
-		else { 
-			computeLayout(root);
-			searchable = d3layout.nodes().slice(0); //clone
 		}
 	}
 	
 	function computeLayout(n) {
-		console.log("compute layout",param);
-		if(param.treemap.display) {
-			h = +param.treemap.height - 20;  //margin top
-			w = +param.treemap.width; //margin left
+		console.log("compute layout",config);
+		if(config.treemap.display) {
+			h = +config.treemap.height - 20;  //margin top
+			w = +config.treemap.width; //margin left
 		}
 		//compute final json tree
 		d3layout = d3.layout.treemap() //array of all nodes
@@ -599,6 +575,8 @@
 			.value(setMode(config.options.proportion))
 
 		var nodes = d3layout.nodes(n)
+
+		console.log(nodes)
 		
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
@@ -1006,8 +984,7 @@
 				//change all button
 				config.options.font=this.value;
 				//action
-				d3.select(".mtm-treemap").style("font-size",config.options.font+"px")
-				d3.select(".mtm-table").style("font-size",config.options.font+"px")
+				d3.selectAll(".mtm").style("font-size",config.options.font+"px")
 				d3.select("#mtm-tip").style("font-size",config.options.font+"px")
 			});
 		$('#mtm-bar-font').on({
@@ -1080,35 +1057,34 @@
 		});
 		//Depth
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","90px").text("depth:")
-		var s = li.append("select").attr("class","form-control").attr("id","mtm-bar-depth-rank")
+		li.append("label").style("width","90px").text("cutoff:")
+		var s = li.append("select").attr("class","form-control").attr("id","mtm-bar-cutoff")
 			s.append("option").attr("value","init").text("--Phylogenic rank--")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
-			s.property("value",config.options.depth_rank)
+			s.property("value",config.options.cutoff_rank)
 			s.on("change",function() { 
 				//change all button
-				config.options.depth_rank=this.value;
-				console.log("change",config.options.depth_rank);
+				config.options.cutoff_rank=this.value;
 				//action
 				refTree();
 				updateLines();
 				updateSearch();
 				if(config.options.zoom) {
-					fluid = config.options.depth_rank!="init" ? tree : root ;
+					fluid = config.options.cutoff_rank!="init" ? tree : root ;
 				}
 				//update
-				console.log(ranks.indexOf(config.options.depth_rank),">=",ranks.indexOf(node.data.rank));
-				if(ranks.indexOf(config.options.depth_rank) >= ranks.indexOf(node.data.rank)) {
+				console.log(ranks.indexOf(config.options.cutoff_rank),">=",ranks.indexOf(node.data.rank));
+				if(ranks.indexOf(config.options.cutoff_rank) >= ranks.indexOf(node.data.rank)) {
 					console.log("if");
 					zoom(d3layout.nodes().filter(function(n){return ""+n.id+n.data.sample == ""+node.id+node.data.sample;})[0]);
 				}
 				else {
-					config.options.depth_rank!="init" ? zoom(tree) : zoom(root) ;
+					config.options.cutoff_rank!="init" ? zoom(tree) : zoom(root) ;
 				}
 				updateColor();
 			});
-		$('#mtm-bar-depth-rank').on({
+		$('#mtm-bar-cutoff').on({
 		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
 		});
 
@@ -1116,7 +1092,7 @@
 		li = list.append("li").append("div").attr("class","form-inline")
 			.append("div").attr("class","btn-group")
 		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
-			.on("click",function(){return config.options.depth_rank!="init" ? zoom(tree) : zoom(root) ;})
+			.on("click",function(){return config.options.cutoff_rank!="init" ? zoom(tree) : zoom(root) ;})
 			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","zoom to root")
 			.append("span").attr("class","glyphicon glyphicon-step-backward")
 		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
@@ -1133,8 +1109,111 @@
 		var s = li.append("select").attr("class","selectpicker").attr("data-live-search","true").attr("data-width","120px")
 			s.on("change",function() { 
 				//action
+				config.options.cutoff_rank="init";
+				d3.select("#mtm-bar-cutoff").property("value",config.options.cutoff_rank);
 				zoom(searchable[this.value]);
 			});
+			/////////////////////////////////////////////
+		//Layout
+		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-layout")
+		item.append("a").attr("href","#")
+		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
+		.html("Layout <span class='caret'></span>")
+		ul = item.append("ul").attr("class","dropdown-menu")
+			.style("width","170px").style("padding","5px")
+
+		//Treemap
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","70px").text("treemap:")
+		li.append("input").attr("type","checkbox").attr("id","mtm-bar-treemap-display")
+		.attr("data-toggle","toggle").attr("data-on","display").attr("data-off","hide")
+		.attr("data-width","80")
+		.property("checked",function() { return config.treemap.display;})
+		$('#mtm-bar-treemap-display').on({ "change": function() { 
+	  		$('#mtm-bar-layout')[0].closable=false;
+	  		//change all button
+			config.treemap.display=d3.select("#mtm-bar-treemap-display").property("checked");
+			d3.select("#mtm-bar-treemap-block").classed("in",config.treemap.display)
+	  	} });
+		//treemap block
+		li = ul.append("li").attr("class","collapse").attr("id","mtm-bar-treemap-block")
+			.classed("in",config.treemap.display)
+		//width
+		block = li.append("div").attr("class","form-inline")
+		block.append("label").style("width","70px").text("width:")
+		block.append("input").attr("type","text").style("width","80px")
+			.attr("class","form-control").attr("id","mtm-bar-treemap-width")
+			.attr("value",config.treemap.width)
+			.on("change",function() { 
+				//change all button
+				config.treemap.width=this.value;
+			});
+		$('#mtm-bar-treemap-width').on({
+		  "click":	function() { $('#mtm-bar-layout')[0].closable=false;}
+		});
+		//height
+		block = li.append("div").attr("class","form-inline")
+		block.append("label").style("width","70px").text("height:")
+		block.append("input").attr("type","text").style("width","80px")
+			.attr("class","form-control").attr("id","mtm-bar-treemap-height")
+			.attr("value",config.treemap.height)
+			.on("change",function() { 
+				//change all button
+				config.treemap.height=this.value;
+			});
+	  	li = ul.append("li").attr("class","divider")
+
+		//Table
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","70px").text("table:")
+		li.append("input").attr("type","checkbox").attr("id","mtm-bar-table-display")
+		.attr("data-toggle","toggle").attr("data-on","display").attr("data-off","hide")
+		.attr("data-width","80")
+		.property("checked",function() { return config.table.display;})
+		$('#mtm-bar-table-display').on({ "change": function() { 
+	  		$('#mtm-bar-layout')[0].closable=false;
+	  		//change all button
+			config.table.display=d3.select("#mtm-bar-table-display").property("checked");
+			d3.select("#mtm-bar-table-block").classed("in",config.table.display)
+	  	} });
+		//table block
+		li = ul.append("li").attr("class","collapse").attr("id","mtm-bar-table-block")
+			.classed("in",config.table.display)
+		//width
+		block = li.append("div").attr("class","form-inline")
+		block.append("label").style("width","70px").text("width:")
+		block.append("input").attr("type","text").style("width","80px")
+			.attr("class","form-control").attr("id","mtm-bar-table-width")
+			.attr("value",config.table.width)
+			.on("change",function() { 
+				//change all button
+				config.table.width=this.value;
+			});
+		$('#mtm-bar-table-width').on({
+		  "click":	function() { $('#mtm-bar-layout')[0].closable=false;}
+		});
+		//height
+		block = li.append("div").attr("class","form-inline")
+		block.append("label").style("width","70px").text("height:")
+		block.append("input").attr("type","text").style("width","80px")
+			.attr("class","form-control").attr("id","mtm-bar-table-height")
+			.attr("value",config.table.height)
+			.on("change",function() { 
+				//change all button
+				config.table.height=this.value;
+			});
+		li = ul.append("li").attr("class","divider")
+
+		//load
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","70px")
+		li.append("button").attr("class","btn btn-primary")
+			.attr("type","button").style("width","80px")
+			.text("Load")
+			.on("click",function(){
+				setLayout();
+				updateLayout();
+			})
 
 	  	//Export
 		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-export")
@@ -1204,13 +1283,13 @@
 		if(verbose){console.timeEnd("bar");}
 	}
 		
-	function treemap(p) {
+	function treemap() {
 		if(verbose){console.time("treemap");}
 		//SVG//
 		var svg = d3.select(".mtm-treemap").append("svg") //general SVG
-				//.attr("id","mtm-treemap")
-				.attr("height", p.height)
-				.attr("width", p.width)
+				.attr("class","mtm")
+				.attr("height", config.treemap.height)
+				.attr("width", config.treemap.width)
 				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")			
 				.style("font-size",config.options.font+"px")
 				.style("display","inline-block")//disable bottom padding
@@ -1238,11 +1317,12 @@
 		var header = svg.append("g")
 			.attr("transform", "translate(1,20)") //margin left, top
 			.classed("mtm-header",true)
+			.style("font-size","14px")
 		//create visual element rect
 		header.append("rect")
 			//.datum(node)
 			.attr("y", -20) //child of root g, moved on margin.top
-			.attr("width", p.width)
+			.attr("width", config.treemap.width)
 			.attr("height", 20) //border-bottom
 			.style("fill","#888")
 			.style("stroke",function() {return config.options.background ? "#000" : "#FFF"; })
@@ -1269,13 +1349,14 @@
 		if(verbose){console.timeEnd("treemap");}
 	}
 	
-	function table(p) {
+	function table() {
 		if(verbose){console.time("table");}
 		
 		//table//
 		var tab=d3.select(".mtm-table").append("div")
-				.style("height", p.height)
-				.style("width", p.width)
+				.attr("class","mtm")
+				.style("height", config.table.height)
+				.style("width", config.table.width)
 				.style("overflow","auto")
 				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")			
 				.style("font-size",config.options.font+"px")
@@ -1290,6 +1371,7 @@
 			.append("table")
 			.append("tr")
 			.classed("mtm-header",true)
+			.style("font-size","14px")
 		thead.append("th").text("Node")
 		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID")
 		thead.append("th").style("width","60px").style("text-align","right").text("Hits")
@@ -1300,8 +1382,8 @@
 
 		//tbody
 		var view = tab.append("div")
-			.style("height",(p.height-thead.node().offsetHeight)+"px")
-			.style("width", p.width+"px")
+			.style("height",(config.table.height-thead.node().offsetHeight)+"px")
+			.style("width", config.table.width+"px")
 			.style("overflow","auto")
 			.attr("class","mtm-scrollable")
 			.append("table")
@@ -1334,15 +1416,6 @@
 			d3.select("#mtm-tip").style("top", (d3.event.pageY+10)+"px")
             .style("left", (d3.event.pageX+10)+"px")
 		}
-	}
-	
-	function configChange(elem) {
-		var vals=elem.id.split(/_/);
-		if(elem.type=="checkbox") {
-			if(elem.checked){ config[vals[0]][vals[1]]=true; }
-			else { config[vals[0]][vals[1]]=false; }
-		}
-		else { config[vals[0]][vals[1]]=elem.value; }
 	}
 	
 	function handleTouch(d) { touched==d ? touched="": touched=d; }
@@ -1578,6 +1651,8 @@
 		//Fill table
 		if(verbose){console.time("growTable");}
 
+		console.log("update lines");
+
 		//delete old lines
 		var view = d3.select(".mtm-table").select(".mtm-view").html("");
 		//create tr and td
@@ -1603,9 +1678,10 @@
 			.style("cursor","pointer")
 			.append("span")
 				.style("padding-left",function(d){//max(depth,rank)
+//console.log(d.name,d.depth,ranks.indexOf(d.data.rank),(ranks.indexOf(d.data.rank)+1));
 					return (+Math.max(d.depth,(d.children ? ranks.indexOf(d.data.rank) : ranks.indexOf(d.data.rank)+1))*4)+"px";
 				})
-				.html(function(d){return "<span class='fa'>&nbsp;</span>";})
+				.html(function(d){return "<span class='glyphicon'>&nbsp;</span>";})
 				.append("span")
 					.on("click", function(d){  
 						highlight(d,false);
@@ -1644,7 +1720,7 @@
 		//internal nodes
 		view.selectAll("tr")
 			.filter(function(d){return d.children;})
-			.select(".fa")
+			.select(".glyphicon")
 			.on("click",function(d){ return toggle(d); })
 	}
 
@@ -1654,7 +1730,7 @@
 		var getColor;
 		//color by rank : top-down
 		if(config.options.colored=="rank" && rank!=-1) {
-			if(config.options.depth_rank=="init") {colorByRank(rank,root,root);}
+			if(config.options.cutoff_rank=="init") {colorByRank(rank,root,root);}
 			else {colorByRank(rank,tree,tree);}
 			getColor = function(d){return d.data.color;}
 		}
@@ -1679,11 +1755,11 @@
 			}
 		}
 		//Affect color
-		if(param.table.display) { //call table + affect treemap
+		if(config.table.display) { //call table + affect treemap
 			d3.select(".mtm-table").select(".mtm-view").selectAll("tr")
 				.style("background-color",function(d){ return getColor(d); })
 		}
-		if (param.treemap.display) { //call treemap
+		if (config.treemap.display) { //call treemap
 			d3.select(".mtm-treemap").select(".mtm-view").selectAll("rect")
 				.style("fill",function(d){return getColor(d);})
 		}
@@ -1880,13 +1956,13 @@
 		}
 
 		//update map
-		if(param.treemap.display) {
+		if(config.treemap.display) {
 			updateRects(n); //Create rectangle elements and position
 			updatePaths(n); //Create path and text element and position
 		}
 
 		//update table
-		if(param.table.display) {
+		if(config.table.display) {
 			var lines = d3.select(".mtm-table").select(".mtm-labels").selectAll("tr")
 			//clear %
 			lines.selectAll(".percent").text("-")
@@ -1907,19 +1983,19 @@
 				//collapse rank
 				lines.data(list[0],function(d){return "v"+d.id+d.data.sample;})
 					.style("display","table-row")
-					.select(".fa").attr("class","fa fa-plus-square-o")
+					.select(".glyphicon").attr("class","glyphicon glyphicon-expand")
 				//expand upper
 				lines.data(list[1],function(d){return "v"+d.id+d.data.sample;})
 					.style("display","table-row")
-					.select(".fa").attr("class","fa fa-minus-square-o")
+					.select(".glyphicon").attr("class","glyphicon glyphicon-collapse-down")
 			}
 			else { //expand all
 				lines.style("display","table-row")
-					.select(".fa").attr("class","fa fa-minus-square-o")		
+					.select(".glyphicon").attr("class","glyphicon glyphicon-collapse-down")		
 			}
 			//leaf
 			lines.filter(function(d){return !d.children;})
-				.select(".fa").attr("class","fa fa-square-o")
+				.select(".glyphicon").attr("class","glyphicon glyphicon-unchecked")
 			if(verbose){console.timeEnd("setLabelTable");}
 		}
 	}
@@ -1937,9 +2013,9 @@
 	}
 	
 	function toggle(d) {
-		var span = d3.select(".mtm-table").select(".v"+d.id+d.data.sample).select(".fa")
-		if(span.classed("fa-minus-square-o")) {
-			span.attr("class","fa fa-plus-square-o");
+		var span = d3.select(".mtm-table").select(".v"+d.id+d.data.sample).select(".glyphicon")
+		if(span.classed("glyphicon glyphicon-collapse-down")) {
+			span.attr("class","glyphicon glyphicon-expand");
 			//hide children 
 			if (d.children) {
 				for (var i in d.children) {
@@ -1948,7 +2024,7 @@
 			}
 		}
 		else {
-			span.attr("class","fa fa-minus-square-o");
+			span.attr("class","glyphicon glyphicon-collapse-down");
 			//show children
 			if (d.children) {
 				for (var i in d.children) {
@@ -1974,7 +2050,7 @@
 		//show current raw and recursive
 		var t = d3.select(".mtm-table").select(".v"+n.id+n.data.sample)
 					.style("display","table-row")
-		if(t.select(".fa").classed("fa-minus-square-o") && n.children) {
+		if(t.select(".glyphicon").classed("glyphicon-collapse-down") && n.children) {
 			for (var i in n.children) {
 				show(n.children[i]);
 			}
