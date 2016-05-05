@@ -92,11 +92,10 @@
 		.then(function() { return loadData(files); })
 		.catch(function(err) { return Error("mtm.load.data:",err); })
 		.then(function(load) { 
-			console.log("load",load);
 			//hundreds + sumHits
 			load[0] = load.reduce(function(a,b) {return +a + +b;});
 			sumHits(root,load);
-			console.log("root",root);
+			console.log("skeleton",root);
 			updateLayout();
 		})
 	}
@@ -288,8 +287,7 @@
 			.attr("name","mtm-format").attr("value","tab")
 			.on("click",function(){format(this);})
 		sub.append("span").text("Tabular.txt")
-		//
-		/**/
+
 		//fields title
 		li = form.append("div").attr("class","form-inline")
 		li.append("label").text("fields").style("width","90px")
@@ -518,23 +516,25 @@
 	}
 
 	function updateLayout() {
+		node = root;
+		computeLayout(root);
+		
 		//manage cutOff
 		refTree();
 
 		searchable = getSubtree(root,[]);
-		console.log("update layout",config);
+		updateSearch();
 
 		if(config.table.display) {
-			updateLines();
+			tree ? updateLines(tree) : updateLines(root);
 		}
 		if(config.treemap.display) {
-			updateSearch();
 			if(config.options.zoom) {
 				fluid = config.options.cutoff_rank!="init" ? tree : root ;
 			}
 		}
 
-		var domain = d3layout.nodes().reduce(function(p,c) {if(p.indexOf(c.id)<0){p.push(c.id);}return p;}, []);
+		var domain = searchable.reduce(function(p,c) {if(p.indexOf(c.id)<0){p.push(c.id);}return p;}, []);
 		color=d3.scale.ordinal().range(config.options.palette.split(/\s*,\s*/)).domain(domain);
 		
 		//update
@@ -543,25 +543,27 @@
 	}
 
 	function refTree() {
-
-		computeLayout(root);
-
 		//compute tree: root or cutOff
 		if(config.options.cutoff_rank!="init") {
 			var rank = ranks.indexOf(config.options.cutoff_rank);
-			var rankN = ranks.indexOf(root.data.rank);
+			var rankN = ranks.indexOf(node.data.rank);
 			//check depth > n.rank
 			if(rank <= rankN) { 
 				rankN++; 
 				config.options.cutoff_rank = ranks[rankN];
+				d3.select("#mtm-bar-cutoff").node().value = config.options.cutoff_rank;
+				rank = rankN;
 			}
-			tree = cutTree(rank,root,root);
+			tree = cutTree(rank,root,root); //clone
 			computeLayout(tree);
+			//update node (bcz cloning)
+			var getNode = d3layout.nodes().filter(function(n){return n.id==node.id && n.data.sample == node.data.sample;});
+			node = getNode[0];
 		}
+		else {tree = false;}
 	}
 	
 	function computeLayout(n) {
-		console.log("compute layout",config);
 		if(config.treemap.display) {
 			h = +config.treemap.height - 20;  //margin top
 			w = +config.treemap.width; //margin left
@@ -576,8 +578,6 @@
 
 		var nodes = d3layout.nodes(n)
 
-		console.log(nodes)
-		
 		//scale from data to map
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
@@ -943,7 +943,6 @@
 			.attr("type","text").style("width","120px")
 			.property("value",config.options.pattern)
 			.on("change",function() { 
-				console.log("on change");
 				//change all button
 				config.options.pattern=this.value;
 				//action
@@ -1068,21 +1067,11 @@
 				config.options.cutoff_rank=this.value;
 				//action
 				refTree();
-				updateLines();
-				updateSearch();
-				if(config.options.zoom) {
-					fluid = config.options.cutoff_rank!="init" ? tree : root ;
-				}
-				//update
-				console.log(ranks.indexOf(config.options.cutoff_rank),">=",ranks.indexOf(node.data.rank));
-				if(ranks.indexOf(config.options.cutoff_rank) >= ranks.indexOf(node.data.rank)) {
-					console.log("if");
-					zoom(d3layout.nodes().filter(function(n){return ""+n.id+n.data.sample == ""+node.id+node.data.sample;})[0]);
-				}
-				else {
-					config.options.cutoff_rank!="init" ? zoom(tree) : zoom(root) ;
-				}
+				tree ? updateLines(tree) : updateLines(root) ;
+				if(config.options.zoom) { fluid = tree ? tree : root ; }
 				updateColor();
+				zoom(node) ;
+				
 			});
 		$('#mtm-bar-cutoff').on({
 		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
@@ -1092,7 +1081,7 @@
 		li = list.append("li").append("div").attr("class","form-inline")
 			.append("div").attr("class","btn-group")
 		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
-			.on("click",function(){return config.options.cutoff_rank!="init" ? zoom(tree) : zoom(root) ;})
+			.on("click",function(){return tree ? zoom(tree) : zoom(root) ;})
 			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","zoom to root")
 			.append("span").attr("class","glyphicon glyphicon-step-backward")
 		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
@@ -1109,11 +1098,24 @@
 		var s = li.append("select").attr("class","selectpicker").attr("data-live-search","true").attr("data-width","120px")
 			s.on("change",function() { 
 				//action
-				config.options.cutoff_rank="init";
-				d3.select("#mtm-bar-cutoff").property("value",config.options.cutoff_rank);
-				zoom(searchable[this.value]);
+				var search = searchable[this.value];
+				if(tree) {
+					var getNode = getSubtree(tree,[]).filter(function(n){return n.id == search.id && n.data.sample==0;})
+					if(getNode.length>0) {node = getNode[0];}
+					else {
+						node = search;
+						refTree();
+						tree ? updateLines(tree) : updateLines(root) ;
+						if(config.options.zoom) { fluid = tree ? tree : root ; }
+					}
+				}
+				else {
+					node = search;
+				}
+				updateColor();
+				zoom(node) ;
 			});
-			/////////////////////////////////////////////
+
 		//Layout
 		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-layout")
 		item.append("a").attr("href","#")
@@ -1647,16 +1649,16 @@
 		$('.selectpicker').selectpicker('refresh');
 	}
 
-	function updateLines() {
+	function updateLines(n) {
 		//Fill table
 		if(verbose){console.time("growTable");}
 
-		console.log("update lines");
-
 		//delete old lines
 		var view = d3.select(".mtm-table").select(".mtm-view").html("");
+
+		var lines = getSubtree(n,[]);
 		//create tr and td
-		view.selectAll("tr").data(searchable).enter().append("tr")
+		view.selectAll("tr").data(lines).enter().append("tr")
 				.attr("class",function(d){return "v"+d.id+d.data.sample;})
 				.on("mouseover",function(d) { 
 					highlight(d,true);
@@ -1671,14 +1673,13 @@
 					.enter().append("td").attr("class",function(d){return d;})
 
 		//fill name
-		view.selectAll(".name").data(searchable)
+		view.selectAll(".name").data(lines)
 			.style("white-space","nowrap")
 			.style("overflow","hidden")
 			.style("text-overflow","ellipsis")
 			.style("cursor","pointer")
 			.append("span")
 				.style("padding-left",function(d){//max(depth,rank)
-//console.log(d.name,d.depth,ranks.indexOf(d.data.rank),(ranks.indexOf(d.data.rank)+1));
 					return (+Math.max(d.depth,(d.children ? ranks.indexOf(d.data.rank) : ranks.indexOf(d.data.rank)+1))*4)+"px";
 				})
 				.html(function(d){return "<span class='glyphicon'>&nbsp;</span>";})
@@ -1689,7 +1690,7 @@
 					})
 					.text(function(d){return d.name;})
 		//fill id
-		view.selectAll(".id").data(searchable)
+		view.selectAll(".id").data(lines)
 				.style("width","70px").style("text-align","right")
 				.append("span")
 				.filter(function(d){return +d.id>0})
@@ -1698,22 +1699,22 @@
 					.attr("target", "taxonomy")
 					.text(function(d){return d.id})
 		//fill hits
-		view.selectAll(".hits").data(searchable)
+		view.selectAll(".hits").data(lines)
 				.style("width","60px").style("text-align","right")
 				.append("span").text(function(d){return d.data.hits;})
 		//fill %
-		view.selectAll(".percent").data(searchable)
+		view.selectAll(".percent").data(lines)
 				.style("width","60px").style("text-align","right")
 				.append("span")
 				//.text() fill in zoom()
 		//fill sample
-		view.selectAll(".sample").data(searchable)
+		view.selectAll(".sample").data(lines)
 				.style("width","80px").style("text-align","right")
 				.append("span").html(function(d){
 					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
 				})
 		//fill rank
-		view.selectAll(".rank").data(searchable)
+		view.selectAll(".rank").data(lines)
 				.style("width","130px")
 			.append("span").text(function(d){return d.data.rank;})
 
@@ -2132,7 +2133,6 @@
 	function convert() {
 		var format = d3.select("[name=mtm-format]:checked").node().value
 		var file=d3.select("#mtm-convert").node().files[0]
-		console.log(file);
 		
 		//root init.
 		root={"name":"root","children":[],"data":{"assigned":0,"rank":"no rank"},"id":1}; //skeleton tree
