@@ -1731,8 +1731,8 @@
 		var getColor;
 		//color by rank : top-down
 		if(config.options.colored=="rank" && rank!=-1) {
-			if(config.options.cutoff_rank=="init") {colorByRank(rank,root,root);}
-			else {colorByRank(rank,tree,tree);}
+			colorByRank(rank,root,root); //for table
+			if(config.options.cutoff_rank!="init") {colorByRank(rank,tree,tree);} //for treemap
 			getColor = function(d){return d.data.color;}
 		}
 		//set color
