@@ -1980,7 +1980,7 @@
 				)
 			//manage collapse
 			if(config.options.labelled=="rank" && rank!=-1){
-				var list = collapseByRank(rank,root,root);
+				var list = tree ? collapseByRank(rank,tree,tree) : collapseByRank(rank,root,root);
 				//hide lower
 				lines.data(list[2],function(d){return "v"+d.id+d.data.sample;})
 					.style("display","none")
