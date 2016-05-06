@@ -1554,10 +1554,10 @@
 		var rank = ranks.indexOf(config.options.labelled_rank) //selected rank
 		if(config.options.labelled=="no") {}
 		else if(config.options.labelled=="rank" && rank!=-1) { //show selected group || upper leaves
-			labelled=labeledByRank(rank,root,root);
+			labelled=labeledByRank(rank,n,n);
 		}
 		else { //label for each tags
-			labelled=d3layout.nodes(root).filter(function(d){return !d.children;})
+			labelled=d3layout.nodes(n).filter(function(d){return !d.children;})
 		}
 		//filter
 		labelled = labelled.filter(function(d) {
@@ -1801,21 +1801,24 @@
 		//p is root
 		//n is the current node. Test on n.children
 		var l=[];
-		if(n.children && n.children.length>0) {
-			for (var i in n.children) {
-				var rankC=ranks.indexOf(n.children[i].data.rank);
-
-				if(rankC>=r) { //missing rank
-					l.push(n.children[i]);
-	
-				}
-				else  { //if(rankC==0 || rankC<r) //search deeper
-					l=l.concat(labeledByRank(r,p,n.children[i]));
-				}
-			}//end foreach
-		}//end children
-		else {
-			if(ranks.indexOf(n.data.rank)<r) { l.push(n); } 
+		
+		//label node
+		if(r<=ranks.indexOf(p.data.rank)) { l.push(p); } 
+		else { //search in subtree
+			if(n.children && n.children.length>0) {
+				for (var i in n.children) {
+					var rankC=ranks.indexOf(n.children[i].data.rank);
+					if(rankC>=r) { //missing rank
+						l.push(n.children[i]);
+					}
+					else  { //if(rankC==0 || rankC<r) //search deeper
+						l=l.concat(labeledByRank(r,p,n.children[i]));
+					}
+				}//end foreach
+			}//end children
+			else { //n is upper rank leaf
+				if(ranks.indexOf(n.data.rank)<r) { l.push(n); } 
+			}
 		}
 		return l;
 	}
