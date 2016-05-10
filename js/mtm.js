@@ -1077,28 +1077,27 @@
 		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
 		});
 
-		//Zoom out
-		li = list.append("li").append("div").attr("class","form-inline")
-			.append("div").attr("class","btn-group")
-		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
-			.on("click",function(){return tree ? zoom(tree) : zoom(root) ;})
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","zoom to root")
-			.append("span").attr("class","glyphicon glyphicon-step-backward")
-		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
-			.on("click",function(){return node.parent ? zoomSkip(node.parent) : zoom(node) ;})
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","zoom to parent node")
-			.append("span").attr("class","glyphicon glyphicon-backward")
-
-		//search
+		//Search
 		li = list.append("li").append("div").attr("class","navbar-form form-inline")
-			.append("div").attr("class","input-group")
+			.append("div").attr("class","input-group btn-group")
 		li.append("div").attr("class","input-group-addon")
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","zoom to selected node")
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","Go to node")
 			.append("span").attr("class","glyphicon glyphicon-search")
+		li.append("button").attr("type","button").attr("class","btn btn-default")
+			.on("click",function(){return tree ? zoom(tree) : zoom(root) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to root node")
+			//.append("span").attr("class","glyphicon glyphicon-step-backward")
+			.text("Root")
+		li.append("button").attr("type","button").attr("class","btn btn-default")
+			.on("click",function(){return node.parent ? zoomSkip(node.parent) : zoom(node) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to parent node")
+			//.append("span").attr("class","glyphicon glyphicon-backward")
+			.text("Parent")
 		var s = li.append("select").attr("class","selectpicker").attr("data-live-search","true").attr("data-width","120px")
+			//.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","go to selected node")
 			s.on("change",function() { 
 				//action
-				var search = searchable[this.value];
+				var search = this.value<0 ? root : searchable[this.value];
 				if(tree) {
 					var getNode = getSubtree(tree,[]).filter(function(n){return n.id == search.id && n.data.sample==0;})
 					if(getNode.length>0) {node = getNode[0];}
@@ -1488,6 +1487,7 @@
 			li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
 		}
 	}
+
 	function updateRects(n) {
 		//scale
 		x.domain([n.x, n.x + n.dx]);
@@ -1646,6 +1646,9 @@
 			.attr("value",function(d,i){return i;})
 			.text(function(d){return d.name;})
 		sel.exit().remove()
+		//add first select
+		d3.select(".selectpicker").insert("option",":first-child").attr("value",-1).property("selected",true).text("Search...")
+		//refresh
 		$('.selectpicker').selectpicker('refresh');
 	}
 
