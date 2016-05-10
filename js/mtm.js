@@ -464,6 +464,7 @@
 						"<!--\t"
 						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}\n"
 						+".mtm-table table{border-collapse:collapse;width:100%;}\n"
+						//+".mtm-table td,th{padding:0px 2px;}\n"
 						+"\t-->"
 					)
 				//divs
@@ -1377,7 +1378,7 @@
 		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID")
 		thead.append("th").style("width","60px").style("text-align","right").text("Hits")
 		thead.append("th").style("width","60px").style("text-align","right").text("%/View")
-		thead.append("th").style("width","80px").style("text-align","right").html("%/Sample&nbsp;")
+		thead.append("th").style("width","90px").style("text-align","right").html("%/Sample&nbsp;")
 		thead.append("th").style("width","130px").style("text-align","left").text("Rank")
 		thead.append("th").style("width","15px").text("")//scroll bar
 
@@ -1403,7 +1404,7 @@
 				.html(function(d) {
 					return d.name+"<br/>Taxonomy ID: "+(+d.id > 0 ? d.id :"")
 						+"<br/>Rank: "+d.data.rank
-						+"<br/>"+d.data.hits+" hits"
+						+"<br/>"+f(d.data.hits)+" hits"
 						+"<br/>"+d.data.percent.toFixed(2)
 						+"% of sample "+d.data.sample
 						+"<br/>"+(d.value*100/node.value).toFixed(2) 
@@ -1628,7 +1629,7 @@
 					//replace
 					tag = tag.replace(/#N/g,d.name);
 					tag = tag.replace(/#I/g,d.id);
-					tag = tag.replace(/#H/g,d.data.hits);
+					tag = tag.replace(/#H/g,f(d.data.hits));
 					tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
 					tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
 					tag = tag.replace(/#R/g,d.data.rank);
@@ -1704,7 +1705,7 @@
 		//fill hits
 		view.selectAll(".hits").data(lines)
 				.style("width","60px").style("text-align","right")
-				.append("span").text(function(d){return d.data.hits;})
+				.append("span").text(function(d){return f(d.data.hits);})
 		//fill %
 		view.selectAll(".percent").data(lines)
 				.style("width","60px").style("text-align","right")
@@ -1712,7 +1713,7 @@
 				//.text() fill in zoom()
 		//fill sample
 		view.selectAll(".sample").data(lines)
-				.style("width","80px").style("text-align","right")
+				.style("width","90px").style("text-align","right")
 				.append("span").html(function(d){
 					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
 				})
@@ -2063,6 +2064,8 @@
 			}
 		}
 	}
+
+	function f(i) { return Number(i).toLocaleString('en'); }
 	
 	//OUTPUT//
 	function copy(n,p) {
