@@ -464,6 +464,7 @@
 						"<!--\t"
 						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}\n"
 						+".mtm-table table{border-collapse:collapse;width:100%;}\n"
+						//+".mtm-table td,th{padding:0px 2px;}\n"
 						+"\t-->"
 					)
 				//divs
@@ -1077,28 +1078,27 @@
 		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
 		});
 
-		//Zoom out
-		li = list.append("li").append("div").attr("class","form-inline")
-			.append("div").attr("class","btn-group")
-		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
-			.on("click",function(){return tree ? zoom(tree) : zoom(root) ;})
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","zoom to root")
-			.append("span").attr("class","glyphicon glyphicon-step-backward")
-		li.append("button").attr("type","button").attr("class","btn btn-default navbar-btn")
-			.on("click",function(){return node.parent ? zoomSkip(node.parent) : zoom(node) ;})
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","zoom to parent node")
-			.append("span").attr("class","glyphicon glyphicon-backward")
-
-		//search
+		//Search
 		li = list.append("li").append("div").attr("class","navbar-form form-inline")
-			.append("div").attr("class","input-group")
+			.append("div").attr("class","input-group btn-group")
 		li.append("div").attr("class","input-group-addon")
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","zoom to selected node")
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","Go to node")
 			.append("span").attr("class","glyphicon glyphicon-search")
+		li.append("button").attr("type","button").attr("class","btn btn-default")
+			.on("click",function(){return tree ? zoom(tree) : zoom(root) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to root node")
+			//.append("span").attr("class","glyphicon glyphicon-step-backward")
+			.text("Root")
+		li.append("button").attr("type","button").attr("class","btn btn-default")
+			.on("click",function(){return node.parent ? zoomSkip(node.parent) : zoom(node) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to parent node")
+			//.append("span").attr("class","glyphicon glyphicon-backward")
+			.text("Parent")
 		var s = li.append("select").attr("class","selectpicker").attr("data-live-search","true").attr("data-width","120px")
+			//.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","go to selected node")
 			s.on("change",function() { 
 				//action
-				var search = searchable[this.value];
+				var search = this.value<0 ? root : searchable[this.value];
 				if(tree) {
 					var getNode = getSubtree(tree,[]).filter(function(n){return n.id == search.id && n.data.sample==0;})
 					if(getNode.length>0) {node = getNode[0];}
@@ -1378,7 +1378,7 @@
 		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID")
 		thead.append("th").style("width","60px").style("text-align","right").text("Hits")
 		thead.append("th").style("width","60px").style("text-align","right").text("%/View")
-		thead.append("th").style("width","80px").style("text-align","right").html("%/Sample&nbsp;")
+		thead.append("th").style("width","90px").style("text-align","right").html("%/Sample&nbsp;")
 		thead.append("th").style("width","130px").style("text-align","left").text("Rank")
 		thead.append("th").style("width","15px").text("")//scroll bar
 
@@ -1404,7 +1404,7 @@
 				.html(function(d) {
 					return d.name+"<br/>Taxonomy ID: "+(+d.id > 0 ? d.id :"")
 						+"<br/>Rank: "+d.data.rank
-						+"<br/>"+d.data.hits+" hits"
+						+"<br/>"+f(d.data.hits)+" hits"
 						+"<br/>"+d.data.percent.toFixed(2)
 						+"% of sample "+d.data.sample
 						+"<br/>"+(d.value*100/node.value).toFixed(2) 
@@ -1488,6 +1488,7 @@
 			li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
 		}
 	}
+
 	function updateRects(n) {
 		//scale
 		x.domain([n.x, n.x + n.dx]);
@@ -1628,7 +1629,7 @@
 					//replace
 					tag = tag.replace(/#N/g,d.name);
 					tag = tag.replace(/#I/g,d.id);
-					tag = tag.replace(/#H/g,d.data.hits);
+					tag = tag.replace(/#H/g,f(d.data.hits));
 					tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
 					tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
 					tag = tag.replace(/#R/g,d.data.rank);
@@ -1646,6 +1647,9 @@
 			.attr("value",function(d,i){return i;})
 			.text(function(d){return d.name;})
 		sel.exit().remove()
+		//add first select
+		d3.select(".selectpicker").insert("option",":first-child").attr("value",-1).property("selected",true).text("Search...")
+		//refresh
 		$('.selectpicker').selectpicker('refresh');
 	}
 
@@ -1701,7 +1705,7 @@
 		//fill hits
 		view.selectAll(".hits").data(lines)
 				.style("width","60px").style("text-align","right")
-				.append("span").text(function(d){return d.data.hits;})
+				.append("span").text(function(d){return f(d.data.hits);})
 		//fill %
 		view.selectAll(".percent").data(lines)
 				.style("width","60px").style("text-align","right")
@@ -1709,7 +1713,7 @@
 				//.text() fill in zoom()
 		//fill sample
 		view.selectAll(".sample").data(lines)
-				.style("width","80px").style("text-align","right")
+				.style("width","90px").style("text-align","right")
 				.append("span").html(function(d){
 					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
 				})
@@ -2060,6 +2064,8 @@
 			}
 		}
 	}
+
+	function f(i) { return Number(i).toLocaleString('en'); }
 	
 	//OUTPUT//
 	function copy(n,p) {
