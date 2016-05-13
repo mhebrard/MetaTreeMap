@@ -1,6 +1,6 @@
 !(function() {
 
-	var mtm = { version: "2.4.1" };
+	var mtm = { version: "3.0" };
 	var verbose=false;
 
 	//VARIABLES//
@@ -1749,8 +1749,8 @@
 		//set color
 		else if(config.options.colored=="majority") { //colorByMajority
 			getColor = function(d) {
-				if(!d.children) {d.data.color = color(d.parent.data.count.indexOf(Math.max(...d.parent.data.count)));}
-				else {d.data.color = color(d.data.count.indexOf(Math.max(...d.data.count)));}
+				if(!d.children) {d.data.color = color(d.parent.data.count.indexOf(Math.max.apply(null,d.parent.data.count)));}
+				else {d.data.color = color(d.data.count.indexOf(Math.max.apply(null,d.data.count)));}
 				return d.data.color;
 			}
 		}
