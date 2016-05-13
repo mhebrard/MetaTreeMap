@@ -16,7 +16,7 @@
 	"cutoff_rank":"genus",
 	"colored":"taxon",
 	"colored_rank":"init",
-	"ancestors":"enable",
+	"upper":"colored",
 	"palette":"brewer",
 	"background":"black",
 	"labelled":"taxon",
