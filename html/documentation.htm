@@ -3,578 +3,207 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 	<title>MTM Doc'</title>
-	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="./mtm.css"  />
+
+	<script src="http://code.jquery.com/jquery-1.12.0.min.js" type="text/javascript"></script>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" type="text/javascript"></script>
+
 	<style type="text/css">
 <!--
 	body {
-		margin:10px;
-		padding:5px;
-		border: 1px solid #888;
+		margin: 10px;
+		padding: 60px 5px 5px 5px;
 	}
-	a {
-		text-decoration: none;
+	.thumbnails {
+		display: flex;
+		flex-wrap: wrap;
 	}
-	img {
-		border: 1px solid gray;
-		padding: 2px;
+	.thumbnails div {
+		margin:3px;
 	}
-	ol {
-		margin:0px;
+	.content {
+		margin: 20px;
+		padding: 4px;
+		background-color: #fff;
+		border-radius: 6px;
 	}
-	h1,h2{
-		border-bottom: 1px solid #888;
-	}
-	h3 {
-		border-bottom: 1px solid #888;
-		display: table;
-	}
-	h5 { /*table of content*/
-		font-size: 12pt;
-		text-align:center;
-		margin: 5px;
-	}
-	#toc ol { counter-reset: item; }
-	#toc li { display: block; }
-	#toc li:before { 
-		content: counters(item, ".") " "; 
-		counter-increment: item; 
-	}
-	#toc {
-		display:table;
-		padding:7px;
-		border: 1px solid #888;
-		background-color: #eee;
-	}
-	.code {
-		border:1px dashed #888;
-		padding:2px;
-		background-color: #eee;
+	.magnified {
+		margin: 0px;
 	}
 -->
 	</style>
 	</head>
   <body>
-	<h1 id="top">MetaTreeMap - User Guide</h1>
-	<p>MetaTreeMap (MTM) is a module developed to visualize phylogenic trees where each species (node) has a number of reads (quantity) that map on the reference genome of this species. Each species is represented by a rectangle and its area is proportional to the number of assigned reads. The final figure is nested rectangles representing tree branches.</p>
-	
-	<div id="toc"><h5>Table of Content [<a href="#toc" onclick="toggle(this)">hide</a>]</h5>
-	<div id="list">
-		<ol><li><a href="#import">Import data</a>
-				<ol><li><a href="#standard">Standard file</a></li>
-					<li><a href="#multiple">Multiple files</a></li>
-					<li><a href="#custom">Custom format</a>
-						<ol><li><a href="#json">Json</a></li>
-							<li><a href="#tabular">Tabular</a></li>
-						</ol>
-					</li>
-					<li><a href="#config">Config file</a></li>
-				</ol>
-			</li>
-			<li><a href="#treemap">Treemap view</a>
-				<ol><li><a href="#orientation">Orientation</h3>
-					<li><a href="#name">Name and Name*</a></li>
-					<li><a href="#mouseover">Mouseover</a>
-						<ol><li><a href="#selection">Selection</a></li>
-							<li><a href="#tooltip">Tooltip</a></li>
-							<li><a href="#branch">Branch</a></li>
-						</ol>
-					</li>
-					<li><a href="#zoom">Zoom</a></li>
-				</ol>
-			</li>
-			<li><a href="#table">Table view</a>
-				<ol><li><a href="#infobox">Infobox</a></li>
-					<li><a href="#collapse">Collapse</a></li>
-					<li><a href="#focus">Focus</a></li>
-					<li><a href="#taxonid">Taxon ID</a></li>
-				</ol>
-			</li>
-			<li><a href="#options">Options</a>
-				<ol><li><a href="#colors">Colors</a>
-						<ol><li><a href="#bytaxon">By taxon (default)</a></li>
-							<li><a href="#byrank">By rank</a></li>
-							<li><a href="#bysample">By sample</a></li>
-							<li><a href="#majority">Majority</a></li>
-						</ol>
-					</li>
-					<li><a href="#phylogenic">Phylogenic rank</a></li>
-					<li><a href="#labelling">Labelling</a></li>
-					<li><a href="#grayed">Grayed</a></li>
-					<li><a href="#home">Home</a></li>
-					<li><a href="#font">Font size</a></li>
-					<li><a href="#colorset">Color set</a></li>
-					<li><a href="#background">Background color</a></li>
-					<li><a href="#size">Size parameter</a>
-						<ol><li><a href="#normalized">Normalized</a></li>
-							<li><a href="#hits">Hits</a></li>
-							<li><a href="#nodes">Nodes</a></li>
-						</ol>
-					</li>
-				</ol>
-			</li>
-			<li><a href="#configuration">Configuration</a>
-				<ol><li><a href="#views">Views</a></li>
-					<li><a href="#dimensions">Dimensions</a></li>
-					<li><a href="#optionsbar">Option bar</a></li>
-					<li><a href="#settings">Settings</a></li>
-					<li><a href="#update">Update</a></li>
-				</ol>
-			</li>
-			<li><a href="#export">Export data</a>
-				<ol><li><a href="#json">Tree</a></li>
-					<li><a href="#png">TreeMap</a></li>
-					<li><a href="#txt">Table</a></li>
-					<li><a href="#configout">Config</a></li>
-				</ol>
-			</li>
-		</ol>
+ 	<nav class="navbar navbar-default navbar-fixed-top">
+  		<div class="container-fluid">
+		    <!-- Brand and toggle get grouped for better mobile display -->
+		    <div class="navbar-header">
+		      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+		        <span class="sr-only">Toggle navigation</span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		      </button>
+		      <!--<a class="navbar-brand" href="#">Brand</a>-->
+		    </div>
+
+		    <!-- Collect the nav links, forms, and other content for toggling -->
+		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		    	<p class="btn btn-default navbar-btn"><a href="#intro">Top</a></p>
+		     	<div class="btn-group navbar-btn">
+  					<p class="btn btn-default"><a href="#quick">Quick Start</a></p>
+  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    					<span class="caret"></span>
+	  				</button>
+	  				<ul class="dropdown-menu">
+					    <li><a href="#quick-import">Import your data</a></li>
+					    <li><a href="#quick-info">See informations about a taxon</a></li>
+					    <li class="divider"></li>
+					    <li><a href="#quick-navigate">Navigate through the tree</a></li>
+					    <li><a href="#quick-zoomin">Zoom in</a></li>
+					    <li><a href="#quick-zoomout">Zoom out</a></li>
+					    <li><a href="#quick-zoomout">Search for a taxon</a></li>
+					    <li class="divider"></li>
+					</ul>
+					</ul>
+				</div>
+		    </div><!-- /.navbar-collapse -->
+		 </div><!-- /.container-fluid -->
+	</nav>
+
+	<!--ALERT-->
+  	<div class="alert alert-warning">
+  		<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  		<span>Sorry, this guide not complete ! It will be updated soon...</span>
+  	</div>
+
+  	<!--Intro-->
+  	<div>
+  		<h1 id="intro" class="page-header">MetaTreeMap - User Guide</h1>
+  		<p class="lead">MetaTreeMap (MTM) is a javascript library focuses on visualizing phylogenic trees with a quantity assigned to nodes. The hierarchy is represented by nested rectangles and the area of each rectangle is proportional to the quantity assigned to each taxon.</p>
+  	</div>
+
+  	<!--Quick Start-->
+  	<div>
+  	<h1 id="quick" class="page-header">Quick Start</h1>
+  	<h2 id="quick-import">Import your data</h2>
+  	<ul><li>See section Format for more information</li>
+  		<li>In option bar, click on <b>Import</b> menu</li>
+  		<li>Click on Data File (JSON) <b>Browse...</b> button</li>
+  		<li><b>Select</b> one or multiple files
+  			<p class="alert alert-info">hold <kbd>Ctrl</kbd> to multiple selection</p></li>
+  		<li><b>Open</b> the selected files</li>
+  		<li>Click on <b>Load</b> button</li>
+  	</ul>
+  	<p class="alert alert-success">Data are loaded and visualized</p>
+
+ <!-- 	
+ 	<div class="thumbnails">
+		<div><a href="#x" title="In option bar, click on Import menu" onclick="modal('quick-import.1')"><img src="../img/quick-import.1.tmbl.png" alt="Import"></a></div>
+		<div><a href="#x" title="Click on data: browse... button" onclick="modal('quick-import.2')"><img src="../img/quick-import.2.tmbl.png" alt="Browse..."></a></div>
+		<div><a href="#x" title="Select one or multiple files" onclick="modal('quick-import.3')"><img src="../img/quick-import.3.tmbl.png" alt="Select"></a></div>
+		<div><a href="#x" title="Open the selected files" onclick="modal('quick-import.4')"><img src="../img/quick-import.4.tmbl.png" alt="Open"></a></div>
+		<div><a href="#x" title="Click on Load button" onclick="modal('quick-import.5')"><img src="../img/quick-import.5.tmbl.png" alt="Load"></a></div>
+		<div><a href="#x" title="Dara are loaded and visualized" onclick="modal('quick-import.6')"><img src="../img/quick-import.6.tmbl.png" alt="Loaded"></a></div>
 	</div>
+-->
+
+	<h2 id="quick-info">See informations about a taxon</h2>
+  	<ul><li>In treemap view, mouse over a <b>rectangle</b>.</li>
+  		<li>In table view, mouse over a <b>line</b>.</li>
+  	</ul>
+  	<p class="alert alert-success">A tooltip appears that display taxon name, sample ID, NCBI taxon ID, phylogenic rank, number of hits, percentage according the sample and percentage according the current view.</p>
+
+ <!--
+  	<div class="thumbnails">
+		<div><a href="#x" title="In treemap view, mouse over a rectangle" onclick="modal('quick-info.1')"><img src="../img/quick-info.1.tmbl.png" alt="treemap-info"></a></div>
+		<div><a href="#x" title="In table view, mouse over a line" onclick="modal('quick-info.2')"><img src="../img/quick-info.2.tmbl.png" alt="tale-info"></a></div>
 	</div>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h2 id="import">Import data</h2>
-	<img src="../img/guide-1.0.png" alt="import"/>
-	<p>The input data of MTM is a phylogenic tree with quantity assigned to each node.<br/>The files that are currently displayed are listed here (see 1) and the number of each sample is indicated.</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="standard">Standard file</h3>
-	<p>The standard file is a json file obtained from <a href="http://metabin.riken.jp/" target="_blank">MetaBin program</a>. In this format, one node is represented by one object that has specific fields :
-	</p>
-	<div class="code">{"name":"Bacteria","children":[],"data":{"assigned":"21","sum":"913","rank":"superkingdom"},"id":"2"}</div>
-	<p>For visualize a file in this format, you can:
-	<ul><li>Click on "Browse..." (see 2)</li>
-		<li>Select one json file</li>
-		<li>Click on "Update View" (see 4)</li>
-	</ul>
-	The visualization is displayed.
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="multiple">Multiple files</h3>
-	<p>You can visualize multiple files in the same treemap. 
-	<ul><li>Click on "Browse..." (see 2)</li>
-		<li>Hold "Ctrl" key and select the files</li>
-		<li>Click on "Update View" (see 4)</li>
-	</ul>
-	All the selected files will be displayed in the same view. By default the files are normalizes (see the section <a href="#normalization">Normalization</a> for additional information).
-	</p>
-	<a href="./"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="custom">Custom format</h3>
-	<p>If you do not have a file from <a href="http://metabin.riken.jp/" target="_blank">MetaBin program</a>, you can convert your data in the right format.
-	<ul><li>Click on "<span class="fa fa-caret-square-o-right"></span>" (see 5)</li></ul>
-	That display a form to proceed the conversion.
-	</p>
-	<img src="../img/guide-1.3.png" alt="convert" />
-	<ul><li>Select your format. (see 6)</li>
-		<li>Select your data file. (see 7)</li>
-		</ul>
-	
-	<h4 id="json">Json</h4>
-	<img src="../img/guide-1.3.1.png" alt="json" />
-	<p>You can use a custom json file. For display properly the treemap, MTM need 3 fields for each node of your tree.
-	<ul><li>Taxon id: number, must be concordant with <a href="http://www.ncbi.nlm.nih.gov/taxonomy" target="_blank">NCBI taxonomy</a></li>
-		<li>Taxon name: string</li>
-		<li>Hits: number, quantity used to calculate the area of the rectangles</li>	
-	</ul>
-	You can specify the "path" of each field to fit with your json file. (The example above show path for MetaBin's json specification)
-	<ul><li>Specify "Taxon id" path (see 8)</li>
-		<li>Specify "Taxon name" path (see 9)</li>
-		<li>Specify "Hits" path (see 10)</li>
-		<li>Click on "Convert" (see 12)</li>
-		<li>Save the file that is generated</li>
-		<li>Refers to section <a href="#standard">Standard file</a> to visualize your data.</li>
-	</ul>
-	</p>
-	
-	<h4 id="tabular">Tabular</h4>
-	<img src="../img/guide-1.3.2.png" alt="tab" />
-	<p>You can use a list of data with field separated by tabulation (from your favourite spreadsheet software exported as text). For display properly the treemap, MTM need 3 fields for each node.
-	<ul><li>Taxon id: number, must be concordant with <a href="http://www.ncbi.nlm.nih.gov/taxonomy" target="_blank">NCBI taxonomy</a>.
-			<br/>*For not referenced taxa (like "No Hits"), use id = 0</li>
-		<li>Taxon name: string. 
-			<br/>*For referenced taxa, MTM will use NCBI scientific name; 
-			<br/>*For non referenced taxa, MTM will use this column.</li>
-		<li>Hits: number. Quantity used to calculate the area of the rectangles</li>	
-	</ul>
-	You can specify the index of column of each field to fit with your table (notice that column A is indexed "1"). In addition you can specify if the first line of your table is a header or the first node.
-	<ul><li>Specify "Taxon id" index (see 8)</li>
-		<li>Specify "Taxon name" index (see 9)</li>
-		<li>Specify "Hits" index (see 10)</li>
-		<li>Specify if MTM must ignore the first line (see 11)</li>
-		<li>Click on "Convert" (see 12)</li>
-		<li>Save the file that is generated</li>
-		<li>Refers to section <a href="#standard">Standard file</a> to visualize your data.</li>
-	</ul>
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="config">Configuration</h3>
-	<img src="../img/guide-1.4.png" alt="config" />
-	<p>In addition of data files, you can import a configuration file. This configuration can be save from a previews analyze (see <a href="#config">Config</a> for additional information), or edited manually. It consist to a list of parameters that set layout and options for MTM.</p>
-	<ul><li>bar
-		<ul><li>display: true |false (display options bar)</li>
-			<li>location: top | left | center | right | bottom (position of the bar on the web page)</li>
-			<li>width: [number] (width of bar, in pixel)</li>	
-		</ul></li>
-		<li>configuration
-		<ul><li>display: true |false (display configuration tab)</li>
-			<li>location: config (position of the tab on the web page)</li>
-		</ul></li>
-		<li>treemap
-		<ul><li>display: true |false (display treemap view)</li>
-			<li>location: top | left | center | right | bottom (position of the view on the web page)</li>
-			<li>width: [number] (width of view, in pixel)</li>	
-			<li>height: [number] (height of view, in pixel)</li>
-			<li>options: true | false (add options bar to view)</li>
-		</ul></li>
-		<li>table
-		<ul><li>display: true |false (display table view)</li>
-			<li>location: top | left | center | right | bottom (position of the view on the web page)</li>
-			<li>width: [number] (width of view, in pixel)</li>	
-			<li>height: [number] (height of view, in pixel)</li>
-			<li>options: true | false (add options bar to view)</li>
-		</ul></li>
-			<li>options
-		<ul><li>color: taxon | rank | sample | max (define taxa colors - see <a href="#colors">Colors</a> for additional information)</li>
-			<li>rank: [phylogenic rank] (see <a href="#phylogenic">Phylogenic rank</a> for additional information)</li>
-			<li>label: taxon | rank (labels treemap according to leaves or rank respectively)</li>
-			<li>upper: color | gray (colored or grayed upper rank respectively)</li>
-			<li>font: [number] (font size in point)</li>
-			<li>palette: #800080,#008000 (list of colors)</li>
-			<li>background: black | white (color of treemap background)</li>
-			<li>size: norm | hits | nodes (see <a href="#size">Size parameter</a> for additinal information)</li>
-			<li>pattern: [pseudo code] (expression pattern for labelling the nodes of treemap - see <a href="#pattern">Pattern</a> for additional information)</li>
-		</ul></li>
-	</ul>
-	The file must be in JSON format. The default configuration file (mtm-config.json) is :
-	<div class="code">{"bar":{"display":false,"location":"bottom","width":600},"configuration":{"display":true,"location":"config"},"treemap":{"display":true,"location":"left","width":800,"height":600,"options":true},"table":{"display":true,"location":"right","width":700,"height":"650","options":false},"options":{"color":"taxon","rank":"null","label":"taxon","upper":"color","font":"14","palette":"#8dd3c7, #ffffb3, #bebada, #fb8072, #80b1d3, #fdb462, #b3de69, #fccde5, #d9d9d9, #bc80bd, #ccebc5, #ffed6f", "background":"black","mode":"norm","pattern":"#N"}}</div>
-	<br/><a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h2 id="treemap">Treemap View</h2>
-	<p>All examples use a set of 3 artificial samples:
-		<ol><li>160 hits</li>
-			<li>174 hits</li>
-			<li>1600 hits</li>
-		</ol>
-	<br/>The treemap view display each node of the tree as a rectangle. The area of the rectangle is proportional to the number of hits assigned to this node. By construction, a branch of the tree is also a rectangle with its area proportional to the number of hits that composed the branch.</p>
-	<img src="../img/guide-2.0.png" alt="treemap"/>
-	<br/><a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="orientation">Orientation</h3>
-	<img src="../img/guide-2.1.png" alt="orientation"/>
-	<p>If the rectangle is more wide than tall, the label is display horizontally (see grey rectangle). 
-	<br/>If the rectangle is more tall than wide, the label is display vertically (see pink rectangles).  
-	<br/>If the label overflow the rectangle, it is truncated. (see pink rectangles)</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="name">Name and Name*</h3>
-	<img src="../img/guide-2.2.png" alt="proteobacteria"/>
-	<p>The hits assigned to a taxon without children (leaf) are represented by a rectangle labelled by the "[taxon name]".
-	<br/>If one ancestor (internal node) has assigned hits, it is represented by a rectangle labelled by "[taxon name]*" (taxon star)<br/>In the example, the dark green rectangle "Not assigned" is a leaf of the tree. The purple rectangle "Bacteria*" represents the hits assigned to the internal node Bacteria. The branch of all the bacteria is composed by the two purple rectangles, and all the rectangles at its right (proteobacteria, Escherichia, Mycobacterium...)</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="mouseover">Mouseover</h3>
-	<img src="../img/guide-2.3.png" alt="mouseover"/>
-	<p>We notice that the corresponding line in table view is also affected (see the section <a href="#longname">Long name</a> for additional information).
-	</p>
-	
-	<h4 id="selection">Selection</h4>
-	<p>On mouseover a rectangle, the node is selected (see darked Bacteria*).</p>
-	
-	<h4 id="tooltip">Tooltip</h4>
-	<p>A tooltip displayed additional information about the selected node.
-	<ul><li>Taxon name</li>
-		<li>Taxon ID (see <a href="http://www.ncbi.nlm.nih.gov/taxonomy" target="_blank">NCBI taxonomy</a>)</li>
-		<li>Phylogenic rank (see <a href="http://www.ncbi.nlm.nih.gov/taxonomy" target="_blank">NCBI taxonomy</a>)</li>
-		<li>Number of assigned hits</li>
-		<li>Percentage of hits regarding to the sample (and sample number).</li>
-		<li>Percentage of hits regarding to the current view (See section <a href="#zoom">Zoom</a> for addictional information)</li>
-	</ul>
-	</p>
-	
-	<h4 id="branch">Branch</h4>
-	If the node is an ancestor (internal node, named [taxon name]*), the branch starting at this ancestor is outlined.
-	<br/>If the node do not have child (leaf, named [taxon name]), the taxon is outlined (all samples).
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="zoom">Zoom</h3>
-	<img src="../img/guide-2.4.png" alt="zoom"/>
-	<p><ul><li>On click on a rectangle, the treemap zoom in.</li>
-		<li>On the header you see the label of the node that represent 100% of the current treemap.</li>
-		<li>The percentage of each rectangle is recalculate according to the zoom level.</li>
-		<li>On mouse over the header display a <a href="#tooltip">tooltip</a>.</li>
-		<li>Click on the header will zoom out at the parent node.</li>
-	</ul>
-	We notice that zoom action in treemap view modify table view (see section <a href="#focus">Focus</a> for additional information).</p>
-	<p>In addition, we can emphasise the distinction between branch and internal node (see section <a href="#name">Name and Name*</a> for additional information). In the example you see that Bacteria (the branch) is compose of 859 hits rather than Bacteria* of sample 3 (the node) represent 210 hits.
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h2 id="table">Table View</h2>
-	<p>All examples use a set of 2 artificial samples:
-		<ol><li>160 hits</li>
-			<li>174 hits</li>
-		</ol>
-	<br/>The table view display each node as a line of a table. The hierarchy of the nodes is represented by the indentation of taxa name. Information displayed are :
-	<ul><li>Taxon name</li>
-		<li>Taxon ID (see <a href="http://www.ncbi.nlm.nih.gov/taxonomy" target="_blank">NCBI taxonomy</a>)</li>
-		<li>Number of assigned hits. For internal node, it is the number of hits in the branch starting at this node. For leaf node, it is the number of hits assigned to this node. (see section <a href="#name">Name and Name*</a> for additional information)</li>
-		<li>Percentage of assigned hits according to current <a href="#zoom">zoom</a> level</li>
-		<li>Percentage of assigned hits according to the sample / Sample number</li>
-		<li>Phylogenic rank (see <a href="http://www.ncbi.nlm.nih.gov/taxonomy" target="_blank">NCBI taxonomy</a>)</li>
-	</ul>
-	</p>
-	<img src="../img/guide-3.0.png" alt="treemap"/>
-	<p>We notice that, by construction, MTM add one node by phylogenic rank. These nodes are named "[rank] under [taxon]".
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="infobox">Infobox</h3>
-	<p>By default, taxon name that cannot be displayed at one line is truncated. On mouse over the line, a tooltip popup and displayed additional information about the selected node. (see the section <a href="#tooltip">Tooltip</a> for addictional information)
-	</p>
-	<img src="../img/guide-3.1.png" alt="lineover"/>
-	<p>We notice that the corresponding rectangle in treemap view is also selected.
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="collapse">Collapse</h3>
-	<p>By default, the whole tree is expanded. Click on a <span class="fa fa-minus-square-o">&nbsp;</span> will collapse the corresponding branch and hide the descendant of the node. Then click on a <span onclick="mtm.toggle('2_2-0',this)" class="fa fa-plus-square-o">&nbsp;</span> will expand again the branch.</p>
-	<img src="../img/guide-3.2.png" alt="collapse"/>
-	<br/>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-		
-	<h3 id="focus">Focus</h3>
-	<p>By default, the root node represent 100% of hits. Click on a taxon name will focus on this node. The percentage of the view are recalculated for all nodes with the clicked node representing 100%. The nodes outside of the selected branch have no percentage.</p>
-	<img src="../img/guide-3.3.png" alt="focus"/>
-	<p>We notice that focus action in table view modify treemap view (see section <a href="#zoom">Zoom</a> for additional information). 
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="taxonid">Taxon ID</h3>
-	<p> Taxa that are present in the input file have <a href="http://www.ncbi.nlm.nih.gov/taxonomy" target="_blank">NCBI taxonomy</a> ID associated. Click on the ID will open the official NCBI web page of the taxon. Nodes added by MTM to fulfil the hierarchy have no NCBI ID (name: "[rank] under [taxon]"). 
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-  
-	<h2 id="options">Options</h2>
-	<p>All examples use a set of 3 artificial samples:
-		<ol><li>160 hits</li>
-			<li>174 hits</li>
-			<li>1600 hits</li>
-		</ol>
-	</p>
-	<img src="../img/guide-4.0.png" alt="options"/>
-	<br/><a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="colors">Colors</h3>
-	<p>The color of nodes are synchronized between treemap view and table view. In table view, the nodes added by MTM to fulfil the hierarchy are colored according to the first defined descendant.
-	<br/>The "colored by..." option (see 1), define the color pattern.</p>
-  
-	<h4 id="bytaxon">By taxon</h4>
-	<img src="../img/guide-4.1.1.png" alt="by taxon"/>
-	<p>Each taxon define one color. (default)</p>
-	<img src="../img/guide-4.1.1.1.png" alt="map by taxon"/><img src="../img/guide-4.1.1.2.png" alt="table by taxon"/>
-	<p>The tree "Proteobacteria*" are red. The added nodes for rank kingdom, subkingdom and superphylum under Bacteria are also red.
-	</p>
-	
-	<h4 id="byrank">By rank</h4>
-	<img src="../img/guide-4.1.2.png" alt="by rank"/>
-	<p>If a <a href="#phylogenic">phylogenic rank</a> is set (see 2), all branches started at this rank have a unique color (nodes upper the rank keep default color).</p>
-	<img src="../img/guide-4.1.2.1.png" alt="map by rank"/><img src="../img/guide-4.1.2.2.png" alt="table by rank"/>
-	<p>All the "Proteobacteria" are red: Proteobacteria* + All "[rank] under Proteobacteria" + E.fergusonii + E.coli
-	</p>
-	
-	<h4 id="bysample">By sample</h4>
-	<img src="../img/guide-4.1.3.png" alt="by sample"/>
-	<p>Each sample define one color.</p>
-	<img src="../img/guide-4.1.3.1.png" alt="map by sample"/><img src="../img/guide-4.1.3.2.png" alt="table by sample"/>
-	<p>All the nodes from sample 1 are orange.</p>
-	
-	<h4 id="majority">Majority</h4>
-	<img src="../img/guide-4.1.4.png" alt="majority"/>
-	<p>For each node, all the sample are colored according to the sample with the higher number of reads.</p>
-	<img src="../img/guide-4.1.4.1.png" alt="map majority"/><img src="../img/guide-4.1.4.2.png" alt="table majority"/>
-	<p>The tree "Proteobacteria*" are pink because sample 3 have more reads than sample 1 and 2. The nodes added to fulfil the hierarchy have a different color.
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="phylogenic">Phylogenic rank</h3>
-	<img src="../img/guide-4.2.png" alt="rank"/>
-	<p>The "Phylogenic rank" option (see 2), is used as parameter for
-	<ul><li><a href="#byrank">"Colored" option</a> (see 1)</li>
-		<li><a href="#labelling">"Labelling" option</a> (see 3)</li>
-		<li><a href="#grayed">"Grayed" option</a> (see 4)</li>
-	</ul>
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="labelling">Labelling</h3>
-	<img src="../img/guide-4.3.png" alt="labelling"/>
-	<p>By default, on the treemap view each rectangle (leaf) is labelled, and on the table view the whole hierarchy is expand.
-	<br/>If a <a href="#phylogenic">phylogenic rank</a> is set (see 2), and the labelling button (see 3) is off (gray): 
-	<br/>On treemap view, the labels of nodes at the selected rank are displayed. On table view, the node at the selected rank are collapsed.</p>
-	<img src="../img/guide-4.3.1.png" alt="map labelled"/><img src="../img/guide-4.3.2.png" alt="table labelled"/>
-	<p>In this example, Colored is set as "by rank", Rank is set as "phylum" and Labelling button is "off".</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="grayed">Grayed</h3>
-	<img src="../img/guide-4.4.png" alt="grayed"/>
-	<p>By default, each rectangle (leaf) and lines is colored.
-	<br/>If a <a href="#phylogenic">phylogenic rank</a> is set (see 2), and the grayed button (see 4) is off (gray): the rectangles and the lines of the nodes upper the selected rank are grayed.</p>
-	<img src="../img/guide-4.4.1.png" alt="map grayed"/><img src="../img/guide-4.4.2.png" alt="table grayed"/>
-	<p>In this example, Colored is set as "by rank", Rank is set as "phylum" and Grayed is "off".</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="home">Home</h3>
-	<img src="../img/guide-4.5.png" alt="home"/>
-	<p>By default, whole tree is displayed and the home button (see 5) is on (white). In case of zoom, the home button is turned off (see section <a href="#zoom">Zoom</a> for additional information).
-	<br/>Click on the home button zoom out at the root node (and button is turned on).
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="font">Font size</h3>
-	<img src="../img/guide-4.6.png" alt="font"/>
-	<p>By default, the font size is 14pt. The font button (see 6) allows to modify the font size of rectangles labels, tooltip and lines (header font size is not changed).
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="colorset">Color Set</h3>
-	<img src="../img/guide-4.7.png" alt="color set"/>
-	<p>The user can define a color set by enter a list of color in this field. the colors must be separated by a comma. the colors can be named (red, green, blue), or in hexadecimal code (#80000,#00AA00,#003080). 
-	<br/>MTM suggest 2 sets: 
-	<ul><li>Colorbrewer: a color set of 12 colors designed for qualitative data by <a href="http://colorbrewer.org" target="_blank">Cynthia Brewer</a></li>
-		<li>d3.category: a color set of 20 colors designed for categories into <a href="http://d3js.org/" target="_blank">d3.js library</a></li>
-	</ul>
-	Example colorbrewer
-	</p>
-	<img src="../img/guide-4.7.1.1.png" alt="map 12 colors"/><img src="../img/guide-4.7.1.2.png" alt="table 12 colors"/>
-	<p>Exemple d3.category</p>
-	<img src="../img/guide-4.7.2.1.png" alt="map 20 colors"/><img src="../img/guide-4.7.2.2.png" alt="table 20 colors"/>
-	<br/>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="background">Background color</h3>
-	<img src="../img/guide-4.8.png" alt="bgcolor"/>
-	<p>By default, the background color is black. Turning off the background button (see 8) switch to white</p>
-	<img src="../img/guide-4.8.1.png" alt="map bgcolor"/>
-	<p>In this example, Colored is set as "by rank", Rank is set as "phylum", Labelling button is "off", and Background is "off". The black label of phyla are more legible with white border for rectangles.
-	</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="size">Size parameter</h3>
-	
-	<h4 id="normalized">Normalized</h4>
-	<img src="../img/guide-4.9.1.png" alt="size"/>
-	<p>By default, the data are normalized (see 9). That means each sample have the same portion of the total treemap. The area of rectangles are proportional to the percentage of hits assigned to the nodes regarding to the sample.</p>
-	<img src="../img/guide-4.9.1.1.png" alt="normalized map"/>
-	
-	<h4 id="hits">Hits</h4>
-	<img src="../img/guide-4.9.2.png" alt="hits"/>
-	<p>Turn the size parameter to "hits" (see 9), displays the data without normalization. That means the area of rectangles are proportional to the number of hits assigned to the nodes whatever the samples proportions.</p>
-	<img src="../img/guide-4.9.2.1.png" alt="hits map"/>
-	
-	<h4 id="nodes">Nodes</h4>
-	<img src="../img/guide-4.9.3.png" alt="nodes"/>
-	<p>Turn the size parameter to "nodes" (see 9), displays all the rectangles with the same area whatever the number of hits nor the samples.</p>
-	<img src="../img/guide-4.9.3.1.png" alt="nodes maps"/>
-	<br/>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="search">Search</h3>
-	<p>User can search through the nodes. Enter some letters in the search box (see 10) display a list of nodes including these letters. Click on one label in the list will <a href="#zoom">Zoom</a> in the corresponding node.</p>
-	<img src="../img/guide-4.10.png" alt="search"/>
-	<br/>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h2 id="configuration">Configuration</h2>
-	<img src="../img/guide-5.0.png" alt="configuration"/>
-	<p>MTM displays different elements (module).
-	<ul><li>Option bar (see 1)</li>
-		<li>Configuration form (see 2)</li>
-		<li>Treemap view (see 3)</li>
-		<li>Table view (see 4)</li>
-	</ul>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="views">Views</h3>
-	<p>Each module can be displayed by checking the correspondig box.
-	<br/>In addition, a module is assigned to a HTML container (div) by specify the id of the container in the location field.
-	<br/>The MTM web page is divided in 5 containers that can be used to customized the layout of the views : </p>
-		<table border=1 style="text-align:center">
-			<tr><td colspan="3">top</td></tr>
-			<tr><td>left</td>
-				<td>center</td>
-				<td>right</td>
-			</tr>
-			<tr><td colspan="3">bottom</td></tr>
-		</table>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="dimensions">Dimensions</h3>
-	<p>Treemap view and table view will be displayed according to the respective width and height parameter. Option bar have only width parameter.</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="optionsbar">Options bar</h3>
-	<p>The options bar can be display in a separate container (see 1) and/or in the same container than a view (see 3 and 4 "options")</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="settings">Settings</h3>
-	<p>The options from the bar can be set in the configuration tab.
-	<br/>In addition, the labels of the <a href="#treemap">treemap view</a> (taxon name by default), can be customized using a pattern (see 6). Fields are indicated by "# Code".
-	<ul><li>#N for taxon name,</li>
-		<li>#I for taxon id,</li>
-		<li>#H for assigned hits,</li>
-		<li>#R for phylogenic rank,</li>
-		<li>#S for sample number.</li>
-		<li>#P for percentages of hits according to the sample (see the section <a href="#zoom">Zoom</a> for additional information),</li>
-		<li>#V for percentages of hits according to the current view (see the section <a href="#size">Size parameter</a> for additional information),</li>
-	</ul>
-	Other character can be added without restriction.</p>
-	<div class="code">#N-#S [#H]</div>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="update">Update</h3>
-	<p>The modifications of the layout will be applied when "Update View" will be clicked (see 7).</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h2 id="export">Export data</h2>
-	<img src="../img/guide-6.0.png" alt="layout"/>
-	<p>Data used and displayed by MTM can be exported in different format, for different purposes.</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="json">Tree</h3>
-	<p>The tree structure can be exported in json format with the specifications of <a href="http://metabin.riken.jp/" target="_blank">MetaBin program</a>. If multiples samples are displayed, the hits assigned to each taxon will be merged. Be careful, the hits are summed, there is no normalization in this export. the result is a unique file with one sample (addition):</p>
-	<div class="code">{"name":"Bacteria","children":[],"data":{"assigned":"21","sum":"913","rank":"superkingdom"},"id":"2"}</div>
-	<br/>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="png">TreeMap</h3>
-	<p>The treemap view can be exported as an image in png format, or as vectorial graphics in svg format</p>	
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="txt">Table</h3>
-	<p>The table view can be exported as a tabular separated value in txt format, that is like a spreadsheet and can open with your favourite software (Calc, Excel...)</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
-	<h3 id="configout">Config</h3>
-	<p>The configuration can be save as a JSON file. It is compose of a list of parameters like layout settings and color group options. See <a href="#config">Configuration</a> for additional information.</p>
-	<a href="#top"><span class="fa fa-arrow-up"></span>Back</a>
-	
+-->
+
+	<!--Zoom-->
+	<h2 id="quick-navigate">Navigate through the tree</h2>
+	<h3 id="quick-zoomin">Zoom in</h3>
+  	<ul><li>In treemap view, click on a <b>rectangle</b>.</li>
+  		<li>In table view, click on a <b>line</b>.</li>
+  	</ul>
+  	<p class="alert alert-success">The treemap zoom in the node. The full treemap represent this node and display its sub-branch.</p>
+
+<!--
+  	<div class="thumbnails">
+		<div><a href="#x" title="In treemap view, click on a rectangle" onclick="modal('quick-info.1')"><img src="../img/quick-info.1.tmbl.png" alt="treemap-zoomin"></a></div>
+		<div><a href="#x" title="In table view, click on a line" onclick="modal('quick-info.2')"><img src="../img/quick-info.2.tmbl.png" alt="tale-zoomin"></a></div>
+		<div><a href="#x" title="Treemap represent now the sub-branch" onclick="modal('quick-zoom.3')"><img src="../img/quick-zoom.3.tmbl.png" alt="treemap-zoomed"></a></div>
+	</div>
+-->
+
+  	<h3 id="quick-zoomout">Zoom out</h3>
+  	<ul><li>In treemap view, click on the <b>header</b>.</li>
+  		<li>In option bar, click on <b>Parent</b> button.</li>
+  	</ul>
+  	<p class="alert alert-success">The treemap zoom out step by step, to the parent of the current node.</p>
+  	<p class="alert alert-warning">In option bar, the <b>Root</b> button zoom all the way out, back to root node.</p>
+
+<!--
+  	<div class="thumbnails">
+		<div><a href="#x" title="In treemap view, click on the header" onclick="modal('quick-zoom.4')"><img src="../img/quick-zoom.4.tmbl.png" alt="treemap-zoomout"></a></div>
+		<div><a href="#x" title="In option bar, click on Parent button" onclick="modal('quick-zoom.5')"><img src="../img/quick-zoom.5.tmbl.png" alt="option-zoomout"></a></div>
+		<div><a href="#x" title="Treemap represent now the parent node" onclick="modal('quick-zoom.6')"><img src="../img/quick-zoom.6.tmbl.png" alt="option-zoomedout"></a></div>
+		<div><a href="#x" title="In option bar, click on Root button to zoom out to root" onclick="modal('quick-zoom.7')"><img src="../img/quick-zoom.7.tmbl.png" alt="option-toroot"></a></div>
+		<div><a href="#x" title="Treemap represent now the root node" onclick="modal('quick-zoom.8')"><img src="../img/quick-zoom.8.tmbl.png" alt="option-zoomroot"></a></div>		
+	</div>
+-->
+
+	<h3 id="quick-search">Search for a taxon</h3>
+  	<ul><li>In option bar, click on <b>Search...</b> button.</li>
+  		<li>Start to <b>write</b> the taxon name.</li>
+  		<li>Click on the wanted <b>taxon</b> name.</li>
+  	</ul>
+  	<p class="alert alert-success">The treemap zoom on the node. The full treemap represent this node and display its sub-branch.</p>
+
+<!--
+  	<div class="thumbnails">
+		<div><a href="#x" title="In option bar, click on the <b>Search...</b> field" onclick="modal('quick-search.1')"><img src="../img/quick-search.1.tmbl.png" alt="option-search"></a></div>
+		<div><a href="#x" title="Start to write the taxon name" onclick="modal('quick-search.2')"><img src="../img/quick-search.2.tmbl.png" alt="search-write"></a></div>
+		<div><a href="#x" title="Click on the needed taxon name" onclick="modal('quick-search.3')"><img src="../img/quick-search.3.tmbl.png" alt="search-select"></a></div>
+		<div><a href="#x" title="The treemap zoom on this node" onclick="modal('quick-search.4')"><img src="../img/quick-search.4.tmbl.png" alt="search-selected"></a></div>
+	</div>
+-->
+
+	<!--ALERT-->
+  	<div class="alert alert-warning">
+  		<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  		<span>Sorry, this guide not complete ! A new version is under construction...</span>
+  	</div>
+
+	<!-- Modal-->
+	<div class="modal fade" id="modal-image" tabindex="-1" onclick="hide()">
+		<div class="content">
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<div><a href="#x" class="thumbnail magnified"></a></div>
+		</div>
+	</div>
+
 	<script type="text/javascript">
-	function toggle(button) {
-		var list = document.getElementById("list"); 
-		console.log(button,button.text,button.innerHTML);
-		if(button.innerHTML=="hide") {
-			button.innerHTML="show";
-			list.style.display="none";
+		//active tooltips
+		$(function () {
+ 			$('.thumbnails>div>a').attr("class","thumbnail")
+ 				.attr("data-toggle","modal").attr("data-target","#modal-image").attr("data-trigger","hover")
+ 				.tooltip();
+		})
+		//update modal
+		function modal(img) {
+			$('.magnified').html('<img src="../img/'+img+'.png" alt="'+img+'">');
+
 		}
-		else {
-			button.innerHTML="hide";
-			list.style.display="block";
+		//hide modal
+		function hide() {
+			$('.modal').modal('hide');
 		}
-	}
+		//anchor shift
+		var shiftWindow = function() { scrollBy(0, -60) };
+		if (location.hash) shiftWindow();
+		window.addEventListener("hashchange", shiftWindow);
 	</script>
   </body>	
 </html>
