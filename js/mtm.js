@@ -150,17 +150,17 @@
 		var data = [];
 		if(!files || files.length==0) { 
 			data=["data/HuFS.json","data/HuFU.json"]; 
-			ul.append("li").text("#1.HuFS.json");
-			ul.append("li").text("#2.HuFU.json");
+			ul.append("li").text("#1.HuFS");
+			ul.append("li").text("#2.HuFU");
 		}
 		else {
 			for(var i=0; i<files.length; i++) {
-				ul.append("li").text("#"+(i+1)+"."+files[i].name);
+				ul.append("li").text("#"+(i+1)+"."+files[i].name.replace(/\.[^/.]+$/, ""));
 				data.push(files[i].data);
 			}
 		}
 		//root init.
-		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"color":"#888"},"id":"1"}; //skeleton tree
+		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"color":"#ccc"},"id":"1"}; //skeleton tree
 		bkeys = [root.id]; //list of keys of nodes
 		bobjs = [root]; //list of node -object-
 		var hundreds = []; //samples total reads
@@ -260,7 +260,7 @@
 		//datafile
 		var li = form.append("div").attr("class","form-inline")
 			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
-		li.append("label").text("data:").style("width","90px")
+		li.append("label").text("Data File").style("width","90px")
 		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-convert-data")
 			//.style("width","90px")
 		s.text("Browse...")
@@ -275,50 +275,50 @@
 		li.append("label").attr("class","help-block small").attr("id","mtm-convert-help").style("display","inline")
 		//json or tab
 		li = form.append("div").attr("class","form-inline")
-		li.append("label").text("format:").style("width","90px")
+		li.append("label").text("Format").style("width","90px")
 		var sub = li.append("label").attr("class","radio-inline")
 		sub.append("input").attr("type","radio").property("checked",true)
 			.attr("name","mtm-format").attr("value","json")
 			.on("click",function(){format(this);})
-		sub.append("span").text("Other.json")
+		sub.append("span").text("Other JSON")
 
 		var sub = li.append("label").attr("class","radio-inline")
 		sub.append("input").attr("type","radio")
 			.attr("name","mtm-format").attr("value","tab")
 			.on("click",function(){format(this);})
-		sub.append("span").text("Tabular.txt")
+		sub.append("span").text("Tabular (TSV)")
 
 		//fields title
 		li = form.append("div").attr("class","form-inline")
-		li.append("label").text("fields").style("width","90px")
+		li.append("label").text("Fields").style("width","90px")
 		li.append("label").attr("id","mtm-fieldhead")
-			.text("Object property")
+			.html("Object Property <small>(Specify field name in your dataset)<small>")
 		//id
 		li = form.append("div").attr("class","form-inline")
-		li.append("label").text("taxon id:").style("width","90px")
+		li.append("label").text("Taxon ID").style("width","90px")
 		li.append("input").attr("type","text")
 			.attr("class","form-control")//.style("width","70px")
 			.attr("name","mtm-tid").attr("value","id")
 		//name
 		li = form.append("div").attr("class","form-inline")
-		li.append("label").text("taxon name:").style("width","90px")
+		li.append("label").text("Taxon Name").style("width","90px")
 		li.append("input").attr("type","text")
 			.attr("class","form-control")//.style("width","70px")
 			.attr("name","mtm-tname").attr("value","name")
 		//hits
 		li = form.append("div").attr("class","form-inline")
-		li.append("label").text("hits:").style("width","90px")
+		li.append("label").text("Hits").style("width","90px")
 		li.append("input").attr("type","text")
 			.attr("class","form-control")//.style("width","70px")
 			.attr("name","mtm-hits").attr("value","data.assigned")
 		//header
 		li = form.append("div").attr("class","form-inline")
 			.attr("id","mtm-headrow").style("display","none")
-		li.append("label").text("header:").style("width","90px")
+		li.append("label").text("Header").style("width","90px")
 		var sub = li.append("label").attr("class","checkbox-inline")
 		sub.append("input").attr("type","checkbox")
 			.attr("name","mtm-head").attr("value","false")
-		sub.append("span").text("Ignore 1st line")
+		sub.append("span").text("Ignore 1st Line")
 		//submit
 		li = form.append("div").attr("class","form-inline")
 		//li.append("label")//.style("width","70px")
@@ -326,7 +326,6 @@
 			.attr("type","button").style("width","90px")
 			.text("Convert")
 			.on("click",function(){convert();})
-		
 
 		//manage hide
 		$("#"+location).on({
@@ -434,9 +433,9 @@
 			if(vals.indexOf(config.options.colored) < 0)
 			{ alert("please set config.options.colored: "+vals.toString());}
 
-			vals=["enable","disable"];
-			if(vals.indexOf(config.options.ancestors) == 0) {config.options.ancestors=true;}
-			else if (vals.indexOf(config.options.ancestors) == 1) {config.options.ancestors=false;}
+			vals=["colored","grayed"];
+			if(vals.indexOf(config.options.upper) == 0) {config.options.upper=true;}
+			else if (vals.indexOf(config.options.upper) == 1) {config.options.upper=false;}
 
 			vals=["brewer","d3"];
 			if(vals.indexOf(config.options.palette) == 0) {config.options.palette=colors[0][1];}
@@ -472,15 +471,16 @@
 				mods.append("div").attr("id","mtm-canvas").style("display","none")
 				mods.append("div").attr("id","mtm-samples").style("display","none")
 				//pattern
-				var ul = mods.append("div").attr("id","mtm-tags").attr("width","140px")
+				var ul = mods.append("div").attr("id","mtm-tags").attr("width","200px")
 					.style("display","none").append("ul").attr("class","list-unstyled")
-				ul.append("li").text("#N: name");
-				ul.append("li").text("#I: id");
-				ul.append("li").text("#H: hits");
-				ul.append("li").text("#R: rank");
-				ul.append("li").text("#S: sample");
-				ul.append("li").text("#P: % by sample");
-				ul.append("li").text("#V: % by view");
+					
+				ul.append("li").text("#N: Taxon Name");
+				ul.append("li").text("#I: NCBI Taxonomy ID");
+				ul.append("li").text("#H: Number Of Hits");
+				ul.append("li").text("#R: Phylogenic Rank");
+				ul.append("li").text("#S: Sample Number");
+				ul.append("li").text("#P: % By Sample");
+				ul.append("li").text("#V: % By View");
 
 				//convert
 				//Modal
@@ -695,7 +695,7 @@
    		});
    		$("#mtm-info").tooltip({ 
 	        placement: "bottom",
-	        title: "Click to see samples names"
+	        title: "Click to see sample names"
    		});
    		$('#mtm-info').on({
 		  "click":	function() { $('#mtm-info').tooltip("hide"); }
@@ -712,12 +712,12 @@
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Import <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
-			.style("width","250px").style("padding","5px")
+			.style("width","350px").style("padding","5px")
 
 		//Data
 		li = ul.append("li").attr("class","form-inline")
 			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
-		li.append("label").text("data:").style("width","70px")
+		li.append("label").text("Data File (JSON)").style("width","190px")
 		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-data-btn")
 			.style("width","90px")
 		s.text("Browse...")
@@ -738,7 +738,7 @@
 		//Config
 		li = ul.append("li").attr("class","form-inline")
 			.style("white-space","nowrap").style("overflow","hidden").style("text-overflow","ellipsis")
-		li.append("label").text("config:").style("width","70px")
+		li.append("label").text("Configuration File (JSON)").style("width","190px")
 		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-config-btn")
 			.style("width","90px")
 		s.text("Browse...")
@@ -758,7 +758,7 @@
 
 		//load
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","70px")
+		li.append("label").style("width","190px")
 		li.append("button").attr("class","btn btn-primary")
 			.attr("type","button").style("width","90px")
 			.text("Load")
@@ -781,7 +781,7 @@
 
 		//Convert
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").text("convert:").style("width","70px")
+		li.append("label").text("Convert Data File").style("width","190px")
 		s = li.append("label").attr("class","btn btn-default").attr("id","mtm-convert")
 			.style("width","90px")
 			.attr("data-toggle","modal").attr("data-target","#mtm-modal")
@@ -798,16 +798,16 @@
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Colors <span class='caret'></span>")
 		var ul = item.append("ul").attr("class","dropdown-menu")
-			.style("width","290px").style("padding","5px")
+			.style("width","300px").style("padding","5px")
 		//Colored
 		var li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","100px").text("colored:")
+		li.append("label").style("width","120px").text("Color By")
 		var s = li.append("select").attr("class","form-control").attr("id","mtm-bar-colored")
 		.style("width","120px")
-			s.append("option").attr("value","taxon").text("by taxon")
-			s.append("option").attr("value","rank").text("by rank")
-			s.append("option").attr("value","sample").text("by sample")
-			s.append("option").attr("value","majority").text("by majority")
+			s.append("option").attr("value","taxon").text("Taxon")
+			s.append("option").attr("value","rank").text("Rank")
+			s.append("option").attr("value","sample").text("Sample")
+			s.append("option").attr("value","majority").text("Majority")
 			//value
 			s.property("value",config.options.colored)
 			s.on("change",function() { 
@@ -824,9 +824,9 @@
 		li = ul.append("li").attr("class","collapse").attr("id","mtm-bar-colored-block")
 		//select rank
 		var block = li.append("div").attr("class","form-inline")
-		block.append("label").style("width","100px").text("rank:")
+		block.append("label").style("width","120px").text("Phylogenic Rank")
 		s = block.append("select").attr("class","form-control").attr("id","mtm-bar-colored-rank")
-			s.append("option").attr("value","init").text("--Phylogenic rank--")
+			s.append("option").attr("value","init").text("Select...")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
 			s.property("value",config.options.colored_rank)
@@ -841,22 +841,22 @@
 		});
 		//gray upper
 		block = li.append("div").attr("class","form-inline")
-		block.append("label").style("width","100px").text("ancestors:")
-		block.append("input").attr("type","checkbox").attr("id","mtm-bar-ancestors")
-		.attr("data-toggle","toggle").attr("data-on","enable").attr("data-off","disable")
+		block.append("label").style("width","120px").text("Upper Ranks")
+		block.append("input").attr("type","checkbox").attr("id","mtm-bar-upper")
+		.attr("data-toggle","toggle").attr("data-on","colored").attr("data-off","grayed")
 		.attr("data-width","80")
-		.property("checked",function() { return config.options.ancestors; })
-		$('#mtm-bar-ancestors').on({ "change": function() { 
+		.property("checked",function() { return config.options.upper; })
+		$('#mtm-bar-upper').on({ "change": function() { 
 	  		$('#mtm-bar-colors')[0].closable=false;
 	  		//change all button
-			config.options.ancestors=d3.select("#mtm-bar-ancestors").property("checked");
+			config.options.upper=d3.select("#mtm-bar-upper").property("checked");
 			//action
 			updateColor();
 	  	} });
 	  	li = ul.append("li").attr("class","divider")
 		//Palette
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","100px").text("palette:")
+		li.append("label").style("width","120px").text("Palette")
 		s = li.append("select").attr("class","form-control").attr("id","mtm-bar-palette")
 		.style("width","120px")
 		for (var k in colors) { s.append("option").attr("value",colors[k][1]).text(colors[k][0]) }
@@ -873,7 +873,7 @@
 		});
 		//BG
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","100px").text("background:")
+		li.append("label").style("width","120px").text("Background")
 		li.append("input").attr("type","checkbox").attr("id","mtm-bar-background")
 		.attr("data-toggle","toggle").attr("data-on","black").attr("data-off","white")
 		.attr("data-width","80")
@@ -895,15 +895,15 @@
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Labels <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
-			.style("width","270px").style("padding","5px")
+			.style("width","300px").style("padding","5px")
 		//labelled
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","80px").text("labelled:")
+		li.append("label").style("width","120px").text("Label By")
 		s = li.append("select").attr("class","form-control").attr("id","mtm-bar-labelled")
 			.style("width","120px")
-			s.append("option").attr("value","taxon").text("by taxon")
-			s.append("option").attr("value","rank").text("by rank")
-			s.append("option").attr("value","no").text("no label")
+			s.append("option").attr("value","taxon").text("Taxon")
+			s.append("option").attr("value","rank").text("Rank")
+			s.append("option").attr("value","no").text("No Label")
 			//value
 			s.property("value",config.options.labelled)
 			s.on("change",function() { 
@@ -920,9 +920,9 @@
 		li = ul.append("li").attr("class","collapse").attr("id","mtm-bar-labelled-block")
 		//select rank
 		block = li.append("div").attr("class","form-inline")
-		block.append("label").style("width","80px").text("rank:")
+		block.append("label").style("width","120px").text("Phylogenic Rank")
 		s = block.append("select").attr("class","form-control").attr("id","mtm-bar-labelled-rank")
-			s.append("option").attr("value","init").text("--Phylogenic rank--")
+			s.append("option").attr("value","init").text("Select...")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
 			s.property("value",config.options.labelled_rank)
@@ -938,7 +938,7 @@
 	  	li = ul.append("li").attr("class","divider")
 		//Pattern
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","80px").text("pattern:")
+		li.append("label").style("width","120px").text("Label Format")
 		block = li.append("div").attr("class","input-group")
 		block.append("input").attr("class","form-control").attr("id","mtm-bar-pattern")
 			.attr("type","text").style("width","120px")
@@ -963,7 +963,7 @@
 		$("#mtm-pattern").popover({
 	        html : true, 
 	        content: function() { return $('#mtm-tags').html(); },
-	        title: "Tags:",
+	        title: "Formatting Tags:",
 	        container: "#mtm-barmenu"
    		});
    		$("#mtm-pattern").tooltip({ 
@@ -974,7 +974,7 @@
 
 		//Font
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","80px").text("font size:")
+		li.append("label").style("width","120px").text("Font Size")
 		s = li.append("select").attr("class","form-control").attr("id","mtm-bar-font")
 			.style("width","120px")
 			for (var i=8; i<40; i=i+2) { s.append("option").attr("value",i).text(i); }
@@ -997,11 +997,11 @@
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Treemap <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
-			.style("width","280px").style("padding","5px")
+			.style("width","300px").style("padding","5px")
 
 		//Hierarchy
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","90px").text("hierarchy:")
+		li.append("label").style("width","120px").text("Hierarchy")
 		li.append("input").attr("type","checkbox").attr("id","mtm-bar-hierarchy")
 		.attr("data-toggle","toggle").attr("data-on","rugged").attr("data-off","flat")
 		.attr("data-width","80")
@@ -1017,7 +1017,7 @@
 	  	} });
 		//Zoom
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","90px").text("zoom:")
+		li.append("label").style("width","120px").text("Zoom Transition")
 		li.append("input").attr("type","checkbox").attr("id","mtm-bar-zoom")
 		.attr("data-toggle","toggle").attr("data-on","fluid").attr("data-off","sticky")
 		.attr("data-width","80")
@@ -1036,12 +1036,12 @@
 	  	} });
 		//Proportion
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","90px").text("proportion:")
+		li.append("label").style("width","120px").text("Proportion By")
 		s = li.append("select").attr("class","form-control").attr("id","mtm-bar-proportion")
 			.style("width","120px")
-			s.append("option").attr("value","sample").text("by sample")
-			s.append("option").attr("value","hits").text("by hits")
-			s.append("option").attr("value","taxon").text("by taxon")
+			s.append("option").attr("value","sample").text("Sample")
+			s.append("option").attr("value","hits").text("Hits")
+			s.append("option").attr("value","taxon").text("Taxon")
 			//value
 			s.property("value",config.options.proportion)
 			s.on("change",function() { 
@@ -1057,9 +1057,9 @@
 		});
 		//Depth
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","90px").text("cutoff:")
+		li.append("label").style("width","120px").text("Rank Cutoff:")
 		var s = li.append("select").attr("class","form-control").attr("id","mtm-bar-cutoff")
-			s.append("option").attr("value","init").text("--Phylogenic rank--")
+			s.append("option").attr("value","init").text("Select...")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
 			s.property("value",config.options.cutoff_rank)
@@ -1122,11 +1122,11 @@
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Layout <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
-			.style("width","170px").style("padding","5px")
+			.style("width","190px").style("padding","5px")
 
 		//Treemap
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","70px").text("treemap:")
+		li.append("label").style("width","90px").text("Treemap")
 		li.append("input").attr("type","checkbox").attr("id","mtm-bar-treemap-display")
 		.attr("data-toggle","toggle").attr("data-on","display").attr("data-off","hide")
 		.attr("data-width","80")
@@ -1142,7 +1142,7 @@
 			.classed("in",config.treemap.display)
 		//width
 		block = li.append("div").attr("class","form-inline")
-		block.append("label").style("width","70px").text("width:")
+		block.append("label").style("width","90px").text("Width (px)")
 		block.append("input").attr("type","text").style("width","80px")
 			.attr("class","form-control").attr("id","mtm-bar-treemap-width")
 			.attr("value",config.treemap.width)
@@ -1155,7 +1155,7 @@
 		});
 		//height
 		block = li.append("div").attr("class","form-inline")
-		block.append("label").style("width","70px").text("height:")
+		block.append("label").style("width","90px").text("Height (px)")
 		block.append("input").attr("type","text").style("width","80px")
 			.attr("class","form-control").attr("id","mtm-bar-treemap-height")
 			.attr("value",config.treemap.height)
@@ -1167,7 +1167,7 @@
 
 		//Table
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","70px").text("table:")
+		li.append("label").style("width","90px").text("Table")
 		li.append("input").attr("type","checkbox").attr("id","mtm-bar-table-display")
 		.attr("data-toggle","toggle").attr("data-on","display").attr("data-off","hide")
 		.attr("data-width","80")
@@ -1183,7 +1183,7 @@
 			.classed("in",config.table.display)
 		//width
 		block = li.append("div").attr("class","form-inline")
-		block.append("label").style("width","70px").text("width:")
+		block.append("label").style("width","90px").text("Width (px)")
 		block.append("input").attr("type","text").style("width","80px")
 			.attr("class","form-control").attr("id","mtm-bar-table-width")
 			.attr("value",config.table.width)
@@ -1196,7 +1196,7 @@
 		});
 		//height
 		block = li.append("div").attr("class","form-inline")
-		block.append("label").style("width","70px").text("height:")
+		block.append("label").style("width","90px").text("Height (px)")
 		block.append("input").attr("type","text").style("width","80px")
 			.attr("class","form-control").attr("id","mtm-bar-table-height")
 			.attr("value",config.table.height)
@@ -1208,7 +1208,7 @@
 
 		//load
 		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","70px")
+		li.append("label").style("width","90px")
 		li.append("button").attr("class","btn btn-primary")
 			.attr("type","button").style("width","80px")
 			.text("Load")
@@ -1223,27 +1223,26 @@
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Export <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
-			.style("width","160px").style("padding","5px")
 
 		//json
 		li = ul.append("li").append("a").attr("href","#")
-			.text("tree.json")
+			.text("Data file in JSON format")
 			.on("click",function(){return mtm.save("json");})
 		//svg
 		li = ul.append("li").append("a").attr("href","#")
-			.text("treemap.svg")
+			.text("Treemap image in SVG format")
 			.on("click",function(){return mtm.save("svg");})
 		//png
 		li = ul.append("li").append("a").attr("href","#")
-			.text("treemap.png")
+			.text("Treemap image in PNG format")
 			.on("click",function(){return mtm.save("png");})
 		//txt
 		li = ul.append("li").append("a").attr("href","#")
-			.text("table.txt")
+			.text("Table data in TSV format")
 			.on("click",function(){return mtm.save("txt");})
 		//config
 		li = ul.append("li").append("a").attr("href","#")
-			.text("mtm-config.json")
+			.text("MTM configuration file in JSON format")
 			.on("click",function(){return mtm.save("config");})
 	
 		//About
@@ -1281,7 +1280,16 @@
 			"show.bs.dropdown":  function() { this.closable=true},
 		 	"hide.bs.dropdown":  function() { if(!this.closable) {this.closable=true; return false;} else {return true;} }
 		});
-
+		//dismiss popover
+		$('body').on('click', function (e) {
+		    $('#mtm-info,#mtm-pattern').each(function () {
+		        //the 'is' for buttons that trigger popups
+		        //the 'has' for icons within a button that triggers a popup
+		        if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+		            $(this).popover('hide');
+		        }
+		    });
+		});
 		if(verbose){console.timeEnd("bar");}
 	}
 		
@@ -1425,36 +1433,36 @@
 	//VIEW UPDATE//
 	function updateModal(mode) {
 		if(mode == "convert") {
-			d3.select("#mtm-modal-title").text("Convert data file")
+			d3.select("#mtm-modal-title").text("Convert Data File")
 			d3.select("#mtm-modal-body").text("")
 			mtm.convertor("mtm-modal-body");
 		}
 		else if(mode == "examples") {
-			d3.select("#mtm-modal-title").text("Examples data files")
+			d3.select("#mtm-modal-title").text("Example Data Files")
 			var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
-			ul.append("li").append("label").text("#1. HuFS: Human gut - 30y old").attr("width","210px")
+			ul.append("li").append("label").text("#1. HuFS: Human gut - 30 years old male").attr("width","210px")
 			var li = ul.append("li").attr("class","btn-group")
 			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
 				.attr("class","btn btn-default")
-				.attr("target","cite").text("citation")
+				.attr("target","cite").text("Citation")
 			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525311.3")
 				.attr("class","btn btn-default")
-				.attr("target","rast").text("data source")
+				.attr("target","rast").text("Data Source")
 			li.append("a").attr("href","./data/HuFS.json")
 				.attr("class","btn btn-default")
-				.attr("target","rast").text("data file")
+				.attr("target","rast").text("Data File")
 
-			ul.append("li").append("label").text("#2. HuFU: Human gut - 3m old").attr("width","210px")
+			ul.append("li").append("label").text("#2. HuFU: Human gut - 7 months old female").attr("width","210px")
 			li = ul.append("li").attr("class","btn-group")
 			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
 				.attr("class","btn btn-default")
-				.attr("target","cite").text("citation")
+				.attr("target","cite").text("Citation")
 			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3")
 				.attr("class","btn btn-default")
-				.attr("target","rast").text("data source")
+				.attr("target","rast").text("Data Source")
 			li.append("a").attr("href","./data/HuFU.json")
 				.attr("class","btn btn-default")
-				.attr("target","rast").text("data file")
+				.attr("target","rast").text("Data File")
 		}
 		else if(mode == "about") {
 			d3.select("#mtm-modal-title").text("About MetaTreeMap")
@@ -1462,14 +1470,13 @@
 			var li = ul.append("li")
 			li.append("strong").text("MetaTreeMap version ")
 			li.append("strong").text(function(){return mtm.version;})
-			li.append("strong").text(" under ")
+			li.append("strong").text(" is under the ")
 			li.append("a").attr("href","./LICENSE").attr("target","_blank").text("BSD License")
 			var li = ul.append("li")
 			li.append("strong").text("Development: ")
-			li.append("a").attr("href","http://metasystems.riken.jp/wiki/Maxime_Hebrard").attr("target","_blank").text("Maxime HEBRARD")
+			li.append("a").attr("href","http://metasystems.riken.jp/wiki/Maxime_Hebrard").attr("target","_blank").text("Maxime Hebrard")
 			var li = ul.append("li")
-			li.append("strong").text("Thanks to ")
-			li.append("span").text("the libraries we use and their authors:")
+			li.append("span").text("The following libraries are used, with thanks to their authors:")
 			var sub = li.append("ul")
 			sub.append("li").append("a").attr("href","https://d3js.org/").attr("target","_blank").text("D3")
 			sub.append("li").append("a").attr("href","http://colorbrewer2.org/").attr("target","_blank").text("ColorBrewer2")
@@ -1790,10 +1797,10 @@
 					})
 				}
 				else  { //if(rankC==0 || rankC<r) //search deeper
-					if(config.options.ancestors) { //enable
+					if(config.options.upper) { //enable
 						n.children[i].data.color = color(n.children[i].id); //taxon
 					}
-					else {n.children[i].data.color = "#888";} //gray
+					else {n.children[i].data.color = "#ccc";} //gray
 					colorByRank(r,p,n.children[i]);
 				}
 			}//end foreach
@@ -2124,14 +2131,14 @@
 	function format(e) {
 		//manage radio button switch in mtm.convertor
 		if(e.value=="json"){
-			d3.select("#mtm-fieldhead").text("Object property")
+			d3.select("#mtm-fieldhead").html("Object Property <small>(Specify field name in your dataset)<small>")
 			d3.select("[name=mtm-tid]").attr("value","id")
 			d3.select("[name=mtm-tname]").attr("value","name")
 			d3.select("[name=mtm-hits]").attr("value","data.assigned")
 			d3.select("#mtm-headrow").style("display","none")
 		}
 		else if(e.value=="tab"){
-			d3.select("#mtm-fieldhead").text("Column index")
+			d3.select("#mtm-fieldhead").html("Column Index <small>(Specify the column of the field in your dataset)</small>")
 			d3.select("[name=mtm-tid]").attr("value","1")
 			d3.select("[name=mtm-tname]").attr("value","2")
 			d3.select("[name=mtm-hits]").attr("value","3")
