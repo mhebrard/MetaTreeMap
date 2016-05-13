@@ -58,7 +58,13 @@
 	  				<ul class="dropdown-menu">
 					    <li><a href="#quick-import">Import your data</a></li>
 					    <li><a href="#quick-info">See informations about a taxon</a></li>
+					    <li class="divider"></li>
 					    <li><a href="#quick-navigate">Navigate through the tree</a></li>
+					    <li><a href="#quick-zoomin">Zoom in</a></li>
+					    <li><a href="#quick-zoomout">Zoom out</a></li>
+					    <li><a href="#quick-zoomout">Search for a taxon</a></li>
+					    <li class="divider"></li>
+					</ul>
 					</ul>
 				</div>
 		    </div><!-- /.navbar-collapse -->
@@ -66,9 +72,9 @@
 	</nav>
 
 	<!--ALERT-->
-  	<div class="alert alert-danger">
+  	<div class="alert alert-warning">
   		<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-  		<span>Sorry, this guide not complete ! A new version is under construction...</span>
+  		<span>Sorry, this guide not complete ! It will be updated soon...</span>
   	</div>
 
   	<!--Intro-->
@@ -113,7 +119,7 @@
 
 	<!--Zoom-->
 	<h2 id="quick-navigate">Navigate through the tree</h2>
-	<h3>Zoom in</h3>
+	<h3 id="quick-zoomin">Zoom in</h3>
   	<ul><li>In treemap view, click on a <b>rectangle</b>.</li>
   		<li>In table view, click on a <b>line</b>.</li>
   	</ul>
@@ -125,7 +131,7 @@
 		<div><a href="#x" title="Treemap represent now the sub-branch" onclick="modal('quick-zoom.3')"><img src="../img/quick-zoom.3.tmbl.png" alt="treemap-zoomed"></a></div>
 	</div>
 
-  	<h3>Zoom out</h3>
+  	<h3 id="quick-zoomout">Zoom out</h3>
   	<ul><li>In treemap view, click on the <b>header</b>.</li>
   		<li>In option bar, click on <b>Parent</b> button.</li>
   	</ul>
@@ -141,7 +147,7 @@
 		
 	</div>
 
-	<h3>Search for a taxon</h3>
+	<h3 id="quick-search">Search for a taxon</h3>
   	<ul><li>In option bar, click on <b>Search...</b> button.</li>
   		<li>Start to <b>write</b> the taxon name.</li>
   		<li>Click on the needed <b>taxon</b> name.</li>
@@ -153,6 +159,20 @@
 		<div><a href="#x" title="Start to write the taxon name" onclick="modal('quick-search.2')"><img src="../img/quick-search.2.tmbl.png" alt="search-write"></a></div>
 		<div><a href="#x" title="Click on the needed taxon name" onclick="modal('quick-search.3')"><img src="../img/quick-search.3.tmbl.png" alt="search-select"></a></div>
 		<div><a href="#x" title="The treemap zoom on this node" onclick="modal('quick-search.4')"><img src="../img/quick-search.4.tmbl.png" alt="search-selected"></a></div>
+	</div>
+
+	<!--Rank ///////////////////////////////////////////////////////////////-->
+	<h2 id="quick-rank">Look at phylogenic rank</h2>
+	<h3 id="quick-zoomin">Swi</h3>
+  	<ul><li>In treemap view, click on a <b>rectangle</b>.</li>
+  		<li>In table view, click on a <b>line</b>.</li>
+  	</ul>
+  	<p class="alert alert-success">The treemap zoom in the node. The full treemap represent this node and display its sub-branch.</p>
+
+  	<div class="thumbnails">
+		<div><a href="#x" title="In treemap view, click on a rectangle" onclick="modal('quick-info.1')"><img src="../img/quick-info.1.tmbl.png" alt="treemap-zoomin"></a></div>
+		<div><a href="#x" title="In table view, click on a line" onclick="modal('quick-info.2')"><img src="../img/quick-info.2.tmbl.png" alt="tale-zoomin"></a></div>
+		<div><a href="#x" title="Treemap represent now the sub-branch" onclick="modal('quick-zoom.3')"><img src="../img/quick-zoom.3.tmbl.png" alt="treemap-zoomed"></a></div>
 	</div>
 
 	<!--ALERT-->
