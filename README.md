@@ -13,19 +13,24 @@ MTM can be use as a javascript library and include in your own webpage.
 **Include** the library in your web page like this: 
 
 ```
-<script src="./mtm.min.js"></script>
+<script type="text/javascript" src="./mtm.min.js"></script>
+```
+
+**Add classes** to HTML elements that will contain the diferent views
+
+```
+<div class="mtm-menu"><!--option bar--></div>
+<div class="mtm-treemap"><!--treemap view--></div>
+<div class="mtm-table"><!--table view--></div>
+```
+
+**Run the script**
+
+```
+<script type="text/javascript">mtm.load();</script>
 ```
 
 **Exposed functions:**
-
-* **mtm.convertor(location)**: display a form, in a HTML container (div) with id=**location**, used to convert JSON or tabular file in the proper input format for MTM.
-
-* **mtm.load(filesList,config)**: load the data files and a config file. **fileList** is a list of string, path of json files (see specifications [here](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#standard)) . **config** is a json file with the list of options for MTM (see specifications [here](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#config)).
-```
-mtm.load(["data/sample1.json","data/sample2.json"],"./mtm-config.json");
-```
-
-* **mtm.save(mode)**: create file from the current view, and allow user to download the file. **mode** can be : "json", "svg", "png", "txt" or "config" (see [documentation](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#export) for more details) 
 
 * **mtm.version**: return the version number
 
