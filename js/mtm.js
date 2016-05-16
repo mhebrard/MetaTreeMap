@@ -1272,8 +1272,8 @@
 
 		//activate toogles
 		$(function() { $('[data-toggle="toggle"]').bootstrapToggle(); })
-		$(function () { $('[data-toggle="popover"]').popover();})
-		$(function () { $('[data-toggle="tooltip"]').tooltip();})
+		$(function () { $('[data-toggle="popover"]').popover(); })
+		$(function () { $('[data-toggle="tooltip"]').tooltip({ trigger : 'hover' });})
 		$(function () { $('.selectpicker').selectpicker();})
 		//manage hide
 		$('.mtm-dropdown').on({
@@ -1697,7 +1697,7 @@
 				.append("span")
 					.on("click", function(d){  
 						highlight(d,false);
-						return zoom(d);
+						return zoomSkip(d);
 					})
 					.text(function(d){return d.name;})
 		//fill id

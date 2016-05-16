@@ -88,7 +88,7 @@
   	<h1 id="quick" class="page-header">Quick Start</h1>
   	<h2 id="quick-import">Import your data</h2>
   	<ul><li>See section Format for more information</li>
-  		<li>In option bar, click on <b>Import</b> menu</li>
+  		<li>In menu bar, click on <b>Import</b></li>
   		<li>Click on Data File (JSON) <b>Browse...</b> button</li>
   		<li><b>Select</b> one or multiple files
   			<p class="alert alert-info">hold <kbd>Ctrl</kbd> to multiple selection</p></li>
@@ -97,78 +97,71 @@
   	</ul>
   	<p class="alert alert-success">Data are loaded and visualized</p>
 
- <!-- 	
+ 	
  	<div class="thumbnails">
 		<div><a href="#x" title="In option bar, click on Import menu" onclick="modal('quick-import.1')"><img src="../img/quick-import.1.tmbl.png" alt="Import"></a></div>
 		<div><a href="#x" title="Click on data: browse... button" onclick="modal('quick-import.2')"><img src="../img/quick-import.2.tmbl.png" alt="Browse..."></a></div>
-		<div><a href="#x" title="Select one or multiple files" onclick="modal('quick-import.3')"><img src="../img/quick-import.3.tmbl.png" alt="Select"></a></div>
+ 		<div><a href="#x" title="Select one or multiple files" onclick="modal('quick-import.3')"><img src="../img/quick-import.3.tmbl.png" alt="Select"></a></div>
 		<div><a href="#x" title="Open the selected files" onclick="modal('quick-import.4')"><img src="../img/quick-import.4.tmbl.png" alt="Open"></a></div>
 		<div><a href="#x" title="Click on Load button" onclick="modal('quick-import.5')"><img src="../img/quick-import.5.tmbl.png" alt="Load"></a></div>
 		<div><a href="#x" title="Dara are loaded and visualized" onclick="modal('quick-import.6')"><img src="../img/quick-import.6.tmbl.png" alt="Loaded"></a></div>
 	</div>
--->
+
 
 	<h2 id="quick-info">See informations about a taxon</h2>
-  	<ul><li>In treemap view, mouse over a <b>rectangle</b>.</li>
-  		<li>In table view, mouse over a <b>line</b>.</li>
+  	<ul><li>In treemap view, mouse over a <b>rectangle</b></li>
+  		<li>In table view, mouse over a <b>line</b></li>
   	</ul>
-  	<p class="alert alert-success">A tooltip appears that display taxon name, sample ID, NCBI taxon ID, phylogenic rank, number of hits, percentage according the sample and percentage according the current view.</p>
+  	<p class="alert alert-success">A tooltip appears that display taxon name, sample ID, NCBI taxonomy ID, phylogenic rank, number of hits, percentage according the sample and percentage according the current view.</p>
 
- <!--
   	<div class="thumbnails">
 		<div><a href="#x" title="In treemap view, mouse over a rectangle" onclick="modal('quick-info.1')"><img src="../img/quick-info.1.tmbl.png" alt="treemap-info"></a></div>
 		<div><a href="#x" title="In table view, mouse over a line" onclick="modal('quick-info.2')"><img src="../img/quick-info.2.tmbl.png" alt="tale-info"></a></div>
 	</div>
--->
 
 	<!--Zoom-->
 	<h2 id="quick-navigate">Navigate through the tree</h2>
 	<h3 id="quick-zoomin">Zoom in</h3>
-  	<ul><li>In treemap view, click on a <b>rectangle</b>.</li>
-  		<li>In table view, click on a <b>line</b>.</li>
+  	<ul><li>In treemap view, click on a <b>rectangle</b></li>
+  		<li>In table view, click on a <b>taxon name</b></li>
   	</ul>
-  	<p class="alert alert-success">The treemap zoom in the node. The full treemap represent this node and display its sub-branch.</p>
+  	<p class="alert alert-success">The treemap zoom on the node. The full treemap represent this node and display its sub-branch</p>
+  	<p class="alert alert-warning">If the node is a leaf, the treemap view zoom on its parent</p>
 
-<!--
   	<div class="thumbnails">
 		<div><a href="#x" title="In treemap view, click on a rectangle" onclick="modal('quick-info.1')"><img src="../img/quick-info.1.tmbl.png" alt="treemap-zoomin"></a></div>
-		<div><a href="#x" title="In table view, click on a line" onclick="modal('quick-info.2')"><img src="../img/quick-info.2.tmbl.png" alt="tale-zoomin"></a></div>
+		<div><a href="#x" title="In table view, click on a taxon name" onclick="modal('quick-info.2')"><img src="../img/quick-info.2.tmbl.png" alt="tale-zoomin"></a></div>
 		<div><a href="#x" title="Treemap represent now the sub-branch" onclick="modal('quick-zoom.3')"><img src="../img/quick-zoom.3.tmbl.png" alt="treemap-zoomed"></a></div>
 	</div>
--->
 
   	<h3 id="quick-zoomout">Zoom out</h3>
-  	<ul><li>In treemap view, click on the <b>header</b>.</li>
-  		<li>In option bar, click on <b>Parent</b> button.</li>
+  	<ul><li>In treemap view, click on the <b>header</b></li>
+  		<li>In menu bar, click on <b>Parent</b> button</li>
   	</ul>
-  	<p class="alert alert-success">The treemap zoom out step by step, to the parent of the current node.</p>
-  	<p class="alert alert-warning">In option bar, the <b>Root</b> button zoom all the way out, back to root node.</p>
+  	<p class="alert alert-success">The treemap zoom out step by step, to the parent of the current node</p>
+  	<p class="alert alert-warning">In menu bar, the <b>Root</b> button zoom all the way out, back to root node</p>
 
-<!--
   	<div class="thumbnails">
 		<div><a href="#x" title="In treemap view, click on the header" onclick="modal('quick-zoom.4')"><img src="../img/quick-zoom.4.tmbl.png" alt="treemap-zoomout"></a></div>
-		<div><a href="#x" title="In option bar, click on Parent button" onclick="modal('quick-zoom.5')"><img src="../img/quick-zoom.5.tmbl.png" alt="option-zoomout"></a></div>
+		<div><a href="#x" title="In menu bar, click on Parent button" onclick="modal('quick-zoom.5')"><img src="../img/quick-zoom.5.tmbl.png" alt="option-zoomout"></a></div>
 		<div><a href="#x" title="Treemap represent now the parent node" onclick="modal('quick-zoom.6')"><img src="../img/quick-zoom.6.tmbl.png" alt="option-zoomedout"></a></div>
-		<div><a href="#x" title="In option bar, click on Root button to zoom out to root" onclick="modal('quick-zoom.7')"><img src="../img/quick-zoom.7.tmbl.png" alt="option-toroot"></a></div>
-		<div><a href="#x" title="Treemap represent now the root node" onclick="modal('quick-zoom.8')"><img src="../img/quick-zoom.8.tmbl.png" alt="option-zoomroot"></a></div>		
+		<div><a href="#x" title="In menu bar, click on Root button to zoom out to root" onclick="modal('quick-zoom.7')"><img src="../img/quick-zoom.7.tmbl.png" alt="option-toroot"></a></div>
+		<div><a href="#x" title="Treemap represent now the root node" onclick="modal('quick-import.6')"><img src="../img/quick-import.6.tmbl.png" alt="option-zoomroot"></a></div>		
 	</div>
--->
 
 	<h3 id="quick-search">Search for a taxon</h3>
-  	<ul><li>In option bar, click on <b>Search...</b> button.</li>
-  		<li>Start to <b>write</b> the taxon name.</li>
-  		<li>Click on the wanted <b>taxon</b> name.</li>
+  	<ul><li>In menu bar, click on <b>Search...</b> button</li>
+  		<li>Start to <b>write</b> the taxon name</li>
+  		<li>Click on the wanted <b>taxon</b> name</li>
   	</ul>
-  	<p class="alert alert-success">The treemap zoom on the node. The full treemap represent this node and display its sub-branch.</p>
+  	<p class="alert alert-success">The treemap zoom on the node. The full treemap represent this node and display its sub-branch</p>
 
-<!--
   	<div class="thumbnails">
-		<div><a href="#x" title="In option bar, click on the <b>Search...</b> field" onclick="modal('quick-search.1')"><img src="../img/quick-search.1.tmbl.png" alt="option-search"></a></div>
+		<div><a href="#x" title="In menu bar, click on the <b>Search...</b> button" onclick="modal('quick-search.1')"><img src="../img/quick-search.1.tmbl.png" alt="option-search"></a></div>
 		<div><a href="#x" title="Start to write the taxon name" onclick="modal('quick-search.2')"><img src="../img/quick-search.2.tmbl.png" alt="search-write"></a></div>
 		<div><a href="#x" title="Click on the needed taxon name" onclick="modal('quick-search.3')"><img src="../img/quick-search.3.tmbl.png" alt="search-select"></a></div>
 		<div><a href="#x" title="The treemap zoom on this node" onclick="modal('quick-search.4')"><img src="../img/quick-search.4.tmbl.png" alt="search-selected"></a></div>
 	</div>
--->
 
 	<!--ALERT-->
   	<div class="alert alert-warning">
