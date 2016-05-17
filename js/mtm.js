@@ -1,6 +1,6 @@
 !(function() {
 
-	var mtm = { version: "3.0" };
+	var mtm = { version: "3.1" };
 	var verbose=false;
 
 	//VARIABLES//
@@ -292,7 +292,7 @@
 		li = form.append("div").attr("class","form-inline")
 		li.append("label").text("Fields").style("width","90px")
 		li.append("label").attr("id","mtm-fieldhead")
-			.html("Object Property <small>(Specify field name in your dataset)<small>")
+			.html("Object Properties <small>(Specify corresponding field names in your dataset)<small>")
 		//id
 		li = form.append("div").attr("class","form-inline")
 		li.append("label").text("Taxon ID").style("width","90px")
@@ -1272,8 +1272,8 @@
 
 		//activate toogles
 		$(function() { $('[data-toggle="toggle"]').bootstrapToggle(); })
-		$(function () { $('[data-toggle="popover"]').popover();})
-		$(function () { $('[data-toggle="tooltip"]').tooltip();})
+		$(function () { $('[data-toggle="popover"]').popover(); })
+		$(function () { $('[data-toggle="tooltip"]').tooltip({ trigger : 'hover' });})
 		$(function () { $('.selectpicker').selectpicker();})
 		//manage hide
 		$('.mtm-dropdown').on({
@@ -1697,7 +1697,7 @@
 				.append("span")
 					.on("click", function(d){  
 						highlight(d,false);
-						return zoom(d);
+						return zoomSkip(d);
 					})
 					.text(function(d){return d.name;})
 		//fill id
@@ -2131,7 +2131,7 @@
 	function format(e) {
 		//manage radio button switch in mtm.convertor
 		if(e.value=="json"){
-			d3.select("#mtm-fieldhead").html("Object Property <small>(Specify field name in your dataset)<small>")
+			d3.select("#mtm-fieldhead").html("Object Properties <small>(Specify corresponding field names in your dataset)<small>")
 			d3.select("[name=mtm-tid]").attr("value","id")
 			d3.select("[name=mtm-tname]").attr("value","name")
 			d3.select("[name=mtm-hits]").attr("value","data.assigned")
