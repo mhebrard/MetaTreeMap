@@ -1,6 +1,6 @@
 !(function() {
 
-	var mtm = { version: "3.1" };
+	var mtm = { version: "3.1.1" };
 	var verbose=false;
 
 	//VARIABLES//
