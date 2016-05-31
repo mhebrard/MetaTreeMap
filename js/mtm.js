@@ -133,10 +133,36 @@
 				})
 			}
 			else if (!config) { 
-				d3.json("./mtm-config.json",function(c) {
-					config=c;
-					return ful("default config loaded");
-				}) 
+				config = {
+					"treemap": {
+						"display":true,
+						"width":700,
+						"height":500
+					},
+					"table": {
+						"display":true,
+						"width":700,
+						"height":500
+					},
+					"options": {
+						"hierarchy":"rugged",
+						"zoom":"fluid",
+						"proportion":"sample",
+						"cutoff_rank":"genus",
+						"colored":"taxon",
+						"colored_rank":"init",
+						"upper":"colored",
+						"palette":"brewer",
+						"background":"black",
+						"labelled":"taxon",
+						"labelled_rank":"init",	
+						"pattern":"#N",
+						"font":14
+					}
+				};
+
+				return ful("default config loaded");
+				
 			}
 			else {
 				return ful("current config use");
@@ -1251,7 +1277,7 @@
 			.on("click",function(){return mtm.save("txt");})
 		//config
 		li = ul.append("li").append("a").attr("href","#")
-			.text("MTM configuration file in JSON format")
+			.text("Configuration file in JSON format")
 			.on("click",function(){return mtm.save("config");})
 	
 		//About
