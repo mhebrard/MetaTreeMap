@@ -1263,10 +1263,10 @@
 			.style("width","160px").style("padding","5px")
 
 		//guide
-		li = ul.append("li").append("a").attr("href","html/documentation.htm")
+		li = ul.append("li").append("a").attr("href","http://metasystems.riken.jp/visualization/treemap/html/documentation.htm")
 			.attr("target","mtm-doc").text("User Guide")//.style("width","70px")
 		//feedback
-		li = ul.append("li").append("a").attr("href","html/feedback.htm")
+		li = ul.append("li").append("a").attr("href","http://metasystems.riken.jp/visualization/treemap/html/feedback.htm")
 			.attr("target","mtm-feedback").text("Feedback")//.style("width","70px")
 		//examples
 		li = ul.append("li").append("a").attr("href","#")
