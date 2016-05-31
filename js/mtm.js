@@ -1242,7 +1242,7 @@
 			.on("click",function(){return mtm.save("txt");})
 		//config
 		li = ul.append("li").append("a").attr("href","#")
-			.text("MTM configuration file in JSON format")
+			.text("Configuration file in JSON format")
 			.on("click",function(){return mtm.save("config");})
 	
 		//About
