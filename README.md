@@ -8,7 +8,7 @@ For more information see the [user guide](http://metasystems.riken.jp/visualizat
 # Javascript Library
 MTM can be use as a javascript library and include in your own webpage.
 
-**Download** the minify version [here](https://raw.githubusercontent.com/mhebrard/MetaTreeMap/master/mtm.min.js). File is on this repo ./mtm.min.js
+**Download** the minify version [here](http://metasystems.riken.jp/visualization/treemap/mtm.min.js). File is on this repo ./mtm.min.js
 
 **Include** the library in your web page like this: 
 
@@ -16,7 +16,7 @@ MTM can be use as a javascript library and include in your own webpage.
 <script type="text/javascript" src="./mtm.min.js"></script>
 ```
 
-**Add classes** to HTML elements that will contain the diferent views
+**Add classes** to HTML elements that will contain the different views
 
 ```
 <div class="mtm-menu"><!--option bar--></div>
@@ -24,10 +24,10 @@ MTM can be use as a javascript library and include in your own webpage.
 <div class="mtm-table"><!--table view--></div>
 ```
 
-**Run the script**
+**Call the script** with a list of default datafile(s)
 
 ```
-<script type="text/javascript">mtm.load();</script>
+<script type="text/javascript">mtm.load(["path/to/file1","path/to/file2"]);</script>
 ```
 
 **Exposed functions:**
