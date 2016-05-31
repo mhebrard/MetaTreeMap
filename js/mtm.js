@@ -90,14 +90,16 @@
 		})
 		.catch(function(err) { return Error("mtm.load.layout:",err); })
 		.then(function() { return loadData(files); })
-		.catch(function(err) { return Error("mtm.load.data:",err); })
 		.then(function(load) { 
 			//hundreds + sumHits
 			load[0] = load.reduce(function(a,b) {return +a + +b;});
 			sumHits(root,load);
 			console.log("skeleton",root);
 			updateLayout();
-		})
+		},function(err){
+			updateModal("data");
+			$('#mtm-modal').modal('show');
+			console.log("mtm.load.data:",err);})
 	}
 
 	function scriptload(u) {
@@ -147,32 +149,39 @@
 		d3.select("#mtm-samples").text("");
 		var ul = d3.select("#mtm-samples").append("ul").attr("class","list-unstyled")
 
+		var hundreds = []; //samples total reads
 		var data = [];
+		var seq=Promise.resolve(hundreds);
+
 		if(!files || files.length==0) { 
-			data=["data/HuFS.json","data/HuFU.json"]; 
-			ul.append("li").text("#1.HuFS");
-			ul.append("li").text("#2.HuFU");
+			seq = seq.then(function(){return Promise.reject("no data");})
 		}
 		else {
+			//root init.
+			root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"color":"#ccc"},"id":"1"}; //skeleton tree
+			bkeys = [root.id]; //list of keys of nodes
+			bobjs = [root]; //list of node -object-
+
 			for(var i=0; i<files.length; i++) {
-				ul.append("li").text("#"+(i+1)+"."+files[i].name.replace(/\.[^/.]+$/, ""));
-				data.push(files[i].data);
+				if(files[i].name) { //import
+					ul.append("li").text("#"+(i+1)+"."+files[i].name.replace(/\.[^/.]+$/, ""));
+					data.push(files[i].data);
+				}
+				else { //init
+					ul.append("li").text("#"+(i+1)+"."+files[i].replace(/\.[^/.]+$/, "").replace(/.*\//, ""));
+					data.push(files[i]);
+				}
 			}
-		}
-		//root init.
-		root={"name":"root","children":[],"data":{"hits":0,"rank":"no rank","sample":0,"color":"#ccc"},"id":"1"}; //skeleton tree
-		bkeys = [root.id]; //list of keys of nodes
-		bobjs = [root]; //list of node -object-
-		var hundreds = []; //samples total reads
-		//sequential merge
-		var seq=Promise.resolve(hundreds);
-		data.forEach(function(f,i) {
-			seq = seq.then(function(h){
-				return readData(f,i,h);
+
+			data.forEach(function(f,i) {
+				seq = seq.then(function(h){
+					return readData(f,i,h);
+				})
 			})
-		})
-		//return global count	
-		seq = seq.then(function(h) { return h; })
+
+			seq = seq.then(function(h) { return h; });
+		}
+
 		return seq;
 	}
 
@@ -1432,67 +1441,79 @@
 	
 	//VIEW UPDATE//
 	function updateModal(mode) {
-		if(mode == "convert") {
-			d3.select("#mtm-modal-title").text("Convert Data File")
-			d3.select("#mtm-modal-body").text("")
-			mtm.convertor("mtm-modal-body");
+		if(mode == "data") {
+			d3.select("#mtm-modal").select(".modal-content").classed("panel-warning",true);
+			d3.select("#mtm-modal").select(".modal-header").classed("panel-heading",true);
+			d3.select("#mtm-modal-title").text("Data not found")
+			d3.select("#mtm-modal-body").text("Please import some datafile(s)")
 		}
-		else if(mode == "examples") {
-			d3.select("#mtm-modal-title").text("Example Data Files")
-			var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
-			ul.append("li").append("label").text("#1. HuFS: Human gut - 30 years old male").attr("width","210px")
-			var li = ul.append("li").attr("class","btn-group")
-			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
-				.attr("class","btn btn-default")
-				.attr("target","cite").text("Citation")
-			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525311.3")
-				.attr("class","btn btn-default")
-				.attr("target","rast").text("Data Source")
-			li.append("a").attr("href","./data/HuFS.json")
-				.attr("class","btn btn-default")
-				.attr("target","rast").text("Data File")
+		else {
+			//warning style//
+			d3.select("#mtm-modal").select(".modal-content").classed("panel-warning",false);
+			d3.select("#mtm-modal").select(".modal-header").classed("panel-heading",false);
 
-			ul.append("li").append("label").text("#2. HuFU: Human gut - 7 months old female").attr("width","210px")
-			li = ul.append("li").attr("class","btn-group")
-			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
-				.attr("class","btn btn-default")
-				.attr("target","cite").text("Citation")
-			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3")
-				.attr("class","btn btn-default")
-				.attr("target","rast").text("Data Source")
-			li.append("a").attr("href","./data/HuFU.json")
-				.attr("class","btn btn-default")
-				.attr("target","rast").text("Data File")
-		}
-		else if(mode == "about") {
-			d3.select("#mtm-modal-title").text("About MetaTreeMap")
-			var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
-			var li = ul.append("li")
-			li.append("strong").text("MetaTreeMap version ")
-			li.append("strong").text(function(){return mtm.version;})
-			li.append("strong").text(" is under the ")
-			li.append("a").attr("href","./LICENSE").attr("target","_blank").text("BSD License")
-			var li = ul.append("li")
-			li.append("strong").text("Development: ")
-			li.append("a").attr("href","http://metasystems.riken.jp/wiki/Maxime_Hebrard").attr("target","_blank").text("Maxime Hebrard")
-			var li = ul.append("li")
-			li.append("span").text("The following libraries are used, with thanks to their authors:")
-			var sub = li.append("ul")
-			sub.append("li").append("a").attr("href","https://d3js.org/").attr("target","_blank").text("D3")
-			sub.append("li").append("a").attr("href","http://colorbrewer2.org/").attr("target","_blank").text("ColorBrewer2")
-			sub.append("li").append("a").attr("href","https://jquery.com/").attr("target","_blank").text("jQuery")
-			sub.append("li").append("a").attr("href","http://getbootstrap.com/").attr("target","_blank").text("Bootstrap")
-			sub.append("li").append("a").attr("href","http://www.bootstraptoggle.com/").attr("target","_blank").text("Bootstrap Toggle")
-			sub.append("li").append("a").attr("href","https://silviomoreto.github.io/bootstrap-select/").attr("target","_blank").text("Bootstrap-select")
-			sub.append("li").append("a").attr("href","https://www.google.com/fonts/specimen/Source+Code+Pro").attr("target","_blank").text("Source Code Pro")
-			var li = ul.append("li")
-			li.append("strong").text("Source code ")
-			li.append("span").text("available on ")
-			li.append("a").attr("href","https://github.com/mhebrard/MetaTreeMap").attr("target","_blank").text("GitHub")
-			var li = ul.append("li")
-			li.append("strong").text("Download ")
-			li.append("span").text("minified version ")
-			li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
+			if(mode == "convert") {
+				d3.select("#mtm-modal-title").text("Convert Data File")
+				d3.select("#mtm-modal-body").text("")
+				mtm.convertor("mtm-modal-body");
+			}
+			else if(mode == "examples") {
+				d3.select("#mtm-modal-title").text("Example Data Files")
+				var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
+				ul.append("li").append("label").text("#1. HuFS: Human gut - 30 years old male").attr("width","210px")
+				var li = ul.append("li").attr("class","btn-group")
+				li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
+					.attr("class","btn btn-default")
+					.attr("target","cite").text("Citation")
+				li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525311.3")
+					.attr("class","btn btn-default")
+					.attr("target","rast").text("Data Source")
+				li.append("a").attr("href","./data/HuFS.json")
+					.attr("class","btn btn-default")
+					.attr("target","rast").text("Data File")
+
+				ul.append("li").append("label").text("#2. HuFU: Human gut - 7 months old female").attr("width","210px")
+				li = ul.append("li").attr("class","btn-group")
+				li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
+					.attr("class","btn btn-default")
+					.attr("target","cite").text("Citation")
+				li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3")
+					.attr("class","btn btn-default")
+					.attr("target","rast").text("Data Source")
+				li.append("a").attr("href","./data/HuFU.json")
+					.attr("class","btn btn-default")
+					.attr("target","rast").text("Data File")
+			}
+			else if(mode == "about") {
+				d3.select("#mtm-modal-title").text("About MetaTreeMap")
+				var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
+				var li = ul.append("li")
+				li.append("strong").text("MetaTreeMap version ")
+				li.append("strong").text(function(){return mtm.version;})
+				li.append("strong").text(" is under the ")
+				li.append("a").attr("href","./LICENSE").attr("target","_blank").text("BSD License")
+				var li = ul.append("li")
+				li.append("strong").text("Development: ")
+				li.append("a").attr("href","http://metasystems.riken.jp/wiki/Maxime_Hebrard").attr("target","_blank").text("Maxime Hebrard")
+				var li = ul.append("li")
+				li.append("span").text("The following libraries are used, with thanks to their authors:")
+				var sub = li.append("ul")
+				sub.append("li").append("a").attr("href","https://d3js.org/").attr("target","_blank").text("D3")
+				sub.append("li").append("a").attr("href","http://colorbrewer2.org/").attr("target","_blank").text("ColorBrewer2")
+				sub.append("li").append("a").attr("href","https://jquery.com/").attr("target","_blank").text("jQuery")
+				sub.append("li").append("a").attr("href","http://getbootstrap.com/").attr("target","_blank").text("Bootstrap")
+				sub.append("li").append("a").attr("href","http://www.bootstraptoggle.com/").attr("target","_blank").text("Bootstrap Toggle")
+				sub.append("li").append("a").attr("href","https://silviomoreto.github.io/bootstrap-select/").attr("target","_blank").text("Bootstrap-select")
+				sub.append("li").append("a").attr("href","https://www.google.com/fonts/specimen/Source+Code+Pro").attr("target","_blank").text("Source Code Pro")
+				var li = ul.append("li")
+				li.append("strong").text("Source code ")
+				li.append("span").text("available on ")
+				li.append("a").attr("href","https://github.com/mhebrard/MetaTreeMap").attr("target","_blank").text("GitHub")
+				var li = ul.append("li")
+				li.append("strong").text("Download ")
+				li.append("span").text("minified version ")
+				li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
+			}
 		}
 	}
 
