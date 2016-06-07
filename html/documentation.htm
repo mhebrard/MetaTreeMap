@@ -99,6 +99,35 @@
 					    <li><a href="#import-tabular">Convert tabular file</a></li>
 					</ul>
 				</div>
+				<div class="btn-group navbar-btn">
+  					<p class="btn btn-default"><a href="#colors">Colors</a></p>
+  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    					<span class="caret"></span>
+	  				</button>
+	  				<ul class="dropdown-menu">
+	  					<li><a href="#colors-taxon">Color by taxon</a></li>
+	  					<li><a href="#colors-rank">Color by rank</a></li>
+	  					<li><a href="#colors-sample">Color by sample</a></li>
+	  					<li><a href="#colors-majority">Color by majority</a></li>
+					    <li class="divider"></li>
+					    <li><a href="#colors-palette">Palette</a></li>
+					    <li><a href="#colors-bg">Background</a></li>
+					</ul>
+				</div>
+				<div class="btn-group navbar-btn">
+  					<p class="btn btn-default"><a href="#labels">Labels</a></p>
+  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    					<span class="caret"></span>
+	  				</button>
+	  				<ul class="dropdown-menu">
+	  					<li><a href="#labels-taxon">Label by taxon</a></li>
+	  					<li><a href="#labels-rank">Label by rank</a></li>
+	  					<li><a href="#labels-no">No label</a></li>
+					    <li class="divider"></li>
+					    <li><a href="#labels-format">Label format</a></li>
+					    <li><a href="#labels-font">Font size</a></li>
+					</ul>
+				</div>
 		    </div><!-- /.navbar-collapse -->
 		 </div><!-- /.container-fluid -->
 	</nav>
@@ -690,6 +719,295 @@
 			</a></div>
 		</div>
 	  	
+	</div>
+
+	<!--COLORS-->
+	<div>
+	  	<h1 id="colors" class="page-header">Colors</h1>
+	  	<h2 id="colors-taxon">Color by taxon</h2>
+	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
+	  		<li>Select the Color by <b>Taxon</b> option</li>
+	   	</ul>
+	  	<p class="alert alert-success">A color is assigned to each taxon name.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('quick-rank.1')">
+				<img src="../img/quick-rank.1.tmbl.png" alt="colors">
+				<div><p>In the menu bar, click on the Colors menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-rank.2')">
+				<img src="../img/quick-rank.2.tmbl.png" alt="by taxon">
+				<div><p>Select the Color by Taxon option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-import.6')">
+				<img src="../img/quick-import.6.tmbl.png" alt="colored">
+				<div><p>A color is assigned to each taxon name</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="colors-rank">Color by phylogenic rank</h2>
+	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
+	  		<li>Select the Color by <b>Rank</b> option</li>
+	  		<li>Select the desired <b>rank</b> in the Phylogenic Rank field</li>
+	   	</ul>
+	  	<p class="alert alert-success">The descendants of the nodes at the specified rank are <b>colored</b> according to these nodes.</p>
+	  	<p class="alert alert-warning">The option Upper Ranks, under the Colors menu, can be set to <b>grayed</b>. If so, the ascendants of the nodes at the specified rank are grayed out.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('quick-rank.1')">
+				<img src="../img/quick-rank.1.tmbl.png" alt="colors">
+				<div><p>In the menu bar, click on the Colors menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-rank.2')">
+				<img src="../img/quick-rank.2.tmbl.png" alt="by rank">
+				<div><p>Select the Color by Rank option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-rank.3')">
+				<img src="../img/quick-rank.3.tmbl.png" alt="select">
+				<div><p>Select the desired rank in the Phylogenic Rank field</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-rank.5')">
+				<img src="../img/quick-rank.5.tmbl.png" alt="colored">
+				<div><p>The descendants of the nodes at the specified rank are now colored according to these nodes</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-rank.6')">
+				<img src="../img/quick-rank.6.tmbl.png" alt="grayed">
+				<div><p>The option Upper Ranks, under the Colors menu, can be set to grayed</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-rank.7')">
+				<img src="../img/quick-rank.7.tmbl.png" alt="grayedout">
+				<div><p>The ascendants of the nodes at the specified rank are now grayed out</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="colors-sample">Color by sample</h2>
+	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
+	  		<li>Select the Color by <b>Sample</b> option</li>
+	   	</ul>
+	  	<p class="alert alert-success">Nodes are colored according to their sample number.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('quick-rank.1')">
+				<img src="../img/quick-rank.1.tmbl.png" alt="colors">
+				<div><p>In the menu bar, click on the Colors menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-rank.2')">
+				<img src="../img/quick-rank.2.tmbl.png" alt="by sample">
+				<div><p>Select the Color by Sample option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('colors-sample.3')">
+				<img src="../img/colors-sample.3.tmbl.png" alt="colored">
+				<div><p>Nodes are colored according to their sample number.</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="colors-majority">Color by majotity</h2>
+	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
+	  		<li>Select the Color by <b>Majority</b> option</li>
+	   	</ul>
+	  	<p class="alert alert-success">Nodes are colored according to the number of the sample with the higher value among the siblings.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('quick-rank.1')">
+				<img src="../img/quick-rank.1.tmbl.png" alt="colors">
+				<div><p>In the menu bar, click on the Colors menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-rank.2')">
+				<img src="../img/quick-rank.2.tmbl.png" alt="by sample">
+				<div><p>Select the Color by Sample option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('colors-majority.3')">
+				<img src="../img/colors-majority.3.tmbl.png" alt="colored">
+				<div><p>Nodes are colored according to the number of the sample with the higher value among the siblings.</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="colors-palette">Palette</h2>
+	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
+	  		<li>Select the <b>Palette</b> you want use</li>
+	   	</ul>
+	  	<p class="alert alert-success">Brewer lists 18 pastel colors. D3 lists 20 strong colors.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('quick-rank.1')">
+				<img src="../img/quick-rank.1.tmbl.png" alt="colors">
+				<div><p>In the menu bar, click on the Colors menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('colors-palette.2')">
+				<img src="../img/colors-palette.2.tmbl.png" alt="palette">
+				<div><p>Select the Palette you want use</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-import.6')">
+				<img src="../img/quick-import.6.tmbl.png" alt="brewer">
+				<div><p>Brewer lists 18 pastel colors</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('colors-palette.4')">
+				<img src="../img/colors-palette.4.tmbl.png" alt="d3">
+				<div><p>D3 lists 20 strong colors</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="colors-bg">Background</h2>
+	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
+	  		<li>Click on the <b>Background</b> toogle to set the background color</li>
+	   	</ul>
+	  	<p class="alert alert-success">Background can be set black or white.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('quick-rank.1')">
+				<img src="../img/quick-rank.1.tmbl.png" alt="colors">
+				<div><p>In the menu bar, click on the Colors menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('colors-bg.2')">
+				<img src="../img/colors-bg.2.tmbl.png" alt="background">
+				<div><p>Toogle the background color</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-import.6')">
+				<img src="../img/quick-import.6.tmbl.png" alt="black">
+				<div><p>Background is black</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('colors-bg.4')">
+				<img src="../img/colors-bg.4.tmbl.png" alt="white">
+				<div><p>Background is white</p></div>
+			</a></div>
+		</div>
+  	</div>
+
+  	<!--LABELS-->
+  	<div>
+	  	<h1 id="labels" class="page-header">Labels</h1>
+	  	<h2 id="labels-taxon">Label by taxon</h2>
+	  	<ul><li>In the menu bar, click on the <b>Labels</b> menu</li>
+	  		<li>Select the Label by <b>Taxon</b> option</li>
+	   	</ul>
+	  	<p class="alert alert-success">Each rectangles of the treemap are labelled.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('labels-taxon.1')">
+				<img src="../img/labels-taxon.1.tmbl.png" alt="labels">
+				<div><p>In the menu bar, click on the Labels menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-taxon.2')">
+				<img src="../img/labels-taxon.2.tmbl.png" alt="by taxon">
+				<div><p>Select the Label by Taxon option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-import.6')">
+				<img src="../img/quick-import.6.tmbl.png" alt="labelled">
+				<div><p>Each rectangles of the treemap are labelled</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="labels-rank">Label by phylogenic rank</h2>
+	  	<ul><li>In the menu bar, click on the <b>Labels</b> menu</li>
+	  		<li>Select the Label by <b>Rank</b> option</li>
+	  		<li>Select the desired <b>rank</b> in the Phylogenic Rank field</li>
+	   	</ul>
+	  	<p class="alert alert-success">The nodes at the specified rank are <b>labelled</b> on the treemap.</p>
+	  	<p class="alert alert-warning">See section <a href="#quick-rank">View by specific phylogenic rank</a> for more options.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('labels-taxon.1')">
+				<img src="../img/labels-taxon.1.tmbl.png" alt="labels">
+				<div><p>In the menu bar, click on the Labels menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-taxon.2')">
+				<img src="../img/labels-taxon.2.tmbl.png" alt="by rank">
+				<div><p>Select the Label by Rank option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-rank.3')">
+				<img src="../img/labels-rank.3.tmbl.png" alt="select">
+				<div><p>Select the desired rank in the Phylogenic Rank field</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-rank.4')">
+				<img src="../img/labels-rank.4.tmbl.png" alt="labelled">
+				<div><p>The nodes at the specified rank are labelled</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="labels-no">No label</h2>
+	  	<ul><li>In the menu bar, click on the <b>Labels</b> menu</li>
+	  		<li>Select the Label by <b>No Label</b> option</li>
+	   	</ul>
+	  	<p class="alert alert-success">Labels are hidden</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('labels-taxon.1')">
+				<img src="../img/labels-taxon.1.tmbl.png" alt="labels">
+				<div><p>In the menu bar, click on the Labels menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-taxon.2')">
+				<img src="../img/labels-taxon.2.tmbl.png" alt="no">
+				<div><p>Select the Label by No Label option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-no.3')">
+				<img src="../img/labels-no.3.tmbl.png" alt="hidden">
+				<div><p>Labels are hidden</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="labels-format">Label format</h2>
+		<p>Label format is used to customized the labels on the treemap. User can specify a pattern to set the label. Hashtags can be used in the pattern that will be change to specific data elements.</p>
+		<p>Hashtags list:</p>
+		<ul>
+			<li>#N: Taxon Name</li>
+			<li>#I: NCBI Taxonomy ID</li>
+			<li>#H: Number Of Hits</li>
+			<li>#R: Phylogenic Rank</li>
+			<li>#S: Sample Number</li>
+			<li>#P: % By Sample</li>
+			<li>#V: % By View</li>
+		</ul>
+	  	<ul><li>In the menu bar, click on the <b>Labels</b> menu</li>
+	  		<li>Fill the Label Format field with a <b>Pattern</b></li>
+	  		<li>Press <kbd>enter</kbd> key to validate</li>
+	   	</ul>
+	  	<p class="alert alert-success">The labels are modified.</p>
+	  	<p class="alert alert-warning">The list of hashtags is displayed when clicking on the <span class="glyphicon glyphicon-info-sign"></span> button.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('labels-taxon.1')">
+				<img src="../img/labels-taxon.1.tmbl.png" alt="labels">
+				<div><p>In the menu bar, click on the Labels menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-format.2')">
+				<img src="../img/labels-format.2.tmbl.png" alt="format">
+				<div><p>Fill the Label Format field with a Pattern</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-format.3')">
+				<img src="../img/labels-format.3.tmbl.png" alt="formated">
+				<div><p>Press enter key, the labels are modified (pattern: ID:#I [#P%] ##S)</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-format.4')">
+				<img src="../img/labels-format.4.tmbl.png" alt="i">
+				<div><p>Click on the <span class="glyphicon glyphicon-info-sign"></span> button</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-format.5')">
+				<img src="../img/labels-format.5.tmbl.png" alt="hashtags">
+				<div><p>The list of hashtags for the pattern is displayed</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="labels-font">Font size</h2>
+	  	<ul><li>In the menu bar, click on the <b>Labels</b> menu</li>
+	  		<li>Select the desired <b>Font Size</b></li>
+	   	</ul>
+	  	<p class="alert alert-success">The font size of treemap labels, tooltip and table is modified.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('labels-taxon.1')">
+				<img src="../img/labels-taxon.1.tmbl.png" alt="labels">
+				<div><p>In the menu bar, click on the Labels menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-font.2')">
+				<img src="../img/labels-font.2.tmbl.png" alt="font">
+				<div><p>Select the desired Font Size</div>
+			</a></div>
+			<div><a href="#" onclick="modal('labels-font.3')">
+				<img src="../img/labels-font.3.tmbl.png" alt="formated">
+				<div><p>The font size of treemap labels, tooltip and table is modified (font size = 20)</p></div>
+			</a></div>
+		</div>
+
 	</div>
 
 
