@@ -128,6 +128,36 @@
 					    <li><a href="#labels-font">Font size</a></li>
 					</ul>
 				</div>
+				<div class="btn-group navbar-btn">
+  					<p class="btn btn-default"><a href="#treemap">Treemap</a></p>
+  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    					<span class="caret"></span>
+	  				</button>
+	  				<ul class="dropdown-menu">
+	  					<li><a href="#treemap-hierarchy">Hierarchy</a></li>
+	  					<li><a href="#treemap-zoom">Zoom transition</a></li>
+	  					<li class="divider"></li>
+	  					<li><a href="#treemap-sample">Proportion by sample</a></li>
+	  					<li><a href="#treemap-hits">Proportion by hits</a></li>
+	  					<li><a href="#treemap-taxon">Proportion by taxon</a></li>
+	  					<li class="divider"></li>
+					    <li><a href="#treemap-cutoff">Rank cuttoff</a></li>
+					</ul>
+				</div>
+				<p class="btn btn-default navbar-btn"><a href="#goto">Go to</a></p>
+				<div class="btn-group navbar-btn">
+  					<p class="btn btn-default"><a href="#layout">Layout</a></p>
+  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    					<span class="caret"></span>
+	  				</button>
+	  				<ul class="dropdown-menu">
+	  					<li><a href="#layout-nomap">Hide treemap</a></li>
+	  					<li><a href="#layout-map">Display treemap</a></li>
+	  					<li><a href="#layout-notable">Hide table</a></li>
+	  					<li><a href="#layout-table">Display table</a></li>
+					</ul>
+				</div>
+				<p class="btn btn-default navbar-btn"><a href="#export">Export</a></p>
 		    </div><!-- /.navbar-collapse -->
 		 </div><!-- /.container-fluid -->
 	</nav>
@@ -848,10 +878,14 @@
 		</div>
 
 		<h2 id="colors-bg">Background</h2>
+		<p>Background can be set to two colors:</p>
+		<ul><li><b>black</b></li>
+			<li><b>white</b></li>
+		</ul>
 	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
 	  		<li>Click on the <b>Background</b> toogle to set the background color</li>
 	   	</ul>
-	  	<p class="alert alert-success">Background can be set black or white.</p>
+	  	<p class="alert alert-success">Background is updated.</p>
 
 	  	<div class="thumbnails">
 			<div><a href="#" onclick="modal('quick-rank.1')">
@@ -1007,9 +1041,300 @@
 				<div><p>The font size of treemap labels, tooltip and table is modified (font size = 20)</p></div>
 			</a></div>
 		</div>
-
 	</div>
 
+	<!--TREEMAP-->
+  	<div>
+	  	<h1 id="treemap" class="page-header">Treemap</h1>
+	  	<h2 id="treemap-hierarchy">Hierarchy</h2>
+	  	<p>Hierarchy can be displayed in two modes: </p>
+	  	<ul><li><b>rugged</b> : each taxon is represented as a rectangle. The parent nodes appear as a border encapsulated their children.</li>
+	  		<li><b>flat</b> : only the leaf nodes appear on the treemap. The parent nodes are not represented.</li>
+	  	</ul>
+	  	<ul><li>In the menu bar, click on the <b>Treemap</b> menu</li>
+	  		<li>Click on the <b>Hierarchy</b> toogle to set its mode</li>
+	   	</ul>
+	  	<p class="alert alert-success">The treemap hierarchy is updated.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('treemap-hierarchy.1')">
+				<img src="../img/treemap-hierarchy.1.tmbl.png" alt="treemap">
+				<div><p>In the menu bar, click on the Treemap menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-hierarchy.2')">
+				<img src="../img/treemap-hierarchy.2.tmbl.png" alt="hierarchy">
+				<div><p>Toogle the hierarchy mode</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-import.6')">
+				<img src="../img/quick-import.6.tmbl.png" alt="rugged">
+				<div><p>Rugged : each taxon is represented as a rectangle</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-hierarchy.4')">
+				<img src="../img/treemap-hierarchy.4.tmbl.png" alt="flat">
+				<div><p>Flat : only the leaf nodes appear on the treemap</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="treemap-zoom">Zoom transition</h2>
+	  	<p>Zoom transition can be set to two modes: </p>
+	  	<ul><li><b>fluid</b> : rectangles are moved to optimize the treemap.</li>
+	  		<li><b>sticky</b> : the relative position of rectangles is fixed.</li>
+	  	</ul>
+	  	<ul><li>In the menu bar, click on the <b>Treemap</b> menu</li>
+	  		<li>Click on the Zoom <b>Transition</b> toogle to set its mode</li>
+	   	</ul>
+	  	<p class="alert alert-success">The zoom feature is updated.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('treemap-hierarchy.1')">
+				<img src="../img/treemap-hierarchy.1.tmbl.png" alt="treemap">
+				<div><p>In the menu bar, click on the Treemap menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-zoom.2')">
+				<img src="../img/treemap-zoom.2.tmbl.png" alt="zoom">
+				<div><p>Toogle the hierarchy mode</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-zoom.3')">
+				<img src="../img/treemap-zoom.3.tmbl.png" alt="fluid">
+				<div><p>Fluid : rectangles are moved to optimize the treemap.</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-zoom.4')">
+				<img src="../img/treemap-zoom.4.tmbl.png" alt="sticky">
+				<div><p>Sticky : the relative position of rectangles is fixed.</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="treemap-sample">Proportion by sample</h2>
+	  	<ul><li>In the menu bar, click on the <b>Treemap</b> menu</li>
+	  		<li>Select the Proportion by <b>Sample</b> option</li>
+	   	</ul>
+	  	<p class="alert alert-success">The area of the rectangles are proportional to the percentage of hits in the sample.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('treemap-hierarchy.1')">
+				<img src="../img/treemap-hierarchy.1.tmbl.png" alt="treemap">
+				<div><p>In the menu bar, click on the Treemap menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-sample.2')">
+				<img src="../img/treemap-sample.2.tmbl.png" alt="select">
+				<div><p>Select the Proportion by Sample option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-import.6')">
+				<img src="../img/quick-import.6.tmbl.png" alt="by sample">
+				<div><p>The area of the rectangles are proportional to the percentage of hits in the sample</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="treemap-hits">Proportion by hits</h2>
+	  	<ul><li>In the menu bar, click on the <b>Treemap</b> menu</li>
+	  		<li>Select the Proportion by <b>Sample</b> option</li>
+	   	</ul>
+	  	<p class="alert alert-success">The area of the rectangles are proportional to the number of hits.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('treemap-hierarchy.1')">
+				<img src="../img/treemap-hierarchy.1.tmbl.png" alt="treemap">
+				<div><p>In the menu bar, click on the Treemap menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-sample.2')">
+				<img src="../img/treemap-sample.2.tmbl.png" alt="select">
+				<div><p>Select the Proportion by Sample option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-hits.3')">
+				<img src="../img/treemap-hits.3.tmbl.png" alt="by hits">
+				<div><p>The area of the rectangles are proportional to the number of hits.</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="treemap-hits">Proportion by taxon</h2>
+	  	<ul><li>In the menu bar, click on the <b>Treemap</b> menu</li>
+	  		<li>Select the Proportion by <b>Sample</b> option</li>
+	   	</ul>
+	  	<p class="alert alert-success">The area of each rectangle is the same.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('treemap-hierarchy.1')">
+				<img src="../img/treemap-hierarchy.1.tmbl.png" alt="treemap">
+				<div><p>In the menu bar, click on the Treemap menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-sample.2')">
+				<img src="../img/treemap-sample.2.tmbl.png" alt="select">
+				<div><p>Select the Proportion by Sample option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-taxon.3')">
+				<img src="../img/treemap-taxon.3.tmbl.png" alt="by taxon">
+				<div><p>The area of each rectangle is the same.</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="treemap-cutoff">Rank cutoff</h2>
+	  	<ul><li>In the menu bar, click on the <b>Treemap</b> menu</li>
+	  		<li>Select the desired <b>rank</b> in the Rank Cutoff field</li>
+	   	</ul>
+	  	<p class="alert alert-success">The descendants of the nodes at the specified rank are <b>hidden</b>.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('treemap-hierarchy.1')">
+				<img src="../img/treemap-hierarchy.1.tmbl.png" alt="treemap">
+				<div><p>In the menu bar, click on the Treemap menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-cutoff.2')">
+				<img src="../img/treemap-cutoff.2.tmbl.png" alt="select">
+				<div><p>Select the desired rank in the Rank Cutoff field</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('treemap-cutoff.3')">
+				<img src="../img/treemap-cutoff.3.tmbl.png" alt="cutoff">
+				<div><p>The descendants of the nodes at the specified rank are hidden (cutoff: order)</p></div>
+			</a></div>
+		</div>	
+	</div>
+
+	<!--GOTO-->
+  	<div>
+	  	<h1 id="goto" class="page-header">Go to</h1>
+	  	<p>See section <a href="#quick-navigate">Navigate through the tree</a>. </p>
+	</div>
+	
+	<!--LAYOUT-->
+	<div>
+	  	<h1 id="layout" class="page-header">Layout</h1>
+	  	<h2 id="layout-nomap">Hide treemap</h2>
+	  	<ul><li>In the menu bar, click on the <b>Layout</b> menu</li>
+	  		<li>Click on the Treemap toogle to set it as <b>hide</b></li>
+	  		<li>Click on the <b>Load</b> button</li>
+	   	</ul>
+	  	<p class="alert alert-success">The treemap is hidden.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('layout-map.1')">
+				<img src="../img/layout-map.1.tmbl.png" alt="layout">
+				<div><p>In the menu bar, click on the Layout menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-map.2')">
+				<img src="../img/layout-map.2.tmbl.png" alt="hide">
+				<div><p>Toogle the Treemap option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-map.3')">
+				<img src="../img/layout-map.3.tmbl.png" alt="load">
+				<div><p>Click on the Load button</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-map.4')">
+				<img src="../img/layout-map.4.tmbl.png" alt="hidden">
+				<div><p>The treemap is hidden</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="layout-map">Display treemap</h2>
+	  	<ul><li>In the menu bar, click on the <b>Layout</b> menu</li>
+	  		<li>Click on the Treemap toogle to set it as <b>display</b></li>
+	  		<li>Fill the <b>Width</b> field with a number of pixels</li>
+	  		<li>Fill the <b>Height</b> field with a number of pixels</li>
+	  		<li>Click on the <b>Load</b> button</li>
+	   	</ul>
+	  	<p class="alert alert-success">The treemap is displayed with the specified dimensions.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('layout-map.1')">
+				<img src="../img/layout-map.1.tmbl.png" alt="layout">
+				<div><p>In the menu bar, click on the Layout menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-map.2')">
+				<img src="../img/layout-map.2.tmbl.png" alt="display">
+				<div><p>Toogle the Treemap option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-map.7')">
+				<img src="../img/layout-map.7.tmbl.png" alt="width">
+				<div><p>Fill the Width field with a number of pixels</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-map.8')">
+				<img src="../img/layout-map.8.tmbl.png" alt="height">
+				<div><p>Fill the Height field with a number of pixels</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-map.9')">
+				<img src="../img/layout-map.9.tmbl.png" alt="load">
+				<div><p>Click on the Load button</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-import.6')">
+				<img src="../img/quick-import.6.tmbl.png" alt="displayed">
+				<div><p>The treemap is displayed with the specified dimensions.</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="layout-notable">Hide table</h2>
+	  	<ul><li>In the menu bar, click on the <b>Layout</b> menu</li>
+	  		<li>Click on the Table toogle to set it as <b>hide</b></li>
+	  		<li>Click on the <b>Load</b> button</li>
+	   	</ul>
+	  	<p class="alert alert-success">The table is hidden.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('layout-map.1')">
+				<img src="../img/layout-map.1.tmbl.png" alt="layout">
+				<div><p>In the menu bar, click on the Layout menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-table.2')">
+				<img src="../img/layout-table.2.tmbl.png" alt="hide">
+				<div><p>Toogle the Table option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-table.3')">
+				<img src="../img/layout-table.3.tmbl.png" alt="load">
+				<div><p>Click on the Load button</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-table.4')">
+				<img src="../img/layout-table.4.tmbl.png" alt="hidden">
+				<div><p>The table is hidden</p></div>
+			</a></div>
+		</div>
+
+		<h2 id="layout-table">Display table</h2>
+	  	<ul><li>In the menu bar, click on the <b>Layout</b> menu</li>
+	  		<li>Click on the Table toogle to set it as <b>display</b></li>
+	  		<li>Fill the <b>Width</b> field with a number of pixels</li>
+	  		<li>Fill the <b>Height</b> field with a number of pixels</li>
+	  		<li>Click on the <b>Load</b> button</li>
+	   	</ul>
+	  	<p class="alert alert-success">The table is displayed with the specified dimensions.</p>
+
+	  	<div class="thumbnails">
+			<div><a href="#" onclick="modal('layout-map.1')">
+				<img src="../img/layout-map.1.tmbl.png" alt="layout">
+				<div><p>In the menu bar, click on the Layout menu</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-table.2')">
+				<img src="../img/layout-table.2.tmbl.png" alt="display">
+				<div><p>Toogle the Table option</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-table.7')">
+				<img src="../img/layout-table.7.tmbl.png" alt="width">
+				<div><p>Fill the Width field with a number of pixels</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-table.8')">
+				<img src="../img/layout-table.8.tmbl.png" alt="height">
+				<div><p>Fill the Height field with a number of pixels</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('layout-map.9')">
+				<img src="../img/layout-map.9.tmbl.png" alt="load">
+				<div><p>Click on the Load button</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('quick-import.6')">
+				<img src="../img/quick-import.6.tmbl.png" alt="displayed">
+				<div><p>The table is displayed with the specified dimensions.</p></div>
+			</a></div>
+		</div>
+	</div>
+
+	<!--EXPORT-->
+  	<div>
+	  	<h1 id="export" class="page-header">Export</h1>
+	  	<p>Data can me save in different formats: </p>
+	  	<ul><li>Data file in JSON format (text)</li>
+	  		<li>Treemap image in SVG format (vectorial)</li>
+	  		<li>Treemap image in PNG format (bitmap)</li>
+	  		<li>Table data in TSV format (table)</li>
+	  		<li>Configuration file in JSON format (text)</li>
+	  	</ul>
+	  	<p class="alert alert-success">See section <a href="#quick-export">Save your results</a>, the same procedure is used for each type of file.</p>
+	</div>
 
 	<!-- Modal-->
 	<div class="modal fade" id="modal-image" tabindex="-1" onclick="hide()">
