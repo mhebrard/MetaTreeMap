@@ -71,7 +71,7 @@
 					    <li><a href="#quick-navigate">Navigate through the tree</a></li>
 					    <li><a href="#quick-zoomin">Zoom in</a></li>
 					    <li><a href="#quick-zoomout">Zoom out</a></li>
-					    <li><a href="#quick-zoomout">Search for a taxon</a></li>
+					    <li><a href="#quick-search">Search for a taxon</a></li>
 					    <li class="divider"></li>
 					    <li><a href="#quick-rank">View by specific phylogenic rank</a></li>
 						<li><a href="#quick-colors">Modifying the colors</a></li>
@@ -172,8 +172,8 @@
   	<div>
 	  	<h1 id="quick" class="page-header">Quick Start</h1>
 	  	<h2 id="quick-import">Import your data</h2>
-	  	<ul><li>See section <a href="#import-format">Input format</a> for more information</li>
-	  		<li>In the menu bar, click on the <b>Import</b> menu</li>
+	  	<p class="alert alert-info">See section <a href="#import-format">Input format</a> for more information</p>
+	  	<ul><li>In the menu bar, click on the <b>Import</b> menu</li>
 	  		<li>Click on the Data File (JSON) <b>Browse...</b> button</li>
 	  		<li><b>Select</b> one or more files
 	  			<p class="alert alert-info">hold the <kbd>Ctrl</kbd> key to select multiple files</p></li>
@@ -418,12 +418,12 @@
 		</div>
 	</div>
 
-	<!--INPUT-->
+	<!--IMPORT-->
 	<div>
 	  	<h1 id="import" class="page-header">Import</h1>
 	  	<h2 id="import-data">Data file</h2>
-	  	<p>The data inputed in MTM should be a hierarchy of taxa with a value assigned to (at least some) taxa. The standard file format used by MTM is a JSON file with specific fields described below.</p>
-	  	<p class="alert alert-info">A proper JSON file can be obtained by analyzing metagenomic sequencing data using <a href="http://metabin.riken.jp/" taget="_blank">MetaBin</a> software.</p>
+	  	<p>The data inputted in MTM should be a hierarchy of taxa with a value assigned to (at least some) taxa. The standard file format used by MTM is a JSON file with specific fields as described below.</p>
+	  	<p class="alert alert-info">A properly formatted JSON file can be obtained by analyzing metagenomic sequencing data with <a href="http://metabin.riken.jp/" taget="_blank">MetaBin</a> program.</p>
 	  	<p>Example of one taxon:</p>
 	  	<pre>{"name":"Bacteria","children":[],"data":{"assigned":"21","sum":"913","rank":"superkingdom"},"id":"2"}</pre>
 	  	<ul><li><b>name: </b>Taxon name</li>
@@ -435,10 +435,10 @@
 	  	</ul>
 
   		<h3 id="import-datain">Import data file</h3>
-  		<p>See section <a href="#quick-import">Import your data</a></p>
+  		<p class="alert alert-info">See section <a href="#quick-import">Import your data</a></p>
 
   		<h3 id="import-dataout">Export data file</h3>
-  		<p class="alert alert-warning">In case of multiple datasets inputed, a unique datafile is exported with the values summed for each taxon (no more normalization).</p>
+  		<p class="alert alert-warning">In the case of multiple datasets inputted, a unique datafile is exported with the values summed for each taxon.</p>
   		<ul><li>In the menu bar, click on the <b>Export</b> menu</li>
 	  		<li>Click on <b>Data File in JSON format</b></li>
 	  		<li>Select the <b>Save File</b> option</li>
@@ -465,10 +465,8 @@
 			</a></div>
 		</div>
 	  	
-
-
 	  	<h2 id="import-config">Configuration file</h2>
-	  	<p>The options of MTM can be pre-set or saved using a configuration file. This file is in JSON format with specific fields described below.<p>
+	  	<p>The options of MTM can be pre-set or saved using a configuration file. This file is in JSON format with specific fields as described below.<p>
 	  	<p>Default configuration:</p>
 	  	<pre>{
 "treemap": {"display":true, "width":700, "height":500},
@@ -516,33 +514,37 @@
 						</ul>
 					</li>
 					<li><b>zoom: </b>
-						<ul><li>fluid : during zoom event, move rectangles of treemap view to optimise the space.</li>
-							<li>sticky : during zoom event, keep the relative position of rectangles of treemap view.</li>
+						<ul><li>fluid : during zoom events, move rectangles in the treemap view to optimise the space.</li>
+							<li>sticky : during zoom events, keep the relative positions of the rectangles in the treemap view.</li>
 						</ul>
 					</li>
 					<li><b>proportion: </b>
-						<ul><li>sample: Values are normalized according samples, each sample represented the same area.</li>
-							<li>hits: Value are not normalized, each hit represented the same area.</li>
-							<li>taxon: Each taxon represented the same area, whatever the associate value is.</li>
+						<ul><li>sample: values are normalized according to the samples, each sample represents the same area.</li>
+							<li>hits: values are not normalized, each hit represents the same area.</li>
+							<li>taxon: Each taxon represents the same area, whatever the associated value is.</li>
 						</ul>
 					</li>
-					<li><b>cutoff_rank: </b> [rank] : the node at phylogenic rank lower than [rank] are not displayed.</li>
+					<li><b>cutoff_rank: </b> [rank] : nodes at phylogenic ranks lower than [rank] are not displayed.</li>
 					<li><b>colored: </b>
 						<ul><li>taxon: the nodes are colored according to taxon name.</li>
-							<li>rank: the nodes of a sub-branck starting at the specified rank are colored according their root.</li>
+							<li>rank: the nodes of a sub-branch starting at the specified rank are colored according to their root.</li>
 							<li>sample: The nodes are colored according to sample ID</li>
 							<li>majority: The nodes are colored according to the sample ID with the higher value in siblings.</li>
 						</ul>
 					</li>
-					<li><b>colored_rank: </b> [rank] : the nodes of a sub-branck starting at [rank] are colored according to their root.</li>
+					<li><b>colored_rank: </b> [rank] : the nodes of a sub-branch starting at [rank] are colored according to their root.</li>
 					<li><b>upper: </b>
-						<ul><li>colored: the node at phylogenic rank upper than the specified rank are colored according to taxon name.</li>
-							<li>grayed: the node at phylogenic rank upper than the specified rank are grayed out.</li>
+						<ul><li>colored: nodes at phylogenic ranks higher than the specified rank are colored according to taxon name.</li>
+							<li>grayed: nodes at phylogenic ranks higher than the specified rank are grayed out.</li>
 						</ul>
 					</li>
 					<li><b>palette: </b>
-						<ul><li>brewer: list of 12 pastel colors.</li>
-							<li>d3: list of 20 dark colors.</li>
+						<ul><li>brewer: list of 12 pastel colors.
+								<p class="alert alert-info">#8dd3c7, #ffffb3, #bebada, #fb8072, #80b1d3, #fdb462, #b3de69, #fccde5, #d9d9d9, #bc80bd, #ccebc5, #ffed6f</p>
+							</li>
+							<li>d3: list of 20 dark colors.
+								<p class="alert alert-info">#1f77b4, #aec7e8, #ff7f0e, #ffbb78, #2ca02c, #98df8a, #d62728, #ff9896, #9467bd, #c5b0d5, #8c564b, #c49c94, #e377c2, #f7b6d2, #7f7f7f, #c7c7c7, #bcbd22, #dbdb8d, #17becf, #9edae5</p>
+							</li>
 						</ul>
 					</li>
 					<li><b>background: </b>
@@ -557,7 +559,7 @@
 						</ul>
 					</li>
 					<li><b>labelled_rank: </b> [rank] : the nodes at [rank] are labelled.</li>
-					<li><b>pattern: </b> [string] : pattern that set the node labels.</li>
+					<li><b>pattern: </b> [string] : pattern that sets the node labels.</li>
 					<li><b>font: </b> #number : font size in pixels.</li>	
 				</ul>
 			</li>
@@ -565,10 +567,10 @@
 
 		<h3 id="import-configin">Import configuration file</h3>
   		<ul><li>In the menu bar, click on the <b>Import</b> menu</li>
-	  		<li>Click on Configuration File (JSON) <b>Browse...</b> button</li>
+	  		<li>Click on the Configuration File (JSON) <b>Browse...</b> button</li>
 	  		<li><b>Select</b> one file</li>
 	  		<li><b>Open</b> the selected file</li>
-	  		<li>Click on <b>Load</b> button</li>
+	  		<li>Click on the <b>Load</b> button</li>
 	  	</ul>
 	  	<p class="alert alert-success">Your data should be visualized with the expected configuration.</p>
 
@@ -579,7 +581,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('import-config.2')">
 				<img src="../img/import-config.2.tmbl.png" alt="JSON">
-				<div><p>Click on Configuration File (JSON) Browse... button</p></div>
+				<div><p>Click on the Configuration File (JSON) Browse... button</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('import-config.3')">
 				<img src="../img/import-config.3.tmbl.png" alt="Select">
@@ -591,7 +593,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('import-config.5')">
 				<img src="../img/import-config.5.tmbl.png" alt="Load">
-				<div><p>Click on Load button</p></div>
+				<div><p>Click on the Load button</p></div>
 			</a></div>
 		</div>
 
@@ -623,19 +625,19 @@
 		</div>
 
 		<h2 id="import-convert">Convert Data file</h2>
-	  	<p>MTM can convert data files in the proper JSON format.</p>
+	  	<p>MTM can convert data files to the properly formatted JSON file.</p>
 
 	  	<h3 id="import-json">Convert JSON file</h3>
 	  	<ul><li>In the menu bar, click on the <b>Import</b> menu</li>
-	  		<li>Click on Convert Data File <b>Format...</b> button</li>
-	  		<li>Click on Data File <b>Browse...</b> button</li> 
+	  		<li>Click on the Convert Data File <b>Format...</b> button</li>
+	  		<li>Click on the Data File <b>Browse...</b> button</li> 
 	  		<li><b>Select</b> one file</li>
 	  		<li><b>Open</b> the selected file</li>
 	  		<li>Select the Format <b>Other JSON</b> option</li>
 	  		<li>Fill the <b>fields</b> with the corresponding names in your file</li>
 	  		<p>Example of alternative JSON file:</p>
   			<pre>{"taxon":{"label":Bacteria","id":"2","rank":"superkingdom"},children":[],"value":"21"}</pre>
-	  		<li>Click on <b>Convert</b> button</li>
+	  		<li>Click on the <b>Convert</b> button</li>
 	  		<li>Select the <b>Save File</b> option</li>
 	  		<li>Click on the <b>OK</b> button</li>
 	  	</ul>
@@ -648,11 +650,11 @@
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.2')">
 				<img src="../img/import-convert.2.tmbl.png" alt="Convert">
-				<div><p>Click on Convert Data File Format... button</p></div>
+				<div><p>Click on the Convert Data File Format... button</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.3')">
 				<img src="../img/import-convert.3.tmbl.png" alt="Browse">
-				<div><p>Click on Data File Browse... button</p></div>
+				<div><p>Click on the Data File Browse... button</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.4')">
 				<img src="../img/import-convert.4.tmbl.png" alt="Select">
@@ -672,7 +674,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.8')">
 				<img src="../img/import-convert.8.tmbl.png" alt="Convert">
-				<div><p>Click on Convert button</p></div>
+				<div><p>Click on the Convert button</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.9')">
 				<img src="../img/import-convert.9.tmbl.png" alt="Save">
@@ -686,17 +688,17 @@
 
 		<h3 id="import-tabular">Convert tabular file</h3>
 		<ul><li>In the menu bar, click on the <b>Import</b> menu</li>
-	  		<li>Click on Convert Data File <b>Format...</b> button</li>
-	  		<li>Click on Data File <b>Browse...</b> button</li> 
+	  		<li>Click on the Convert Data File <b>Format...</b> button</li>
+	  		<li>Click on the Data File <b>Browse...</b> button</li> 
 	  		<li><b>Select</b> one file</li>
 	  		<li><b>Open</b> the selected file</li>
 	  		<li>Select the Format <b>Tabular (TSV)</b> option</li>
 	  		<li>Fill the <b>fields</b> with the corresponding column index in your file</li>
-	  		<p>Example of Tabular file file:</p>
+	  		<p>Example of Tabular file:</p>
   			<pre>ID	Taxon	Hits
 2	Bacteria	21</pre>
-			<p class="alert alert-info">If the file have a header (as example) please check the box <b>Ignore 1st Line</b></p>
-	  		<li>Click on <b>Convert</b> button</li>
+			<p class="alert alert-warning">If the file has a header (as in the example) please check the box <b>Ignore 1st Line</b></p>
+	  		<li>Click on the <b>Convert</b> button</li>
 	  		<li>Select the <b>Save File</b> option</li>
 	  		<li>Click on the <b>OK</b> button</li>
 	  	</ul>
@@ -709,11 +711,11 @@
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.2')">
 				<img src="../img/import-convert.2.tmbl.png" alt="Convert">
-				<div><p>Click on Convert Data File Format... button</p></div>
+				<div><p>Click on the Convert Data File Format... button</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.3')">
 				<img src="../img/import-convert.3.tmbl.png" alt="Browse">
-				<div><p>Click on Data File Browse... button</p></div>
+				<div><p>Click on the Data File Browse... button</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.14')">
 				<img src="../img/import-convert.14.tmbl.png" alt="Select">
@@ -737,7 +739,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.19')">
 				<img src="../img/import-convert.19.tmbl.png" alt="Convert">
-				<div><p>Click on Convert button</p></div>
+				<div><p>Click on the Convert button</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('import-convert.20')">
 				<img src="../img/import-convert.20.tmbl.png" alt="Save">
@@ -831,7 +833,7 @@
 			</a></div>
 		</div>
 
-		<h2 id="colors-majority">Color by majotity</h2>
+		<h2 id="colors-majority">Color by majority</h2>
 	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
 	  		<li>Select the Color by <b>Majority</b> option</li>
 	   	</ul>
@@ -854,9 +856,11 @@
 
 		<h2 id="colors-palette">Palette</h2>
 	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
-	  		<li>Select the <b>Palette</b> you want use</li>
+	  		<li>Select the <b>Palette</b> you want to use</li>
 	   	</ul>
-	  	<p class="alert alert-success">Brewer lists 18 pastel colors. D3 lists 20 strong colors.</p>
+	  	<p class="alert alert-success">Brewer uses 18 pastel colors. D3 uses 20 dark colors.</p>
+	  	<p class="alert alert-info"><b>Brewer:</b> #8dd3c7, #ffffb3, #bebada, #fb8072, #80b1d3, #fdb462, #b3de69, #fccde5, #d9d9d9, #bc80bd, #ccebc5, #ffed6f</p>
+		<p class="alert alert-info"><b>D3:</b> #1f77b4, #aec7e8, #ff7f0e, #ffbb78, #2ca02c, #98df8a, #d62728, #ff9896, #9467bd, #c5b0d5, #8c564b, #c49c94, #e377c2, #f7b6d2, #7f7f7f, #c7c7c7, #bcbd22, #dbdb8d, #17becf, #9edae5</p>
 
 	  	<div class="thumbnails">
 			<div><a href="#" onclick="modal('quick-rank.1')">
@@ -865,27 +869,27 @@
 			</a></div>
 			<div><a href="#" onclick="modal('colors-palette.2')">
 				<img src="../img/colors-palette.2.tmbl.png" alt="palette">
-				<div><p>Select the Palette you want use</p></div>
+				<div><p>Select the Palette you want to use</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('quick-import.6')">
 				<img src="../img/quick-import.6.tmbl.png" alt="brewer">
-				<div><p>Brewer lists 18 pastel colors</p></div>
+				<div><p>Brewer uses 18 pastel colors</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('colors-palette.4')">
 				<img src="../img/colors-palette.4.tmbl.png" alt="d3">
-				<div><p>D3 lists 20 strong colors</p></div>
+				<div><p>D3 uses 20 dark colors</p></div>
 			</a></div>
 		</div>
 
 		<h2 id="colors-bg">Background</h2>
-		<p>Background can be set to two colors:</p>
+		<p>The background can be set to two colors:</p>
 		<ul><li><b>black</b></li>
 			<li><b>white</b></li>
 		</ul>
 	  	<ul><li>In the menu bar, click on the <b>Colors</b> menu</li>
-	  		<li>Click on the <b>Background</b> toogle to set the background color</li>
+	  		<li>Click on the <b>Background</b> toggle to set the background color</li>
 	   	</ul>
-	  	<p class="alert alert-success">Background is updated.</p>
+	  	<p class="alert alert-success">The background is updated.</p>
 
 	  	<div class="thumbnails">
 			<div><a href="#" onclick="modal('quick-rank.1')">
@@ -894,15 +898,15 @@
 			</a></div>
 			<div><a href="#" onclick="modal('colors-bg.2')">
 				<img src="../img/colors-bg.2.tmbl.png" alt="background">
-				<div><p>Toogle the background color</p></div>
+				<div><p>Toggle the background color</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('quick-import.6')">
 				<img src="../img/quick-import.6.tmbl.png" alt="black">
-				<div><p>Background is black</p></div>
+				<div><p>The background is black</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('colors-bg.4')">
 				<img src="../img/colors-bg.4.tmbl.png" alt="white">
-				<div><p>Background is white</p></div>
+				<div><p>The background is white</p></div>
 			</a></div>
 		</div>
   	</div>
@@ -914,7 +918,7 @@
 	  	<ul><li>In the menu bar, click on the <b>Labels</b> menu</li>
 	  		<li>Select the Label by <b>Taxon</b> option</li>
 	   	</ul>
-	  	<p class="alert alert-success">Each rectangles of the treemap are labelled.</p>
+	  	<p class="alert alert-success">All rectangles of the treemap are labelled.</p>
 
 	  	<div class="thumbnails">
 			<div><a href="#" onclick="modal('labels-taxon.1')">
@@ -927,7 +931,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('quick-import.6')">
 				<img src="../img/quick-import.6.tmbl.png" alt="labelled">
-				<div><p>Each rectangles of the treemap are labelled</p></div>
+				<div><p>All rectangles of the treemap are labelled</p></div>
 			</a></div>
 		</div>
 
@@ -937,7 +941,7 @@
 	  		<li>Select the desired <b>rank</b> in the Phylogenic Rank field</li>
 	   	</ul>
 	  	<p class="alert alert-success">The nodes at the specified rank are <b>labelled</b> on the treemap.</p>
-	  	<p class="alert alert-warning">See section <a href="#quick-rank">View by specific phylogenic rank</a> for more options.</p>
+	  	<p class="alert alert-info">See section <a href="#quick-rank">View by specific phylogenic rank</a> for more options.</p>
 
 	  	<div class="thumbnails">
 			<div><a href="#" onclick="modal('labels-taxon.1')">
@@ -980,7 +984,7 @@
 		</div>
 
 		<h2 id="labels-format">Label format</h2>
-		<p>Label format is used to customized the labels on the treemap. User can specify a pattern to set the label. Hashtags can be used in the pattern that will be change to specific data elements.</p>
+		<p>The label format option is used to customize the labels in the treemap. Users can specify what information appears on the label. Hashtags can be used to set the pattern that will be used to specify data elements.</p>
 		<p>Hashtags list:</p>
 		<ul>
 			<li>#N: Taxon Name</li>
@@ -996,7 +1000,7 @@
 	  		<li>Press <kbd>enter</kbd> key to validate</li>
 	   	</ul>
 	  	<p class="alert alert-success">The labels are modified.</p>
-	  	<p class="alert alert-warning">The list of hashtags is displayed when clicking on the <span class="glyphicon glyphicon-info-sign"></span> button.</p>
+	  	<p class="alert alert-warning">A list of available hashtags is displayed when clicking on the <span class="glyphicon glyphicon-info-sign"></span> button.</p>
 
 	  	<div class="thumbnails">
 			<div><a href="#" onclick="modal('labels-taxon.1')">
@@ -1017,7 +1021,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('labels-format.5')">
 				<img src="../img/labels-format.5.tmbl.png" alt="hashtags">
-				<div><p>The list of hashtags for the pattern is displayed</p></div>
+				<div><p>A list of available hashtags for the pattern is displayed</p></div>
 			</a></div>
 		</div>
 
@@ -1025,7 +1029,7 @@
 	  	<ul><li>In the menu bar, click on the <b>Labels</b> menu</li>
 	  		<li>Select the desired <b>Font Size</b></li>
 	   	</ul>
-	  	<p class="alert alert-success">The font size of treemap labels, tooltip and table is modified.</p>
+	  	<p class="alert alert-success">The font size of the treemap labels, tooltips and table is modified.</p>
 
 	  	<div class="thumbnails">
 			<div><a href="#" onclick="modal('labels-taxon.1')">
@@ -1038,7 +1042,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('labels-font.3')">
 				<img src="../img/labels-font.3.tmbl.png" alt="formated">
-				<div><p>The font size of treemap labels, tooltip and table is modified (font size = 20)</p></div>
+				<div><p>The font size of the treemap labels, tooltips and table is modified (font size = 20)</p></div>
 			</a></div>
 		</div>
 	</div>
@@ -1048,11 +1052,11 @@
 	  	<h1 id="treemap" class="page-header">Treemap</h1>
 	  	<h2 id="treemap-hierarchy">Hierarchy</h2>
 	  	<p>Hierarchy can be displayed in two modes: </p>
-	  	<ul><li><b>rugged</b> : each taxon is represented as a rectangle. The parent nodes appear as a border encapsulated their children.</li>
+	  	<ul><li><b>rugged</b> : each taxon is represented as a rectangle. The parent nodes appear as a border encapsulating their children.</li>
 	  		<li><b>flat</b> : only the leaf nodes appear on the treemap. The parent nodes are not represented.</li>
 	  	</ul>
 	  	<ul><li>In the menu bar, click on the <b>Treemap</b> menu</li>
-	  		<li>Click on the <b>Hierarchy</b> toogle to set its mode</li>
+	  		<li>Click on the <b>Hierarchy</b> toggle to set its mode</li>
 	   	</ul>
 	  	<p class="alert alert-success">The treemap hierarchy is updated.</p>
 
@@ -1063,7 +1067,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('treemap-hierarchy.2')">
 				<img src="../img/treemap-hierarchy.2.tmbl.png" alt="hierarchy">
-				<div><p>Toogle the hierarchy mode</p></div>
+				<div><p>Toggle the hierarchy mode</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('quick-import.6')">
 				<img src="../img/quick-import.6.tmbl.png" alt="rugged">
@@ -1077,11 +1081,11 @@
 
 		<h2 id="treemap-zoom">Zoom transition</h2>
 	  	<p>Zoom transition can be set to two modes: </p>
-	  	<ul><li><b>fluid</b> : rectangles are moved to optimize the treemap.</li>
-	  		<li><b>sticky</b> : the relative position of rectangles is fixed.</li>
+	  	<ul><li><b>fluid</b> : the rectangles are moved to optimize the treemap.</li>
+	  		<li><b>sticky</b> : the relative positions of the rectangles are fixed.</li>
 	  	</ul>
 	  	<ul><li>In the menu bar, click on the <b>Treemap</b> menu</li>
-	  		<li>Click on the Zoom <b>Transition</b> toogle to set its mode</li>
+	  		<li>Click on the Zoom <b>Transition</b> toggle to set its mode</li>
 	   	</ul>
 	  	<p class="alert alert-success">The zoom feature is updated.</p>
 
@@ -1092,15 +1096,15 @@
 			</a></div>
 			<div><a href="#" onclick="modal('treemap-zoom.2')">
 				<img src="../img/treemap-zoom.2.tmbl.png" alt="zoom">
-				<div><p>Toogle the hierarchy mode</p></div>
+				<div><p>Toggle the hierarchy mode</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('treemap-zoom.3')">
 				<img src="../img/treemap-zoom.3.tmbl.png" alt="fluid">
-				<div><p>Fluid : rectangles are moved to optimize the treemap.</p></div>
+				<div><p>Fluid : the rectangles are moved to optimize the treemap.</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('treemap-zoom.4')">
 				<img src="../img/treemap-zoom.4.tmbl.png" alt="sticky">
-				<div><p>Sticky : the relative position of rectangles is fixed.</p></div>
+				<div><p>Sticky : the relative positions of the rectangles are fixed.</p></div>
 			</a></div>
 		</div>
 
@@ -1192,7 +1196,7 @@
 	<!--GOTO-->
   	<div>
 	  	<h1 id="goto" class="page-header">Go to</h1>
-	  	<p>See section <a href="#quick-navigate">Navigate through the tree</a>. </p>
+	  	<p class="alert alert-info">See section <a href="#quick-navigate">Navigate through the tree</a>. </p>
 	</div>
 	
 	<!--LAYOUT-->
@@ -1200,7 +1204,7 @@
 	  	<h1 id="layout" class="page-header">Layout</h1>
 	  	<h2 id="layout-nomap">Hide treemap</h2>
 	  	<ul><li>In the menu bar, click on the <b>Layout</b> menu</li>
-	  		<li>Click on the Treemap toogle to set it as <b>hide</b></li>
+	  		<li>Click on the Treemap toggle to set it to <b>hide</b></li>
 	  		<li>Click on the <b>Load</b> button</li>
 	   	</ul>
 	  	<p class="alert alert-success">The treemap is hidden.</p>
@@ -1212,7 +1216,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('layout-map.2')">
 				<img src="../img/layout-map.2.tmbl.png" alt="hide">
-				<div><p>Toogle the Treemap option</p></div>
+				<div><p>Toggle the Treemap option</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('layout-map.3')">
 				<img src="../img/layout-map.3.tmbl.png" alt="load">
@@ -1226,9 +1230,9 @@
 
 		<h2 id="layout-map">Display treemap</h2>
 	  	<ul><li>In the menu bar, click on the <b>Layout</b> menu</li>
-	  		<li>Click on the Treemap toogle to set it as <b>display</b></li>
-	  		<li>Fill the <b>Width</b> field with a number of pixels</li>
-	  		<li>Fill the <b>Height</b> field with a number of pixels</li>
+	  		<li>Click on the Treemap toggle to set it to <b>display</b></li>
+	  		<li>Fill in the <b>Width</b> field with the desired number of pixels</li>
+	  		<li>Fill in the <b>Height</b> field with the desired number of pixels</li>
 	  		<li>Click on the <b>Load</b> button</li>
 	   	</ul>
 	  	<p class="alert alert-success">The treemap is displayed with the specified dimensions.</p>
@@ -1240,15 +1244,15 @@
 			</a></div>
 			<div><a href="#" onclick="modal('layout-map.2')">
 				<img src="../img/layout-map.2.tmbl.png" alt="display">
-				<div><p>Toogle the Treemap option</p></div>
+				<div><p>Toggle the Treemap option</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('layout-map.7')">
 				<img src="../img/layout-map.7.tmbl.png" alt="width">
-				<div><p>Fill the Width field with a number of pixels</p></div>
+				<div><p>Fill in the Width field with the desired number of pixels</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('layout-map.8')">
 				<img src="../img/layout-map.8.tmbl.png" alt="height">
-				<div><p>Fill the Height field with a number of pixels</p></div>
+				<div><p>Fill in the Height field with the desired number of pixels</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('layout-map.9')">
 				<img src="../img/layout-map.9.tmbl.png" alt="load">
@@ -1262,7 +1266,7 @@
 
 		<h2 id="layout-notable">Hide table</h2>
 	  	<ul><li>In the menu bar, click on the <b>Layout</b> menu</li>
-	  		<li>Click on the Table toogle to set it as <b>hide</b></li>
+	  		<li>Click on the Table toggle to set it to <b>hide</b></li>
 	  		<li>Click on the <b>Load</b> button</li>
 	   	</ul>
 	  	<p class="alert alert-success">The table is hidden.</p>
@@ -1274,7 +1278,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('layout-table.2')">
 				<img src="../img/layout-table.2.tmbl.png" alt="hide">
-				<div><p>Toogle the Table option</p></div>
+				<div><p>Toggle the Table option</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('layout-table.3')">
 				<img src="../img/layout-table.3.tmbl.png" alt="load">
@@ -1288,9 +1292,9 @@
 
 		<h2 id="layout-table">Display table</h2>
 	  	<ul><li>In the menu bar, click on the <b>Layout</b> menu</li>
-	  		<li>Click on the Table toogle to set it as <b>display</b></li>
-	  		<li>Fill the <b>Width</b> field with a number of pixels</li>
-	  		<li>Fill the <b>Height</b> field with a number of pixels</li>
+	  		<li>Click on the Table toggle to set it to <b>display</b></li>
+	  		<li>Fill in the <b>Width</b> field with the desired number of pixels</li>
+	  		<li>Fill in the <b>Height</b> field with the desired number of pixels</li>
 	  		<li>Click on the <b>Load</b> button</li>
 	   	</ul>
 	  	<p class="alert alert-success">The table is displayed with the specified dimensions.</p>
@@ -1302,15 +1306,15 @@
 			</a></div>
 			<div><a href="#" onclick="modal('layout-table.2')">
 				<img src="../img/layout-table.2.tmbl.png" alt="display">
-				<div><p>Toogle the Table option</p></div>
+				<div><p>Toggle the Table option</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('layout-table.7')">
 				<img src="../img/layout-table.7.tmbl.png" alt="width">
-				<div><p>Fill the Width field with a number of pixels</p></div>
+				<div><p>Fill in the Width field with the desired number of pixels</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('layout-table.8')">
 				<img src="../img/layout-table.8.tmbl.png" alt="height">
-				<div><p>Fill the Height field with a number of pixels</p></div>
+				<div><p>Fill in the Height field with the desired number of pixels</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('layout-map.9')">
 				<img src="../img/layout-map.9.tmbl.png" alt="load">
@@ -1326,14 +1330,14 @@
 	<!--EXPORT-->
   	<div>
 	  	<h1 id="export" class="page-header">Export</h1>
-	  	<p>Data can me save in different formats: </p>
+	  	<p>The data can be saved in various formats: </p>
 	  	<ul><li>Data file in JSON format (text)</li>
 	  		<li>Treemap image in SVG format (vectorial)</li>
 	  		<li>Treemap image in PNG format (bitmap)</li>
 	  		<li>Table data in TSV format (table)</li>
 	  		<li>Configuration file in JSON format (text)</li>
 	  	</ul>
-	  	<p class="alert alert-success">See section <a href="#quick-export">Save your results</a>, the same procedure is used for each type of file.</p>
+	  	<p class="alert alert-info">See section <a href="#quick-export">Save your results</a>, the same procedure is used for each type of file.</p>
 	</div>
 
 	<!-- Modal-->
