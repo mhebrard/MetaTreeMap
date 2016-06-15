@@ -496,7 +496,7 @@
 				//style
 				mods.append("style").attr("type","text/css").text(
 						"<!--\t"
-						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}\n"
+						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;white-space:nowrap;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}\n"
 						+".mtm-table table{border-collapse:collapse;width:100%;}\n"
 						//+".mtm-table td,th{padding:0px 2px;}\n"
 						+"\t-->"
