@@ -30,6 +30,12 @@ MTM can be use as a javascript library and include in your own webpage.
 <script type="text/javascript">mtm.load(["path/to/file1","path/to/file2"]);</script>
 ```
 
+In addition you can pass a **config file** in second argument (see [Documentation](http://metasystems.riken.jp/visualization/treemap/html/documentation.htm#import-config) for more information).
+
+```
+<script type="text/javascript">mtm.load(["path/to/file1"],"my_config.json");</script>
+```
+
 **Exposed functions:**
 
 * **mtm.version**: return the version number
