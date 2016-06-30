@@ -499,7 +499,7 @@
 						"<!--\t"
 						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;white-space:nowrap;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}\n"
 						+".mtm-table table{border-collapse:collapse;width:100%;}\n"
-						//+".mtm-table td,th{padding:0px 2px;}\n"
+						+".mtm-menu button{font-size:14px !important;}\n"
 						+"\t-->"
 					)
 				//divs
@@ -619,7 +619,7 @@
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
 
-		if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
+		//if(mtm.verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
 	}
 
 	function cutTree(r,p,n){
@@ -1326,11 +1326,9 @@
 		        }
 		    });
 		});
-		if(verbose){console.timeEnd("bar");}
 	}
 		
 	function treemap() {
-		if(verbose){console.time("treemap");}
 		//SVG//
 		var svg = d3.select(".mtm-treemap").append("svg") //general SVG
 				.attr("class","mtm")
@@ -1392,12 +1390,9 @@
 			.style("stroke-width","5")
 			.style("fill","none")
 			.style("pointer-events","none")
-		if(verbose){console.timeEnd("treemap");}
 	}
 	
-	function table() {
-		if(verbose){console.time("table");}
-		
+	function table() {		
 		//table//
 		var tab=d3.select(".mtm-table").append("div")
 				.attr("class","mtm")
@@ -1435,9 +1430,7 @@
 			.append("table")
 			.classed("mtm-view",true)
 			.classed("mtm-labels",true)
-			.style("table-layout","fixed")
-
-		if(verbose){console.timeEnd("table");}				
+			.style("table-layout","fixed")		
 	}
 	
 	function tip(state,d) {
@@ -1698,8 +1691,6 @@
 
 	function updateLines(n) {
 		//Fill table
-		if(verbose){console.time("growTable");}
-
 		//delete old lines
 		var view = d3.select(".mtm-table").select(".mtm-view").html("");
 
@@ -1773,7 +1764,6 @@
 	}
 
 	function updateColor() {
-		if(verbose){console.time("updateColor");}
 		rank = ranks.indexOf(config.options.colored_rank) //selected rank
 		var getColor;
 		//color by rank : top-down
@@ -2047,7 +2037,6 @@
 			//leaf
 			lines.filter(function(d){return !d.children;})
 				.select(".glyphicon").attr("class","glyphicon glyphicon-unchecked")
-			if(verbose){console.timeEnd("setLabelTable");}
 		}
 	}
 
