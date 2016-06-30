@@ -1,7 +1,7 @@
 !(function() {
 
 	var mtm = { version: "3.2" };
-	var verbose=false;
+	mtm.verbose=true;
 
 	//VARIABLES//
 	//need to compute json
@@ -37,40 +37,47 @@
 	mtm.load = function(files,conf) {
 		//container for dependencies
 		if(!document.getElementById("mtm-mods")) {
+			//mods
 			var s = document.createElement('div');
 			s.id = "mtm-mods";
 			var p = document.getElementsByTagName('body')[0];
 			if(p.firstChild) { p.insertBefore(s,p.firstChild); }
 			else { p.appendChild(s); }
+			//error
+			s = document.createElement('div');
+			s.id = "mtm-error";
+			if(p.firstChild) { p.insertBefore(s,p.firstChild); }
+			else { p.appendChild(s); }
+
 		}
-		//manage dependencies
-		var queue = [];
-		if (!window.jQuery) { //include jQ + bootstrap
-			queue.push(scriptload("http://code.jquery.com/jquery-1.12.0.min.js")); 
-			queue.push(linkload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"));
-			queue.push(scriptload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"));
-		}
-		else if (!$.fn.modal.Constructor.VERSION) { //include bootstrap
-			queue.push(linkload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"));
-			queue.push(scriptload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")); 
-		}
-		if(!window.d3) {queue.push(scriptload("https://d3js.org/d3.v3.min.js")); } //include d3
-		
-		//run
-		Promise.resolve()
-		.then(function(){ return Promise.all(queue);}) //run loading
-		.catch(function(err){return Error("mtm.load.dependencies:",err);})
+
+		//RUN Promise
+		var queue=[];
+		Promise.resolve().then(function(){  //include jQuery
+			if (!window.jQuery) { //no jQuery
+				queue.push(scriptload("http://code.jquery.com/jquery-1.12.0.min.js"));
+			}
+			return Promise.all(queue);
+		}).catch(function(err){setError(err,"danger","mtm.load.jQuery: jQuery is in trouble");})
+		.then(function(){ //incude Bootstrap + D3
+			queue=[];
+			if(!$.fn.modal || !$.fn.modal.Constructor.VERSION) {
+				queue.push(linkload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"));
+				queue.push(scriptload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")); 
+			}
+			if(!window.d3) {queue.push(scriptload("https://d3js.org/d3.v3.min.js")); } //include d3
+			return Promise.all(queue);
+		}).catch(function(err){setError(err,"danger","mtm.load.bootstrap: bootstrap is in trouble");})
 		.then(function(){ 
 			console.log("mtm",mtm.version)
 			console.log("jQ",jQuery.fn.jquery);
 			console.log("bootstrap",$.fn.modal.Constructor.VERSION);
 			console.log("d3",d3.version);
-		}).catch(function(err) { return Error("mtm.load.versions:",err); })
-		.then(function() {
+		}).catch(function(err){setError(err,"danger","mtm.load.version: Some libraries are missing");})
+		.then(function() { //include modules
 			queue=[];
 			if(!d3.select('#mtm-mods').attr("data-subs")) {
 				d3.select('#mtm-mods').attr("data-subs",true)
-	
 				//font
 				queue.push(linkload("http://fonts.googleapis.com/css?family=Source+Code+Pro:600"));
 				//bootstrap-toogle
@@ -80,15 +87,12 @@
 				queue.push(linkload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css"));
 				queue.push(scriptload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"));
 			}
-			//include
 			return Promise.all(queue);
-		}).catch(function(err){return Error("mtm.load.modules:",err);})
+		}).catch(function(err){setError(err,"danger","mtm.load.modules: Some modules are missing");})
 		.then(function(){ return loadConf(conf); })
-		.catch(function(err){return Error("mtm.load.config:",err);})
-		.then(function() { 
-			return Promise.all([setConfig(),setLayout()]);
-		})
-		.catch(function(err) { return Error("mtm.load.layout:",err); })
+		.catch(function(err){setError(err,"danger","mtm.load.config: Config file is in trouble");})
+		.then(function() { return Promise.all([setConfig(),setLayout()]); })
+		.catch(function(err){setError(err,"danger","mtm.load.layout: Cannot initiate layout");})// { return Error("mtm.load.layout:",err); })
 		.then(function() { return loadData(files); })
 		.then(function(load) { 
 			//hundreds + sumHits
@@ -96,10 +100,7 @@
 			sumHits(root,load);
 			console.log("skeleton",root);
 			updateLayout();
-		},function(err){
-			updateModal("data");
-			$('#mtm-modal').modal('show');
-			console.log("mtm.load.data:",err);})
+		},function(err){setError(err,"warning","mtm.load.data: Data file is missing");})
 	}
 
 	function scriptload(u) {
@@ -180,7 +181,7 @@
 		var seq=Promise.resolve(hundreds);
 
 		if(!files || files.length==0) { 
-			seq = seq.then(function(){return Promise.reject("no data");})
+			seq = seq.then(function(){return Promise.reject(new Error("no data file"));}) //{return Promise.reject("no data");})
 		}
 		else {
 			//root init.
@@ -690,7 +691,7 @@
 		if(confMode=="sample") { mode=sizeNorm; }
 		else if(confMode=="hits") { mode=sizeHits; }
 		else if(confMode=="taxon") { mode=sizeNodes;}
-		else {console.log("ERROR: unvalide size mode"); mode=sizeNorm; }
+		else {console.log("WARN: unvalide size mode"); mode=sizeNorm; }
 		return mode;
 	}
 	
@@ -1467,79 +1468,67 @@
 	
 	//VIEW UPDATE//
 	function updateModal(mode) {
-		if(mode == "data") {
-			d3.select("#mtm-modal").select(".modal-content").classed("panel-warning",true);
-			d3.select("#mtm-modal").select(".modal-header").classed("panel-heading",true);
-			d3.select("#mtm-modal-title").text("Data not found")
-			d3.select("#mtm-modal-body").text("Please import some datafile(s)")
+		if(mode == "convert") {
+			d3.select("#mtm-modal-title").text("Convert Data File")
+			d3.select("#mtm-modal-body").text("")
+			mtm.convertor("mtm-modal-body");
 		}
-		else {
-			//warning style//
-			d3.select("#mtm-modal").select(".modal-content").classed("panel-warning",false);
-			d3.select("#mtm-modal").select(".modal-header").classed("panel-heading",false);
+		else if(mode == "examples") {
+			d3.select("#mtm-modal-title").text("Example Data Files")
+			var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
+			ul.append("li").append("label").text("#1. HuFS: Human gut - 30 years old male").attr("width","210px")
+			var li = ul.append("li").attr("class","btn-group")
+			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
+				.attr("class","btn btn-default")
+				.attr("target","cite").text("Citation")
+			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525311.3")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("Data Source")
+			li.append("a").attr("href","./data/HuFS.json")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("Data File")
 
-			if(mode == "convert") {
-				d3.select("#mtm-modal-title").text("Convert Data File")
-				d3.select("#mtm-modal-body").text("")
-				mtm.convertor("mtm-modal-body");
-			}
-			else if(mode == "examples") {
-				d3.select("#mtm-modal-title").text("Example Data Files")
-				var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
-				ul.append("li").append("label").text("#1. HuFS: Human gut - 30 years old male").attr("width","210px")
-				var li = ul.append("li").attr("class","btn-group")
-				li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
-					.attr("class","btn btn-default")
-					.attr("target","cite").text("Citation")
-				li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525311.3")
-					.attr("class","btn btn-default")
-					.attr("target","rast").text("Data Source")
-				li.append("a").attr("href","./data/HuFS.json")
-					.attr("class","btn btn-default")
-					.attr("target","rast").text("Data File")
-
-				ul.append("li").append("label").text("#2. HuFU: Human gut - 7 months old female").attr("width","210px")
-				li = ul.append("li").attr("class","btn-group")
-				li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
-					.attr("class","btn btn-default")
-					.attr("target","cite").text("Citation")
-				li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3")
-					.attr("class","btn btn-default")
-					.attr("target","rast").text("Data Source")
-				li.append("a").attr("href","./data/HuFU.json")
-					.attr("class","btn btn-default")
-					.attr("target","rast").text("Data File")
-			}
-			else if(mode == "about") {
-				d3.select("#mtm-modal-title").text("About MetaTreeMap")
-				var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
-				var li = ul.append("li")
-				li.append("strong").text("MetaTreeMap version ")
-				li.append("strong").text(function(){return mtm.version;})
-				li.append("strong").text(" is under the ")
-				li.append("a").attr("href","./LICENSE").attr("target","_blank").text("BSD License")
-				var li = ul.append("li")
-				li.append("strong").text("Development: ")
-				li.append("a").attr("href","http://metasystems.riken.jp/wiki/Maxime_Hebrard").attr("target","_blank").text("Maxime Hebrard")
-				var li = ul.append("li")
-				li.append("span").text("The following libraries are used, with thanks to their authors:")
-				var sub = li.append("ul")
-				sub.append("li").append("a").attr("href","https://d3js.org/").attr("target","_blank").text("D3")
-				sub.append("li").append("a").attr("href","http://colorbrewer2.org/").attr("target","_blank").text("ColorBrewer2")
-				sub.append("li").append("a").attr("href","https://jquery.com/").attr("target","_blank").text("jQuery")
-				sub.append("li").append("a").attr("href","http://getbootstrap.com/").attr("target","_blank").text("Bootstrap")
-				sub.append("li").append("a").attr("href","http://www.bootstraptoggle.com/").attr("target","_blank").text("Bootstrap Toggle")
-				sub.append("li").append("a").attr("href","https://silviomoreto.github.io/bootstrap-select/").attr("target","_blank").text("Bootstrap-select")
-				sub.append("li").append("a").attr("href","https://www.google.com/fonts/specimen/Source+Code+Pro").attr("target","_blank").text("Source Code Pro")
-				var li = ul.append("li")
-				li.append("strong").text("Source code ")
-				li.append("span").text("available on ")
-				li.append("a").attr("href","https://github.com/mhebrard/MetaTreeMap").attr("target","_blank").text("GitHub")
-				var li = ul.append("li")
-				li.append("strong").text("Download ")
-				li.append("span").text("minified version ")
-				li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
-			}
+			ul.append("li").append("label").text("#2. HuFU: Human gut - 7 months old female").attr("width","210px")
+			li = ul.append("li").attr("class","btn-group")
+			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
+				.attr("class","btn btn-default")
+				.attr("target","cite").text("Citation")
+			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("Data Source")
+			li.append("a").attr("href","./data/HuFU.json")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("Data File")
+		}
+		else if(mode == "about") {
+			d3.select("#mtm-modal-title").text("About MetaTreeMap")
+			var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
+			var li = ul.append("li")
+			li.append("strong").text("MetaTreeMap version ")
+			li.append("strong").text(function(){return mtm.version;})
+			li.append("strong").text(" is under the ")
+			li.append("a").attr("href","./LICENSE").attr("target","_blank").text("BSD License")
+			var li = ul.append("li")
+			li.append("strong").text("Development: ")
+			li.append("a").attr("href","http://metasystems.riken.jp/wiki/Maxime_Hebrard").attr("target","_blank").text("Maxime Hebrard")
+			var li = ul.append("li")
+			li.append("span").text("The following libraries are used, with thanks to their authors:")
+			var sub = li.append("ul")
+			sub.append("li").append("a").attr("href","https://d3js.org/").attr("target","_blank").text("D3")
+			sub.append("li").append("a").attr("href","http://colorbrewer2.org/").attr("target","_blank").text("ColorBrewer2")
+			sub.append("li").append("a").attr("href","https://jquery.com/").attr("target","_blank").text("jQuery")
+			sub.append("li").append("a").attr("href","http://getbootstrap.com/").attr("target","_blank").text("Bootstrap")
+			sub.append("li").append("a").attr("href","http://www.bootstraptoggle.com/").attr("target","_blank").text("Bootstrap Toggle")
+			sub.append("li").append("a").attr("href","https://silviomoreto.github.io/bootstrap-select/").attr("target","_blank").text("Bootstrap-select")
+			sub.append("li").append("a").attr("href","https://www.google.com/fonts/specimen/Source+Code+Pro").attr("target","_blank").text("Source Code Pro")
+			var li = ul.append("li")
+			li.append("strong").text("Source code ")
+			li.append("span").text("available on ")
+			li.append("a").attr("href","https://github.com/mhebrard/MetaTreeMap").attr("target","_blank").text("GitHub")
+			var li = ul.append("li")
+			li.append("strong").text("Download ")
+			li.append("span").text("minified version ")
+			li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
 		}
 	}
 
@@ -2120,6 +2109,15 @@
 	}
 
 	function f(i) { return Number(i).toLocaleString('en'); }
+
+	function setError(e,mode,msg) {
+		if(mtm.verbose) {
+			var div = d3.select('#mtm-error').style('display','block');
+			if(!div.classed("alert")){ div.attr("class","alert alert-"+mode) }
+			div.append("li").text(msg)			
+		}
+		return Promise.reject(new Error(msg+" ("+e+")"));
+	}
 	
 	//OUTPUT//
 	function copy(n,p) {
