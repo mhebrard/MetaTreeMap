@@ -500,6 +500,10 @@
 						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;white-space:nowrap;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}\n"
 						+".mtm-table table{border-collapse:collapse;width:100%;}\n"
 						+".mtm-menu button{font-size:14px !important;}\n"
+						+".mtm-menu .dropdown {float:left;}\n"
+						+".mtm-menu .dropdown .form-control {display:inline-flex !important;}\n"
+						+".mtm-menu .dropdown .input-group {display:inline-flex !important;}\n"
+						+".mtm-menu .dropdown .input-group-addon {width:auto !important;}\n"
 						+"\t-->"
 					)
 				//divs
@@ -714,15 +718,38 @@
 		var cont = menu.append("nav").attr("class","navbar navbar-default")
 		.append("div").attr("class","container-fluid")
 
-		var list = cont.append("div").attr("class","navbar-header")
+		/*var list = cont.append("div").attr("class","navbar-header")
 		//collapsed button
 		var item = list.append("button").attr("type","button").attr("class","navbar-toggle collapsed")
 		.attr("data-toggle","collapse").attr("data-target","#mtm-barmenu")
 		item.append("span").attr("class","icon-bar")
 		item.append("span").attr("class","icon-bar")
 		item.append("span").attr("class","icon-bar")
+		*/
 		//info
-		list.append("button").attr("type","button").attr("class","btn btn-default navbar-brand").attr("id","mtm-info")
+/*		list.append("button").attr("type","button").attr("class","btn btn-default navbar-brand").attr("id","mtm-info")
+		.append("span").attr("class","glyphicon glyphicon-info-sign")
+    	$("#mtm-info").popover({
+	        html : true, 
+	        content: function() { return $('#mtm-samples').html(); },
+	        title: "Samples:"
+   		});
+   		$("#mtm-info").tooltip({ 
+	        placement: "bottom",
+	        title: "Click to see sample names"
+   		});
+   		$('#mtm-info').on({
+		  "click":	function() { $('#mtm-info').tooltip("hide"); }
+		});
+*/
+    	//Bar content
+		list = cont.append("div")//.attr("class","collapse navbar-collapse")
+		.attr("id","mtm-barmenu")
+		//.append("ul").attr("class","nav navbar-nav")
+
+		//Info
+		list.append("div").attr("class","dropdown")
+		.append("button").attr("type","button").attr("class","btn btn-default navbar-btn").attr("id","mtm-info")
 		.append("span").attr("class","glyphicon glyphicon-info-sign")
     	$("#mtm-info").popover({
 	        html : true, 
@@ -737,16 +764,20 @@
 		  "click":	function() { $('#mtm-info').tooltip("hide"); }
 		});
 
-    	//Bar content
-		list = cont.append("div").attr("class","collapse navbar-collapse")
-		.attr("id","mtm-barmenu")
-		.append("ul").attr("class","nav navbar-nav")
 
-		//Import
+/*		//Import
 		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-import")
 		item.append("a").attr("href","#")
 		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
 		.html("Import <span class='caret'></span>")
+		ul = item.append("ul").attr("class","dropdown-menu")
+			.style("width","350px").style("padding","5px")
+*/
+		//import
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-import")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Import <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","350px").style("padding","5px")
 
@@ -829,12 +860,13 @@
 	  	} });
 
 		//Colors
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-colors")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Colors <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-colors")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Colors <span class='caret'></span>")
 		var ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","300px").style("padding","5px")
+
 		//Colored
 		var li = ul.append("li").attr("class","form-inline")
 		li.append("label").style("width","120px").text("Color By")
@@ -861,7 +893,8 @@
 		//select rank
 		var block = li.append("div").attr("class","form-inline")
 		block.append("label").style("width","120px").text("Phylogenic Rank")
-		s = block.append("select").attr("class","form-control").attr("id","mtm-bar-colored-rank")
+		s = block.append("select").style("width","160px")
+			.attr("class","form-control").attr("id","mtm-bar-colored-rank")
 			s.append("option").attr("value","init").text("Select...")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
@@ -926,12 +959,13 @@
 	  	} });
 
 		//Labels
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-labels")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Labels <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-labels")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Labels <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","300px").style("padding","5px")
+
 		//labelled
 		li = ul.append("li").attr("class","form-inline")
 		li.append("label").style("width","120px").text("Label By")
@@ -957,7 +991,8 @@
 		//select rank
 		block = li.append("div").attr("class","form-inline")
 		block.append("label").style("width","120px").text("Phylogenic Rank")
-		s = block.append("select").attr("class","form-control").attr("id","mtm-bar-labelled-rank")
+		s = block.append("select").style("width","160px")
+			.attr("class","form-control").attr("id","mtm-bar-labelled-rank")
 			s.append("option").attr("value","init").text("Select...")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
@@ -1028,10 +1063,10 @@
 		});
 
 		//Treemap
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-treemap")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Treemap <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-treemap")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Treemap <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","300px").style("padding","5px")
 
@@ -1094,7 +1129,8 @@
 		//Depth
 		li = ul.append("li").attr("class","form-inline")
 		li.append("label").style("width","120px").text("Rank Cutoff:")
-		var s = li.append("select").attr("class","form-control").attr("id","mtm-bar-cutoff")
+		var s = li.append("select").style("width","160px")
+			.attr("class","form-control").attr("id","mtm-bar-cutoff")
 			s.append("option").attr("value","init").text("Select...")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
@@ -1113,50 +1149,12 @@
 		$('#mtm-bar-cutoff').on({
 		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
 		});
-
-		//Search
-		li = list.append("li").append("div").attr("class","navbar-form form-inline")
-			.append("div").attr("class","input-group btn-group")
-		li.append("div").attr("class","input-group-addon")
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","Go to node")
-			.append("span").attr("class","glyphicon glyphicon-search")
-		li.append("button").attr("type","button").attr("class","btn btn-default")
-			.on("click",function(){return tree ? zoom(tree) : zoom(root) ;})
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to root node")
-			//.append("span").attr("class","glyphicon glyphicon-step-backward")
-			.text("Root")
-		li.append("button").attr("type","button").attr("class","btn btn-default")
-			.on("click",function(){return node.parent ? zoomSkip(node.parent) : zoom(node) ;})
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to parent node")
-			//.append("span").attr("class","glyphicon glyphicon-backward")
-			.text("Parent")
-		var s = li.append("select").attr("class","selectpicker").attr("data-live-search","true").attr("data-width","120px")
-			//.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","go to selected node")
-			s.on("change",function() { 
-				//action
-				var search = this.value<0 ? root : searchable[this.value];
-				if(tree) {
-					var getNode = getSubtree(tree,[]).filter(function(n){return n.id == search.id && n.data.sample==0;})
-					if(getNode.length>0) {node = getNode[0];}
-					else {
-						node = search;
-						refTree();
-						tree ? updateLines(tree) : updateLines(root) ;
-						if(config.options.zoom) { fluid = tree ? tree : root ; }
-					}
-				}
-				else {
-					node = search;
-				}
-				updateColor();
-				zoom(node) ;
-			});
-
+		
 		//Layout
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-layout")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Layout <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-layout")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Layout <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","190px").style("padding","5px")
 
@@ -1254,10 +1252,10 @@
 			})
 
 	  	//Export
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-export")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Export <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-export")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Export <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 
 		//json
@@ -1282,10 +1280,10 @@
 			.on("click",function(){return mtm.save("config");})
 	
 		//About
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-about")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("About <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-about")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("About <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","160px").style("padding","5px")
 
@@ -1305,6 +1303,44 @@
 			.attr("data-toggle","modal").attr("data-target","#mtm-modal")
 			.text("About MTM")//.style("width","70px")
 			.on("click",function(){return updateModal("about");})
+
+		//Search
+		item = list.append("div").attr("class","dropdown navbar-btn")
+			.append("div").attr("class","input-group btn-group")
+		item.append("div").attr("class","input-group-addon")
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","Go to node")
+			.append("span").attr("class","glyphicon glyphicon-search")
+		item.append("button").attr("type","button").attr("class","btn btn-default")
+			.on("click",function(){return tree ? zoom(tree) : zoom(root) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to root node")
+			//.append("span").attr("class","glyphicon glyphicon-step-backward")
+			.text("Root")
+		item.append("button").attr("type","button").attr("class","btn btn-default")
+			.on("click",function(){return node.parent ? zoomSkip(node.parent) : zoom(node) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to parent node")
+			//.append("span").attr("class","glyphicon glyphicon-backward")
+			.text("Parent")
+		var s = item.append("select").attr("class","selectpicker").attr("data-live-search","true").attr("data-width","120px")
+			//.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","go to selected node")
+			s.on("change",function() { 
+				//action
+				var search = this.value<0 ? root : searchable[this.value];
+				if(tree) {
+					var getNode = getSubtree(tree,[]).filter(function(n){return n.id == search.id && n.data.sample==0;})
+					if(getNode.length>0) {node = getNode[0];}
+					else {
+						node = search;
+						refTree();
+						tree ? updateLines(tree) : updateLines(root) ;
+						if(config.options.zoom) { fluid = tree ? tree : root ; }
+					}
+				}
+				else {
+					node = search;
+				}
+				updateColor();
+				zoom(node) ;
+			});
 
 		//activate toogles
 		$(function() { $('[data-toggle="toggle"]').bootstrapToggle(); })
