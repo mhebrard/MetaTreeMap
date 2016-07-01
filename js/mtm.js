@@ -157,7 +157,7 @@
 						"background":"black",
 						"labelled":"taxon",
 						"labelled_rank":"init",	
-						"pattern":"#N",
+						"pattern":"#N ##S",
 						"font":14
 					}
 				};
@@ -412,7 +412,7 @@
 			
 			//Add tag node
 			if(n.data.assigned!="0"){
-				var tag={"name":n.name+" #"+s,
+				var tag={"name":n.name,
 					"children":[],
 					"data":{"hits":+n.data.assigned,
 						"rank":n.data.rank,
@@ -671,7 +671,7 @@
 		for(var i in count) {
 			if(count[i]>0) {
 				n.children.push({
-					"name":n.name+" #"+i,
+					"name":n.name,
 					"id":n.id,
 					"children":[],
 					"data":{
@@ -1662,17 +1662,17 @@
 				.attr("xlink:href",function(d){return "#map"+d.id+d.data.sample;})
 			//update all
 			sel.selectAll("textPath").html(function(d){
-					var tag = config.options.pattern;
-					//replace
-					tag = tag.replace(/#N/g,d.name);
-					tag = tag.replace(/#I/g,d.id);
-					tag = tag.replace(/#H/g,f(d.data.hits));
-					tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
-					tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
-					tag = tag.replace(/#R/g,d.data.rank);
-					tag = tag.replace(/#S/g,d.data.sample);
-					return tag;
-				})
+				var tag = config.options.pattern;
+				//replace
+				tag = tag.replace(/#N/g,d.name);
+				tag = tag.replace(/#I/g,d.id);
+				tag = tag.replace(/#H/g,f(d.data.hits));
+				tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
+				tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
+				tag = tag.replace(/#R/g,d.data.rank);
+				tag = tag.replace(/#S/g,d.data.sample);
+				return tag;
+			})
 			//delete
 			sel.exit().remove();
 	}
