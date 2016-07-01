@@ -500,7 +500,7 @@
 						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;white-space:nowrap;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}\n"
 						+".mtm-table table{border-collapse:collapse;width:100%;}\n"
 						+".mtm-menu button{font-size:14px !important;}\n"
-						+".mtm-menu .dropdown {float:left;}\n"
+						+".mtm-menu .dropdown {float:left;margin-left:4px;}\n"
 						+".mtm-menu .dropdown .form-control {display:inline-flex !important;}\n"
 						+".mtm-menu .dropdown .input-group {display:inline-flex !important;}\n"
 						+".mtm-menu .dropdown .input-group-addon {width:auto !important;}\n"
@@ -718,34 +718,8 @@
 		var cont = menu.append("nav").attr("class","navbar navbar-default")
 		.append("div").attr("class","container-fluid")
 
-		/*var list = cont.append("div").attr("class","navbar-header")
-		//collapsed button
-		var item = list.append("button").attr("type","button").attr("class","navbar-toggle collapsed")
-		.attr("data-toggle","collapse").attr("data-target","#mtm-barmenu")
-		item.append("span").attr("class","icon-bar")
-		item.append("span").attr("class","icon-bar")
-		item.append("span").attr("class","icon-bar")
-		*/
-		//info
-/*		list.append("button").attr("type","button").attr("class","btn btn-default navbar-brand").attr("id","mtm-info")
-		.append("span").attr("class","glyphicon glyphicon-info-sign")
-    	$("#mtm-info").popover({
-	        html : true, 
-	        content: function() { return $('#mtm-samples').html(); },
-	        title: "Samples:"
-   		});
-   		$("#mtm-info").tooltip({ 
-	        placement: "bottom",
-	        title: "Click to see sample names"
-   		});
-   		$('#mtm-info').on({
-		  "click":	function() { $('#mtm-info').tooltip("hide"); }
-		});
-*/
     	//Bar content
-		list = cont.append("div")//.attr("class","collapse navbar-collapse")
-		.attr("id","mtm-barmenu")
-		//.append("ul").attr("class","nav navbar-nav")
+		list = cont.append("div").attr("id","mtm-barmenu")
 
 		//Info
 		list.append("div").attr("class","dropdown")
@@ -764,15 +738,6 @@
 		  "click":	function() { $('#mtm-info').tooltip("hide"); }
 		});
 
-
-/*		//Import
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-import")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Import <span class='caret'></span>")
-		ul = item.append("ul").attr("class","dropdown-menu")
-			.style("width","350px").style("padding","5px")
-*/
 		//import
 		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-import")
 		item.append("button").attr("type","button").attr("data-toggle","dropdown")

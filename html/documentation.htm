@@ -45,120 +45,106 @@
   <body>
  	<nav class="navbar navbar-default navbar-fixed-top">
   		<div class="container-fluid">
-		    <!-- Brand and toggle get grouped for better mobile display -->
-		    <div class="navbar-header">
-		      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-		        <span class="sr-only">Toggle navigation</span>
-		        <span class="icon-bar"></span>
-		        <span class="icon-bar"></span>
-		        <span class="icon-bar"></span>
-		      </button>
-		      <!--<a class="navbar-brand" href="#">Brand</a>-->
-		    </div>
-
-		    <!-- Collect the nav links, forms, and other content for toggling -->
-		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-		    	<p class="btn btn-default navbar-btn"><a href="#intro">Top</a></p>
-		     	<div class="btn-group navbar-btn">
-  					<p class="btn btn-default"><a href="#quick">Quick Start</a></p>
-  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-    					<span class="caret"></span>
-	  				</button>
-	  				<ul class="dropdown-menu">
-					    <li><a href="#quick-import">Import your data</a></li>
-					    <li><a href="#quick-info">View taxon information</a></li>
-					    <li class="divider"></li>
-					    <li><a href="#quick-navigate">Navigate through the tree</a></li>
-					    <li><a href="#quick-zoomin">Zoom in</a></li>
-					    <li><a href="#quick-zoomout">Zoom out</a></li>
-					    <li><a href="#quick-search">Search for a taxon</a></li>
-					    <li class="divider"></li>
-					    <li><a href="#quick-rank">View by specific phylogenic rank</a></li>
-						<li><a href="#quick-colors">Modifying the colors</a></li>
-						<li><a href="#quick-labels">Modifying the labels</a></li>
-						<li class="divider"></li>
-						<li><a href="#quick-export">Save your results</a></li>
-					</ul>
-				</div>
-				<div class="btn-group navbar-btn">
-  					<p class="btn btn-default"><a href="#import">Import</a></p>
-  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-    					<span class="caret"></span>
-	  				</button>
-	  				<ul class="dropdown-menu">
-	  					<li><a href="#import-data">Data file</a></li>
-					    <li><a href="#import-datain">Import data file</a></li>
-					    <li><a href="#import-dataout">Export data file</a></li>
-					    <li class="divider"></li>
-					    <li><a href="#import-config">Configuration file</a></li>
-					    <li><a href="#import-configin">Import configuration file</a></li>
-					    <li><a href="#import-configout">Export configuration file</a></li>
-					    <li class="divider"></li>
-					    <li><a href="#import-convert">Convert data file</a></li>
-					    <li><a href="#import-json">Convert JSON file</a></li>
-					    <li><a href="#import-tabular">Convert tabular file</a></li>
-					</ul>
-				</div>
-				<div class="btn-group navbar-btn">
-  					<p class="btn btn-default"><a href="#colors">Colors</a></p>
-  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-    					<span class="caret"></span>
-	  				</button>
-	  				<ul class="dropdown-menu">
-	  					<li><a href="#colors-taxon">Color by taxon</a></li>
-	  					<li><a href="#colors-rank">Color by rank</a></li>
-	  					<li><a href="#colors-sample">Color by sample</a></li>
-	  					<li><a href="#colors-majority">Color by majority</a></li>
-					    <li class="divider"></li>
-					    <li><a href="#colors-palette">Palette</a></li>
-					    <li><a href="#colors-bg">Background</a></li>
-					</ul>
-				</div>
-				<div class="btn-group navbar-btn">
-  					<p class="btn btn-default"><a href="#labels">Labels</a></p>
-  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-    					<span class="caret"></span>
-	  				</button>
-	  				<ul class="dropdown-menu">
-	  					<li><a href="#labels-taxon">Label by taxon</a></li>
-	  					<li><a href="#labels-rank">Label by rank</a></li>
-	  					<li><a href="#labels-no">No label</a></li>
-					    <li class="divider"></li>
-					    <li><a href="#labels-format">Label format</a></li>
-					    <li><a href="#labels-font">Font size</a></li>
-					</ul>
-				</div>
-				<div class="btn-group navbar-btn">
-  					<p class="btn btn-default"><a href="#treemap">Treemap</a></p>
-  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-    					<span class="caret"></span>
-	  				</button>
-	  				<ul class="dropdown-menu">
-	  					<li><a href="#treemap-hierarchy">Hierarchy</a></li>
-	  					<li><a href="#treemap-zoom">Zoom transition</a></li>
-	  					<li class="divider"></li>
-	  					<li><a href="#treemap-sample">Proportion by sample</a></li>
-	  					<li><a href="#treemap-hits">Proportion by hits</a></li>
-	  					<li><a href="#treemap-taxon">Proportion by taxon</a></li>
-	  					<li class="divider"></li>
-					    <li><a href="#treemap-cutoff">Rank cuttoff</a></li>
-					</ul>
-				</div>
-				<p class="btn btn-default navbar-btn"><a href="#goto">Go to</a></p>
-				<div class="btn-group navbar-btn">
-  					<p class="btn btn-default"><a href="#layout">Layout</a></p>
-  					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-    					<span class="caret"></span>
-	  				</button>
-	  				<ul class="dropdown-menu">
-	  					<li><a href="#layout-nomap">Hide treemap</a></li>
-	  					<li><a href="#layout-map">Display treemap</a></li>
-	  					<li><a href="#layout-notable">Hide table</a></li>
-	  					<li><a href="#layout-table">Display table</a></li>
-					</ul>
-				</div>
-				<p class="btn btn-default navbar-btn"><a href="#export">Export</a></p>
-		    </div><!-- /.navbar-collapse -->
+	    	<p class="btn btn-default navbar-btn"><a href="#intro">Top</a></p>
+	     	<div class="btn-group navbar-btn">
+					<p class="btn btn-default"><a href="#quick">Quick Start</a></p>
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+  				</button>
+  				<ul class="dropdown-menu">
+				    <li><a href="#quick-import">Import your data</a></li>
+				    <li><a href="#quick-info">View taxon information</a></li>
+				    <li class="divider"></li>
+				    <li><a href="#quick-navigate">Navigate through the tree</a></li>
+				    <li><a href="#quick-zoomin">Zoom in</a></li>
+				    <li><a href="#quick-zoomout">Zoom out</a></li>
+				    <li><a href="#quick-search">Search for a taxon</a></li>
+				    <li class="divider"></li>
+				    <li><a href="#quick-rank">View by specific phylogenic rank</a></li>
+					<li><a href="#quick-colors">Modifying the colors</a></li>
+					<li><a href="#quick-labels">Modifying the labels</a></li>
+					<li class="divider"></li>
+					<li><a href="#quick-export">Save your results</a></li>
+				</ul>
+			</div>
+			<div class="btn-group navbar-btn">
+					<p class="btn btn-default"><a href="#import">Import</a></p>
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+  				</button>
+  				<ul class="dropdown-menu">
+  					<li><a href="#import-data">Data file</a></li>
+				    <li><a href="#import-datain">Import data file</a></li>
+				    <li><a href="#import-dataout">Export data file</a></li>
+				    <li class="divider"></li>
+				    <li><a href="#import-config">Configuration file</a></li>
+				    <li><a href="#import-configin">Import configuration file</a></li>
+				    <li><a href="#import-configout">Export configuration file</a></li>
+				    <li class="divider"></li>
+				    <li><a href="#import-convert">Convert data file</a></li>
+				    <li><a href="#import-json">Convert JSON file</a></li>
+				    <li><a href="#import-tabular">Convert tabular file</a></li>
+				</ul>
+			</div>
+			<div class="btn-group navbar-btn">
+					<p class="btn btn-default"><a href="#colors">Colors</a></p>
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+  				</button>
+  				<ul class="dropdown-menu">
+  					<li><a href="#colors-taxon">Color by taxon</a></li>
+  					<li><a href="#colors-rank">Color by rank</a></li>
+  					<li><a href="#colors-sample">Color by sample</a></li>
+  					<li><a href="#colors-majority">Color by majority</a></li>
+				    <li class="divider"></li>
+				    <li><a href="#colors-palette">Palette</a></li>
+				    <li><a href="#colors-bg">Background</a></li>
+				</ul>
+			</div>
+			<div class="btn-group navbar-btn">
+					<p class="btn btn-default"><a href="#labels">Labels</a></p>
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+  				</button>
+  				<ul class="dropdown-menu">
+  					<li><a href="#labels-taxon">Label by taxon</a></li>
+  					<li><a href="#labels-rank">Label by rank</a></li>
+  					<li><a href="#labels-no">No label</a></li>
+				    <li class="divider"></li>
+				    <li><a href="#labels-format">Label format</a></li>
+				    <li><a href="#labels-font">Font size</a></li>
+				</ul>
+			</div>
+			<div class="btn-group navbar-btn">
+					<p class="btn btn-default"><a href="#treemap">Treemap</a></p>
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+  				</button>
+  				<ul class="dropdown-menu">
+  					<li><a href="#treemap-hierarchy">Hierarchy</a></li>
+  					<li><a href="#treemap-zoom">Zoom transition</a></li>
+  					<li class="divider"></li>
+  					<li><a href="#treemap-sample">Proportion by sample</a></li>
+  					<li><a href="#treemap-hits">Proportion by hits</a></li>
+  					<li><a href="#treemap-taxon">Proportion by taxon</a></li>
+  					<li class="divider"></li>
+				    <li><a href="#treemap-cutoff">Rank cuttoff</a></li>
+				</ul>
+			</div>
+			<p class="btn btn-default navbar-btn"><a href="#goto">Go to</a></p>
+			<div class="btn-group navbar-btn">
+					<p class="btn btn-default"><a href="#layout">Layout</a></p>
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+  				</button>
+  				<ul class="dropdown-menu">
+  					<li><a href="#layout-nomap">Hide treemap</a></li>
+  					<li><a href="#layout-map">Display treemap</a></li>
+  					<li><a href="#layout-notable">Hide table</a></li>
+  					<li><a href="#layout-table">Display table</a></li>
+				</ul>
+			</div>
+			<p class="btn btn-default navbar-btn"><a href="#export">Export</a></p>
 		 </div><!-- /.container-fluid -->
 	</nav>
 
@@ -166,6 +152,11 @@
   	<div>
   		<h1 id="intro" class="page-header">MetaTreeMap - User Guide</h1>
   		<p class="lead">MetaTreeMap (MTM) is a JavaScript library for visualizing phylogenic trees with a quantity assigned to the nodes. The hierarchy is represented by nested rectangles where the area of each rectangle is proportional to the quantity assigned to each taxon.</p>
+
+  		<p>This documentation use sample F1-S and F1-U from article:<br/>
+  			Kurokawa <i>et al.</i> "Comparative metagenomics revealed commonly enriched gene sets in human gut microbiomes." <i>DNA res</i> 2007 Aug;14(4):169-181.<br/>
+  			You can find the publication <a href="http://www.ncbi.nlm.nih.gov/pubmed/17916580" targer="_blank">on pubmed</a>. The data are accessible <a href="http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeProject&project=4778" targer="_blank">on MG-RAST</a>. They were analysed with <a href="http://metabin.riken.jp/" targer="_blank">MetaBin</a>, to obtain two data files: <a href="http://metasystems.riken.jp/visualization/treemap/data/HuFS.json" targer="_blank">HuFS.json</a> and <a href="http://metasystems.riken.jp/visualization/treemap/data/HuFU.json" targer="_blank">HuFU.json</a>.
+  		</p>
   	</div>
 
   	<!--Quick Start-->
