@@ -8,12 +8,16 @@ For more information see the [user guide](http://metasystems.riken.jp/visualizat
 # Javascript Library
 MTM can be use as a javascript library and include in your own webpage.
 
-**Download** the minify version [here](http://metasystems.riken.jp/visualization/treemap/mtm.min.js). File is on this repo ./mtm.min.js
-
-**Include** the library in your web page like this: 
+**Download** the minify version [here](http://metasystems.riken.jp/visualization/treemap/mtm.min.js). And include the library in your web page like this: 
 
 ```
 <script type="text/javascript" src="./mtm.min.js"></script>
+```
+
+**Or** You can use our **CDN**, and including the latest version.
+
+```
+<script type="text/javascript" src="http://metasystems.riken.jp/visualization/cdn/mtm.min.js"></script>
 ```
 
 **Add classes** to HTML elements that will contain the different views
