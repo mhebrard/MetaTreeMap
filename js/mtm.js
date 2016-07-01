@@ -1523,6 +1523,11 @@
 			li.append("strong").text("Download ")
 			li.append("span").text("minified version ")
 			li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
+
+			var li = ul.append("li")
+			li.append("strong").text("Reference: ")
+			li.append("span").html("MetaTreeMap: an alternative visualization method for displaying metagenomic phylogenic trees. Hebrard M, Taylor TD. <i>PLOS One</i> 11(6):e0158261. (June 23, 2016) ")
+			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/27336370").attr("target","_blank").text("PMID 27336370")
 		}
 	}
 
