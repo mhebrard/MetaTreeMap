@@ -1,7 +1,7 @@
 !(function() {
 
-	var mtm = { version: "3.2" };
-	var verbose=false;
+	var mtm = { version: "3.3" };
+	mtm.verbose=true;
 
 	//VARIABLES//
 	//need to compute json
@@ -37,40 +37,47 @@
 	mtm.load = function(files,conf) {
 		//container for dependencies
 		if(!document.getElementById("mtm-mods")) {
+			//mods
 			var s = document.createElement('div');
 			s.id = "mtm-mods";
 			var p = document.getElementsByTagName('body')[0];
 			if(p.firstChild) { p.insertBefore(s,p.firstChild); }
 			else { p.appendChild(s); }
+			//error
+			s = document.createElement('div');
+			s.id = "mtm-error";
+			if(p.firstChild) { p.insertBefore(s,p.firstChild); }
+			else { p.appendChild(s); }
+
 		}
-		//manage dependencies
-		var queue = [];
-		if (!window.jQuery) { //include jQ + bootstrap
-			queue.push(scriptload("http://code.jquery.com/jquery-1.12.0.min.js")); 
-			queue.push(linkload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"));
-			queue.push(scriptload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"));
-		}
-		else if (!$.fn.modal.Constructor.VERSION) { //include bootstrap
-			queue.push(linkload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"));
-			queue.push(scriptload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")); 
-		}
-		if(!window.d3) {queue.push(scriptload("https://d3js.org/d3.v3.min.js")); } //include d3
-		
-		//run
-		Promise.resolve()
-		.then(function(){ return Promise.all(queue);}) //run loading
-		.catch(function(err){return Error("mtm.load.dependencies:",err);})
+
+		//RUN Promise
+		var queue=[];
+		Promise.resolve().then(function(){  //include jQuery
+			if (!window.jQuery) { //no jQuery
+				queue.push(scriptload("http://code.jquery.com/jquery-1.12.0.min.js"));
+			}
+			return Promise.all(queue);
+		}).catch(function(err){setError(err,"danger","mtm.load.jQuery: jQuery is in trouble");})
+		.then(function(){ //incude Bootstrap + D3
+			queue=[];
+			if(!$.fn.modal || !$.fn.modal.Constructor.VERSION) {
+				queue.push(linkload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"));
+				queue.push(scriptload("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")); 
+			}
+			if(!window.d3) {queue.push(scriptload("https://d3js.org/d3.v3.min.js")); } //include d3
+			return Promise.all(queue);
+		}).catch(function(err){setError(err,"danger","mtm.load.bootstrap: bootstrap is in trouble");})
 		.then(function(){ 
 			console.log("mtm",mtm.version)
 			console.log("jQ",jQuery.fn.jquery);
 			console.log("bootstrap",$.fn.modal.Constructor.VERSION);
 			console.log("d3",d3.version);
-		}).catch(function(err) { return Error("mtm.load.versions:",err); })
-		.then(function() {
+		}).catch(function(err){setError(err,"danger","mtm.load.version: Some libraries are missing");})
+		.then(function() { //include modules
 			queue=[];
 			if(!d3.select('#mtm-mods').attr("data-subs")) {
 				d3.select('#mtm-mods').attr("data-subs",true)
-	
 				//font
 				queue.push(linkload("http://fonts.googleapis.com/css?family=Source+Code+Pro:600"));
 				//bootstrap-toogle
@@ -80,15 +87,12 @@
 				queue.push(linkload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css"));
 				queue.push(scriptload("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"));
 			}
-			//include
 			return Promise.all(queue);
-		}).catch(function(err){return Error("mtm.load.modules:",err);})
+		}).catch(function(err){setError(err,"danger","mtm.load.modules: Some modules are missing");})
 		.then(function(){ return loadConf(conf); })
-		.catch(function(err){return Error("mtm.load.config:",err);})
-		.then(function() { 
-			return Promise.all([setConfig(),setLayout()]);
-		})
-		.catch(function(err) { return Error("mtm.load.layout:",err); })
+		.catch(function(err){setError(err,"danger","mtm.load.config: Config file is in trouble");})
+		.then(function() { return Promise.all([setConfig(),setLayout()]); })
+		.catch(function(err){setError(err,"danger","mtm.load.layout: Cannot initiate layout");})// { return Error("mtm.load.layout:",err); })
 		.then(function() { return loadData(files); })
 		.then(function(load) { 
 			//hundreds + sumHits
@@ -96,10 +100,7 @@
 			sumHits(root,load);
 			console.log("skeleton",root);
 			updateLayout();
-		},function(err){
-			updateModal("data");
-			$('#mtm-modal').modal('show');
-			console.log("mtm.load.data:",err);})
+		},function(err){setError(err,"warning","mtm.load.data: Data file is missing");})
 	}
 
 	function scriptload(u) {
@@ -156,7 +157,7 @@
 						"background":"black",
 						"labelled":"taxon",
 						"labelled_rank":"init",	
-						"pattern":"#N",
+						"pattern":"#N ##S",
 						"font":14
 					}
 				};
@@ -180,7 +181,7 @@
 		var seq=Promise.resolve(hundreds);
 
 		if(!files || files.length==0) { 
-			seq = seq.then(function(){return Promise.reject("no data");})
+			seq = seq.then(function(){return Promise.reject(new Error("no data file"));}) //{return Promise.reject("no data");})
 		}
 		else {
 			//root init.
@@ -411,7 +412,7 @@
 			
 			//Add tag node
 			if(n.data.assigned!="0"){
-				var tag={"name":n.name+" #"+s,
+				var tag={"name":n.name,
 					"children":[],
 					"data":{"hits":+n.data.assigned,
 						"rank":n.data.rank,
@@ -498,7 +499,11 @@
 						"<!--\t"
 						+"#mtm-tip{position:absolute;z-index:3;background-color:#888;border:1px solid #000;border-radius:.2em;padding:3px;white-space:nowrap;font-family:'Source Code Pro','Lucida Console',Monaco,monospace;font-size:14px;pointer-events:none;opacity:0}\n"
 						+".mtm-table table{border-collapse:collapse;width:100%;}\n"
-						//+".mtm-table td,th{padding:0px 2px;}\n"
+						+".mtm-menu button{font-size:14px !important;}\n"
+						+".mtm-menu .dropdown {float:left;margin-left:4px;}\n"
+						+".mtm-menu .dropdown .form-control {display:inline-flex !important;}\n"
+						+".mtm-menu .dropdown .input-group {display:inline-flex !important;}\n"
+						+".mtm-menu .dropdown .input-group-addon {width:auto !important;}\n"
 						+"\t-->"
 					)
 				//divs
@@ -618,7 +623,7 @@
 		x = d3.scale.linear().range([0, w]);
 		y = d3.scale.linear().range([0, h]);
 
-		if(verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
+		//if(mtm.verbose){console.log("nodes",nodes.length,"leaves",nodes.filter(function(d){return !d.children;}).length,"root.value",root.value);}
 	}
 
 	function cutTree(r,p,n){
@@ -666,7 +671,7 @@
 		for(var i in count) {
 			if(count[i]>0) {
 				n.children.push({
-					"name":n.name+" #"+i,
+					"name":n.name,
 					"id":n.id,
 					"children":[],
 					"data":{
@@ -690,7 +695,7 @@
 		if(confMode=="sample") { mode=sizeNorm; }
 		else if(confMode=="hits") { mode=sizeHits; }
 		else if(confMode=="taxon") { mode=sizeNodes;}
-		else {console.log("ERROR: unvalide size mode"); mode=sizeNorm; }
+		else {console.log("WARN: unvalide size mode"); mode=sizeNorm; }
 		return mode;
 	}
 	
@@ -713,15 +718,12 @@
 		var cont = menu.append("nav").attr("class","navbar navbar-default")
 		.append("div").attr("class","container-fluid")
 
-		var list = cont.append("div").attr("class","navbar-header")
-		//collapsed button
-		var item = list.append("button").attr("type","button").attr("class","navbar-toggle collapsed")
-		.attr("data-toggle","collapse").attr("data-target","#mtm-barmenu")
-		item.append("span").attr("class","icon-bar")
-		item.append("span").attr("class","icon-bar")
-		item.append("span").attr("class","icon-bar")
-		//info
-		list.append("button").attr("type","button").attr("class","btn btn-default navbar-brand").attr("id","mtm-info")
+    	//Bar content
+		list = cont.append("div").attr("id","mtm-barmenu")
+
+		//Info
+		list.append("div").attr("class","dropdown")
+		.append("button").attr("type","button").attr("class","btn btn-default navbar-btn").attr("id","mtm-info")
 		.append("span").attr("class","glyphicon glyphicon-info-sign")
     	$("#mtm-info").popover({
 	        html : true, 
@@ -736,16 +738,11 @@
 		  "click":	function() { $('#mtm-info').tooltip("hide"); }
 		});
 
-    	//Bar content
-		list = cont.append("div").attr("class","collapse navbar-collapse")
-		.attr("id","mtm-barmenu")
-		.append("ul").attr("class","nav navbar-nav")
-
-		//Import
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-import")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Import <span class='caret'></span>")
+		//import
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-import")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Import <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","350px").style("padding","5px")
 
@@ -828,12 +825,13 @@
 	  	} });
 
 		//Colors
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-colors")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Colors <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-colors")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Colors <span class='caret'></span>")
 		var ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","300px").style("padding","5px")
+
 		//Colored
 		var li = ul.append("li").attr("class","form-inline")
 		li.append("label").style("width","120px").text("Color By")
@@ -860,7 +858,8 @@
 		//select rank
 		var block = li.append("div").attr("class","form-inline")
 		block.append("label").style("width","120px").text("Phylogenic Rank")
-		s = block.append("select").attr("class","form-control").attr("id","mtm-bar-colored-rank")
+		s = block.append("select").style("width","160px")
+			.attr("class","form-control").attr("id","mtm-bar-colored-rank")
 			s.append("option").attr("value","init").text("Select...")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
@@ -925,12 +924,13 @@
 	  	} });
 
 		//Labels
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-labels")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Labels <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-labels")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Labels <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","300px").style("padding","5px")
+
 		//labelled
 		li = ul.append("li").attr("class","form-inline")
 		li.append("label").style("width","120px").text("Label By")
@@ -956,7 +956,8 @@
 		//select rank
 		block = li.append("div").attr("class","form-inline")
 		block.append("label").style("width","120px").text("Phylogenic Rank")
-		s = block.append("select").attr("class","form-control").attr("id","mtm-bar-labelled-rank")
+		s = block.append("select").style("width","160px")
+			.attr("class","form-control").attr("id","mtm-bar-labelled-rank")
 			s.append("option").attr("value","init").text("Select...")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
@@ -1027,10 +1028,10 @@
 		});
 
 		//Treemap
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-treemap")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Treemap <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-treemap")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Treemap <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","300px").style("padding","5px")
 
@@ -1093,7 +1094,8 @@
 		//Depth
 		li = ul.append("li").attr("class","form-inline")
 		li.append("label").style("width","120px").text("Rank Cutoff:")
-		var s = li.append("select").attr("class","form-control").attr("id","mtm-bar-cutoff")
+		var s = li.append("select").style("width","160px")
+			.attr("class","form-control").attr("id","mtm-bar-cutoff")
 			s.append("option").attr("value","init").text("Select...")
 			for (var k in ranks) { s.append("option").attr("value",ranks[k]).text(ranks[k]) }
 			//value
@@ -1112,50 +1114,12 @@
 		$('#mtm-bar-cutoff').on({
 		  "click":	function() { $('#mtm-bar-treemap')[0].closable=false;}
 		});
-
-		//Search
-		li = list.append("li").append("div").attr("class","navbar-form form-inline")
-			.append("div").attr("class","input-group btn-group")
-		li.append("div").attr("class","input-group-addon")
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","Go to node")
-			.append("span").attr("class","glyphicon glyphicon-search")
-		li.append("button").attr("type","button").attr("class","btn btn-default")
-			.on("click",function(){return tree ? zoom(tree) : zoom(root) ;})
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to root node")
-			//.append("span").attr("class","glyphicon glyphicon-step-backward")
-			.text("Root")
-		li.append("button").attr("type","button").attr("class","btn btn-default")
-			.on("click",function(){return node.parent ? zoomSkip(node.parent) : zoom(node) ;})
-			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to parent node")
-			//.append("span").attr("class","glyphicon glyphicon-backward")
-			.text("Parent")
-		var s = li.append("select").attr("class","selectpicker").attr("data-live-search","true").attr("data-width","120px")
-			//.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","go to selected node")
-			s.on("change",function() { 
-				//action
-				var search = this.value<0 ? root : searchable[this.value];
-				if(tree) {
-					var getNode = getSubtree(tree,[]).filter(function(n){return n.id == search.id && n.data.sample==0;})
-					if(getNode.length>0) {node = getNode[0];}
-					else {
-						node = search;
-						refTree();
-						tree ? updateLines(tree) : updateLines(root) ;
-						if(config.options.zoom) { fluid = tree ? tree : root ; }
-					}
-				}
-				else {
-					node = search;
-				}
-				updateColor();
-				zoom(node) ;
-			});
-
+		
 		//Layout
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-layout")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Layout <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-layout")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Layout <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","190px").style("padding","5px")
 
@@ -1253,10 +1217,10 @@
 			})
 
 	  	//Export
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-export")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("Export <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-export")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("Export <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 
 		//json
@@ -1281,10 +1245,10 @@
 			.on("click",function(){return mtm.save("config");})
 	
 		//About
-		item = list.append("li").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-about")
-		item.append("a").attr("href","#")
-		.attr("class","dropdown-toggle").attr("data-toggle","dropdown")
-		.html("About <span class='caret'></span>")
+		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-about")
+		item.append("button").attr("type","button").attr("data-toggle","dropdown")
+			.attr("class","btn btn-default navbar-btn dropdown-toggle")
+			.html("About <span class='caret'></span>")
 		ul = item.append("ul").attr("class","dropdown-menu")
 			.style("width","160px").style("padding","5px")
 
@@ -1304,6 +1268,44 @@
 			.attr("data-toggle","modal").attr("data-target","#mtm-modal")
 			.text("About MTM")//.style("width","70px")
 			.on("click",function(){return updateModal("about");})
+
+		//Search
+		item = list.append("div").attr("class","dropdown navbar-btn")
+			.append("div").attr("class","input-group btn-group")
+		item.append("div").attr("class","input-group-addon")
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("title","Go to node")
+			.append("span").attr("class","glyphicon glyphicon-search")
+		item.append("button").attr("type","button").attr("class","btn btn-default")
+			.on("click",function(){return tree ? zoom(tree) : zoom(root) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to root node")
+			//.append("span").attr("class","glyphicon glyphicon-step-backward")
+			.text("Root")
+		item.append("button").attr("type","button").attr("class","btn btn-default")
+			.on("click",function(){return node.parent ? zoomSkip(node.parent) : zoom(node) ;})
+			.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","Go to parent node")
+			//.append("span").attr("class","glyphicon glyphicon-backward")
+			.text("Parent")
+		var s = item.append("select").attr("class","selectpicker").attr("data-live-search","true").attr("data-width","120px")
+			//.attr("data-toggle","tooltip").attr("data-placement","bottom").attr("data-container","#mtm-barmenu").attr("title","go to selected node")
+			s.on("change",function() { 
+				//action
+				var search = this.value<0 ? root : searchable[this.value];
+				if(tree) {
+					var getNode = getSubtree(tree,[]).filter(function(n){return n.id == search.id && n.data.sample==0;})
+					if(getNode.length>0) {node = getNode[0];}
+					else {
+						node = search;
+						refTree();
+						tree ? updateLines(tree) : updateLines(root) ;
+						if(config.options.zoom) { fluid = tree ? tree : root ; }
+					}
+				}
+				else {
+					node = search;
+				}
+				updateColor();
+				zoom(node) ;
+			});
 
 		//activate toogles
 		$(function() { $('[data-toggle="toggle"]').bootstrapToggle(); })
@@ -1325,11 +1327,9 @@
 		        }
 		    });
 		});
-		if(verbose){console.timeEnd("bar");}
 	}
 		
 	function treemap() {
-		if(verbose){console.time("treemap");}
 		//SVG//
 		var svg = d3.select(".mtm-treemap").append("svg") //general SVG
 				.attr("class","mtm")
@@ -1391,12 +1391,9 @@
 			.style("stroke-width","5")
 			.style("fill","none")
 			.style("pointer-events","none")
-		if(verbose){console.timeEnd("treemap");}
 	}
 	
-	function table() {
-		if(verbose){console.time("table");}
-		
+	function table() {		
 		//table//
 		var tab=d3.select(".mtm-table").append("div")
 				.attr("class","mtm")
@@ -1434,9 +1431,7 @@
 			.append("table")
 			.classed("mtm-view",true)
 			.classed("mtm-labels",true)
-			.style("table-layout","fixed")
-
-		if(verbose){console.timeEnd("table");}				
+			.style("table-layout","fixed")		
 	}
 	
 	function tip(state,d) {
@@ -1467,79 +1462,72 @@
 	
 	//VIEW UPDATE//
 	function updateModal(mode) {
-		if(mode == "data") {
-			d3.select("#mtm-modal").select(".modal-content").classed("panel-warning",true);
-			d3.select("#mtm-modal").select(".modal-header").classed("panel-heading",true);
-			d3.select("#mtm-modal-title").text("Data not found")
-			d3.select("#mtm-modal-body").text("Please import some datafile(s)")
+		if(mode == "convert") {
+			d3.select("#mtm-modal-title").text("Convert Data File")
+			d3.select("#mtm-modal-body").text("")
+			mtm.convertor("mtm-modal-body");
 		}
-		else {
-			//warning style//
-			d3.select("#mtm-modal").select(".modal-content").classed("panel-warning",false);
-			d3.select("#mtm-modal").select(".modal-header").classed("panel-heading",false);
+		else if(mode == "examples") {
+			d3.select("#mtm-modal-title").text("Example Data Files")
+			var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
+			ul.append("li").append("label").text("#1. HuFS: Human gut - 30 years old male").attr("width","210px")
+			var li = ul.append("li").attr("class","btn-group")
+			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
+				.attr("class","btn btn-default")
+				.attr("target","cite").text("Citation")
+			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525311.3")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("Data Source")
+			li.append("a").attr("href","./data/HuFS.json")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("Data File")
 
-			if(mode == "convert") {
-				d3.select("#mtm-modal-title").text("Convert Data File")
-				d3.select("#mtm-modal-body").text("")
-				mtm.convertor("mtm-modal-body");
-			}
-			else if(mode == "examples") {
-				d3.select("#mtm-modal-title").text("Example Data Files")
-				var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
-				ul.append("li").append("label").text("#1. HuFS: Human gut - 30 years old male").attr("width","210px")
-				var li = ul.append("li").attr("class","btn-group")
-				li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
-					.attr("class","btn btn-default")
-					.attr("target","cite").text("Citation")
-				li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525311.3")
-					.attr("class","btn btn-default")
-					.attr("target","rast").text("Data Source")
-				li.append("a").attr("href","./data/HuFS.json")
-					.attr("class","btn btn-default")
-					.attr("target","rast").text("Data File")
+			ul.append("li").append("label").text("#2. HuFU: Human gut - 7 months old female").attr("width","210px")
+			li = ul.append("li").attr("class","btn-group")
+			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
+				.attr("class","btn btn-default")
+				.attr("target","cite").text("Citation")
+			li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("Data Source")
+			li.append("a").attr("href","./data/HuFU.json")
+				.attr("class","btn btn-default")
+				.attr("target","rast").text("Data File")
+		}
+		else if(mode == "about") {
+			d3.select("#mtm-modal-title").text("About MetaTreeMap")
+			var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
+			var li = ul.append("li")
+			li.append("strong").text("MetaTreeMap version ")
+			li.append("strong").text(function(){return mtm.version;})
+			li.append("strong").text(" is under the ")
+			li.append("a").attr("href","./LICENSE").attr("target","_blank").text("BSD License")
+			var li = ul.append("li")
+			li.append("strong").text("Development: ")
+			li.append("a").attr("href","http://metasystems.riken.jp/wiki/Maxime_Hebrard").attr("target","_blank").text("Maxime Hebrard")
+			var li = ul.append("li")
+			li.append("span").text("The following libraries are used, with thanks to their authors:")
+			var sub = li.append("ul")
+			sub.append("li").append("a").attr("href","https://d3js.org/").attr("target","_blank").text("D3")
+			sub.append("li").append("a").attr("href","http://colorbrewer2.org/").attr("target","_blank").text("ColorBrewer2")
+			sub.append("li").append("a").attr("href","https://jquery.com/").attr("target","_blank").text("jQuery")
+			sub.append("li").append("a").attr("href","http://getbootstrap.com/").attr("target","_blank").text("Bootstrap")
+			sub.append("li").append("a").attr("href","http://www.bootstraptoggle.com/").attr("target","_blank").text("Bootstrap Toggle")
+			sub.append("li").append("a").attr("href","https://silviomoreto.github.io/bootstrap-select/").attr("target","_blank").text("Bootstrap-select")
+			sub.append("li").append("a").attr("href","https://www.google.com/fonts/specimen/Source+Code+Pro").attr("target","_blank").text("Source Code Pro")
+			var li = ul.append("li")
+			li.append("strong").text("Source code ")
+			li.append("span").text("available on ")
+			li.append("a").attr("href","https://github.com/mhebrard/MetaTreeMap").attr("target","_blank").text("GitHub")
+			var li = ul.append("li")
+			li.append("strong").text("Download ")
+			li.append("span").text("minified version ")
+			li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
 
-				ul.append("li").append("label").text("#2. HuFU: Human gut - 7 months old female").attr("width","210px")
-				li = ul.append("li").attr("class","btn-group")
-				li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/17916580")
-					.attr("class","btn btn-default")
-					.attr("target","cite").text("Citation")
-				li.append("a").attr("href","http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeOverview&metagenome=4525314.3")
-					.attr("class","btn btn-default")
-					.attr("target","rast").text("Data Source")
-				li.append("a").attr("href","./data/HuFU.json")
-					.attr("class","btn btn-default")
-					.attr("target","rast").text("Data File")
-			}
-			else if(mode == "about") {
-				d3.select("#mtm-modal-title").text("About MetaTreeMap")
-				var ul = d3.select("#mtm-modal-body").text("").append("ul").attr("class","list-unstyled")
-				var li = ul.append("li")
-				li.append("strong").text("MetaTreeMap version ")
-				li.append("strong").text(function(){return mtm.version;})
-				li.append("strong").text(" is under the ")
-				li.append("a").attr("href","./LICENSE").attr("target","_blank").text("BSD License")
-				var li = ul.append("li")
-				li.append("strong").text("Development: ")
-				li.append("a").attr("href","http://metasystems.riken.jp/wiki/Maxime_Hebrard").attr("target","_blank").text("Maxime Hebrard")
-				var li = ul.append("li")
-				li.append("span").text("The following libraries are used, with thanks to their authors:")
-				var sub = li.append("ul")
-				sub.append("li").append("a").attr("href","https://d3js.org/").attr("target","_blank").text("D3")
-				sub.append("li").append("a").attr("href","http://colorbrewer2.org/").attr("target","_blank").text("ColorBrewer2")
-				sub.append("li").append("a").attr("href","https://jquery.com/").attr("target","_blank").text("jQuery")
-				sub.append("li").append("a").attr("href","http://getbootstrap.com/").attr("target","_blank").text("Bootstrap")
-				sub.append("li").append("a").attr("href","http://www.bootstraptoggle.com/").attr("target","_blank").text("Bootstrap Toggle")
-				sub.append("li").append("a").attr("href","https://silviomoreto.github.io/bootstrap-select/").attr("target","_blank").text("Bootstrap-select")
-				sub.append("li").append("a").attr("href","https://www.google.com/fonts/specimen/Source+Code+Pro").attr("target","_blank").text("Source Code Pro")
-				var li = ul.append("li")
-				li.append("strong").text("Source code ")
-				li.append("span").text("available on ")
-				li.append("a").attr("href","https://github.com/mhebrard/MetaTreeMap").attr("target","_blank").text("GitHub")
-				var li = ul.append("li")
-				li.append("strong").text("Download ")
-				li.append("span").text("minified version ")
-				li.append("a").attr("href","./mtm.min.js").attr("target","_blank").text("Here")
-			}
+			var li = ul.append("li")
+			li.append("strong").text("Reference: ")
+			li.append("span").html("MetaTreeMap: an alternative visualization method for displaying metagenomic phylogenic trees. Hebrard M, Taylor TD. <i>PLOS One</i> 11(6):e0158261. (June 23, 2016) ")
+			li.append("a").attr("href","http://www.ncbi.nlm.nih.gov/pubmed/27336370").attr("target","_blank").text("PMID 27336370")
 		}
 	}
 
@@ -1679,17 +1667,17 @@
 				.attr("xlink:href",function(d){return "#map"+d.id+d.data.sample;})
 			//update all
 			sel.selectAll("textPath").html(function(d){
-					var tag = config.options.pattern;
-					//replace
-					tag = tag.replace(/#N/g,d.name);
-					tag = tag.replace(/#I/g,d.id);
-					tag = tag.replace(/#H/g,f(d.data.hits));
-					tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
-					tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
-					tag = tag.replace(/#R/g,d.data.rank);
-					tag = tag.replace(/#S/g,d.data.sample);
-					return tag;
-				})
+				var tag = config.options.pattern;
+				//replace
+				tag = tag.replace(/#N/g,d.name);
+				tag = tag.replace(/#I/g,d.id);
+				tag = tag.replace(/#H/g,f(d.data.hits));
+				tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
+				tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
+				tag = tag.replace(/#R/g,d.data.rank);
+				tag = tag.replace(/#S/g,d.data.sample);
+				return tag;
+			})
 			//delete
 			sel.exit().remove();
 	}
@@ -1709,8 +1697,6 @@
 
 	function updateLines(n) {
 		//Fill table
-		if(verbose){console.time("growTable");}
-
 		//delete old lines
 		var view = d3.select(".mtm-table").select(".mtm-view").html("");
 
@@ -1784,7 +1770,6 @@
 	}
 
 	function updateColor() {
-		if(verbose){console.time("updateColor");}
 		rank = ranks.indexOf(config.options.colored_rank) //selected rank
 		var getColor;
 		//color by rank : top-down
@@ -2058,7 +2043,6 @@
 			//leaf
 			lines.filter(function(d){return !d.children;})
 				.select(".glyphicon").attr("class","glyphicon glyphicon-unchecked")
-			if(verbose){console.timeEnd("setLabelTable");}
 		}
 	}
 
@@ -2120,6 +2104,15 @@
 	}
 
 	function f(i) { return Number(i).toLocaleString('en'); }
+
+	function setError(e,mode,msg) {
+		if(mtm.verbose) {
+			var div = d3.select('#mtm-error').style('display','block');
+			if(!div.classed("alert")){ div.attr("class","alert alert-"+mode) }
+			div.append("li").text(msg)			
+		}
+		return Promise.reject(new Error(msg+" ("+e+")"));
+	}
 	
 	//OUTPUT//
 	function copy(n,p) {
