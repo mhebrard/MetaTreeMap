@@ -153,10 +153,26 @@
   		<h1 id="intro" class="page-header">MetaTreeMap - User Guide</h1>
   		<p class="lead">MetaTreeMap (MTM) is a JavaScript library for visualizing phylogenic trees with a quantity assigned to the nodes. The hierarchy is represented by nested rectangles where the area of each rectangle is proportional to the quantity assigned to each taxon.</p>
 
-  		<p>This documentation use sample F1-S and F1-U from article:<br/>
-  			Kurokawa <i>et al.</i> "Comparative metagenomics revealed commonly enriched gene sets in human gut microbiomes." <i>DNA res</i> 2007 Aug;14(4):169-181.<br/>
-  			You can find the publication <a href="http://www.ncbi.nlm.nih.gov/pubmed/17916580" targer="_blank">on pubmed</a>. The data are accessible <a href="http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeProject&project=4778" targer="_blank">on MG-RAST</a>. They were analysed with <a href="http://metabin.riken.jp/" targer="_blank">MetaBin</a>, to obtain two data files: <a href="http://metasystems.riken.jp/visualization/treemap/data/HuFS.json" targer="_blank">HuFS.json</a> and <a href="http://metasystems.riken.jp/visualization/treemap/data/HuFU.json" targer="_blank">HuFU.json</a>.
+  		<p><b>Reference:</b> "MetaTreeMap: an alternative visualization method for displaying metagenomic phylogenic trees." Hebrard M, Taylor TD. <i>PLOS One</i> 11(6):e0158261. (June 23, 2016) <a href="http://www.ncbi.nlm.nih.gov/pubmed/27336370" targer="_blank">PMID 27336370</a>.
   		</p>
+
+  		<p><b>Example files:</b> This documentation use the samples F1-S and F1-U from the article:<br/>
+  			"Comparative metagenomics revealed commonly enriched gene sets in human gut microbiomes." Kurokawa <i>et al.</i>  <i>DNA res</i> 14(4):169-181. (August 31, 2007) <a href="http://www.ncbi.nlm.nih.gov/pubmed/17916580" targer="_blank">PMID 17916580</a>. <br/>
+  			The data are accessible <a href="http://metagenomics.anl.gov/metagenomics.cgi?page=MetagenomeProject&project=4778" targer="_blank">on MG-RAST</a>. They were analysed with <a href="http://metabin.riken.jp/" targer="_blank">MetaBin</a>, to obtain two data files: <a href="http://metasystems.riken.jp/visualization/treemap/data/HuFS.json" targer="_blank">HuFS.json</a> and <a href="http://metasystems.riken.jp/visualization/treemap/data/HuFU.json" targer="_blank">HuFU.json</a>.
+  		</p>
+
+  		<p><b>Thumbnail:</b> If you need a thumbnail, please use <a href="../img/mtm-thumbnail.png">[This]</a>. Or if you need a miniature, please use <a href="../img/mtm-mini.png">[This]</a>
+  		</p>
+  		<div class="thumbnails">
+			<div><a href="#" onclick="modal('mtm-thumbnail')">
+				<img src="../img/mtm-thumbnail.png" alt="thumbnail">
+				<div><p>MTM thumbnail</p></div>
+			</a></div>
+			<div><a href="#" onclick="modal('mtm-mini')">
+				<img src="../img/mtm-mini.png" alt="JSON">
+				<div><p>MTM miniature</p></div>
+			</a></div>
+		</div>
   	</div>
 
   	<!--Quick Start-->
@@ -415,8 +431,11 @@
 	  	<h2 id="import-data">Data file</h2>
 	  	<p>The data inputted in MTM should be a hierarchy of taxa with a value assigned to (at least some) taxa. The standard file format used by MTM is a JSON file with specific fields as described below.</p>
 	  	<p class="alert alert-info">A properly formatted JSON file can be obtained by analyzing metagenomic sequencing data with <a href="http://metabin.riken.jp/" taget="_blank">MetaBin</a> program.</p>
-	  	<p>Example of one taxon:</p>
-	  	<pre>{"name":"Bacteria","children":[],"data":{"assigned":"21","sum":"913","rank":"superkingdom"},"id":"2"}</pre>
+	  	<p>Example of minimal tree:</p>
+	  	<pre>{"name":"root","children":[
+ {"name":"Bacteria","children":[],"data":{"assigned":"42","sum":"42","rank":"superkingdom"},"id":"2"}
+],"data":{"assigned":"0","sum":"42","rank":"no rank"},"id":"1"}</pre>
+		<p class="alert alert-warning">The root not of the tree <b>must</b> have id="1".</p>
 	  	<ul><li><b>name: </b>Taxon name</li>
 	  		<li><b>children: </b>List of children (taxa)</li>
 	  		<li><b>assigned: </b>Value assigned to the taxon (number of reads)</li>
@@ -836,8 +855,8 @@
 				<div><p>In the menu bar, click on the Colors menu</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('quick-rank.2')">
-				<img src="../img/quick-rank.2.tmbl.png" alt="by sample">
-				<div><p>Select the Color by Sample option</p></div>
+				<img src="../img/quick-rank.2.tmbl.png" alt="by majority">
+				<div><p>Select the Color by Majority option</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('colors-majority.3')">
 				<img src="../img/colors-majority.3.tmbl.png" alt="colored">
@@ -1089,8 +1108,8 @@
 				<img src="../img/treemap-zoom.2.tmbl.png" alt="zoom">
 				<div><p>Toggle the hierarchy mode</p></div>
 			</a></div>
-			<div><a href="#" onclick="modal('treemap-zoom.3')">
-				<img src="../img/treemap-zoom.3.tmbl.png" alt="fluid">
+			<div><a href="#" onclick="modal('quick-zoom.3')">
+				<img src="../img/quick-zoom.3.tmbl.png" alt="fluid">
 				<div><p>Fluid : the rectangles are moved to optimize the treemap.</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('treemap-zoom.4')">
@@ -1120,9 +1139,9 @@
 			</a></div>
 		</div>
 
-		<h2 id="treemap-hits">Proportion by hits</h2>
+		<h2 id="treemap-hits">Proportion by hit</h2>
 	  	<ul><li>In the menu bar, click on the <b>Treemap</b> menu</li>
-	  		<li>Select the Proportion by <b>Sample</b> option</li>
+	  		<li>Select the Proportion by <b>Hits</b> option</li>
 	   	</ul>
 	  	<p class="alert alert-success">The area of the rectangles are proportional to the number of hits.</p>
 
@@ -1133,7 +1152,7 @@
 			</a></div>
 			<div><a href="#" onclick="modal('treemap-sample.2')">
 				<img src="../img/treemap-sample.2.tmbl.png" alt="select">
-				<div><p>Select the Proportion by Sample option</p></div>
+				<div><p>Select the Proportion by Hits option</p></div>
 			</a></div>
 			<div><a href="#" onclick="modal('treemap-hits.3')">
 				<img src="../img/treemap-hits.3.tmbl.png" alt="by hits">

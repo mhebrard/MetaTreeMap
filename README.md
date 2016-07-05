@@ -1,5 +1,12 @@
-# MetaTreeMap
+# ![ logo ](./img/mtm-mini.png) MetaTreeMap
 MetaTreeMap (MTM) is a module developed to visualize phylogenic trees where each species (node) has a number of reads (quantity) that map on the reference genome of this species. Each species is represented by a rectangle and its area is proportional to the number of assigned reads. The final figure is nested rectangles representing tree branches.
+
+# Citation
+
+> Hebrard M, Taylor TD. MetaTreeMap: an alternative visualization method for
+displaying metagenomic phylogenic trees. PLOS One 11(6):e0158261. (June 23, 2016) PMID 27336370
+
+![ thumbnail ](./img/mtm-thumbnail.png)
 
 # Web service
 MTM can be use online at [this address](http://metasystems.riken.jp/visualization/treemap/index.htm).
@@ -56,5 +63,4 @@ In addition you can pass a **config file** in second argument (see [Documentatio
 * **LICENCE**: full licence file.
 * **README**: current abstract
 * **index.htm**: The frontpage of the web interface.
-* **mtm-config.json**: the default config file for MTM.
 * **mtm.min.js**: the minify version of MTM (used by the web interface)

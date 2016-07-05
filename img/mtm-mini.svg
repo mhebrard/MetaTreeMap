@@ -1,0 +1,26 @@
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" 
+style="font-family: &quot;Source Code Pro&quot;,&quot;Lucida Console&quot;,Monaco,monospace; font-size: 14px; display: inline-block; position: relative; z-index: 1;" 
+width="520" height="500" class="mtm">
+<rect class="mtm-bg" fill="#000" height="100%" width="100%"></rect>
+<g class="mtm-view" transform="translate(1,20)">
+ <rect height="271" width="515" transform="translate(2,206)" style="stroke: rgb(0, 0, 0); fill: rgb(255, 220, 87); cursor: pointer;" class="v60"></rect>
+ <rect height="267" width="383" transform="translate(132,208)" style="stroke: rgb(0, 0, 0); fill: rgb(204, 137, 66); cursor: pointer;" class="v80"></rect>
+ <rect height="263" width="379" transform="translate(134,210)" style="stroke: rgb(0, 0, 0); fill: rgb(255, 171, 83); cursor: pointer;" class="v81"></rect>
+ <rect height="267" width="127.00000000000003" transform="translate(4,208)" style="stroke: rgb(0, 0, 0); fill: rgb(204, 3, 3); cursor: pointer;" class="v70"></rect>
+ <rect height="263" width="123.00000000000003" transform="translate(6,210)" style="stroke: rgb(0, 0, 0); fill: rgb(255, 4, 4); cursor: pointer;" class="v71"></rect>
+ <rect height="203" width="515" transform="translate(2,2)" style="stroke: rgb(0, 0, 0); fill: rgb(179, 162, 199); cursor: pointer;" class="v00"></rect>
+ <rect height="199" width="340.33333333333337" transform="translate(174.6666717529297,4)" style="stroke: rgb(0, 0, 0); fill: rgb(41, 65, 191); cursor: pointer;" class="v20"></rect>
+ <rect height="195" width="167.66666666666669" transform="translate(345.3333435058594,6)" style="stroke: rgb(0, 0, 0); fill: rgb(6, 161, 204); cursor: pointer;" class="v30"></rect>
+ <rect height="191" width="163.66666666666669" transform="translate(347.3333435058594,8)" style="stroke: rgb(0, 0, 0); fill: rgb(7, 201, 255); cursor: pointer;" class="v31"></rect>
+ <rect height="195" width="167.66666666666669" transform="translate(176.6666717529297,6)" style="stroke: rgb(0, 0, 0); fill: rgb(1, 143, 65); cursor: pointer;" class="v40"></rect>
+ <rect height="191" width="163.66666666666669" transform="translate(178.6666717529297,8)" style="stroke: rgb(0, 0, 0); fill: rgb(2, 195, 89); cursor: pointer;" class="v41"></rect>
+ <rect height="199" width="169.66666666666663" transform="translate(4,4)" style="stroke: rgb(0, 0, 0); fill: rgb(94, 43, 133); cursor: pointer;" class="v50"></rect>
+ <rect height="195" width="165.66666666666663" transform="translate(6,6)" style="stroke: rgb(0, 0, 0); fill: rgb(130, 60, 184); cursor: pointer;" class="v51"></rect>
+</g>
+<g class="mtm-labels" transform="translate(1,20)"></g>
+<g style="font-size: 14px;" class="mtm-header" transform="translate(1,20)">
+ <rect style="fill: rgb(136, 136, 136); stroke: rgb(0, 0, 0); cursor: pointer;" height="20" width="520" y="-20"></rect>
+ <text style="pointer-events: none;" dy=".75em" y="-16" x="6"></text>
+</g>
+<rect height="0" width="0" y="0" x="0" style="stroke: rgb(0, 0, 0); stroke-width: 5; fill: none; pointer-events: none;" class="mtm-hl"></rect>
+</svg>
