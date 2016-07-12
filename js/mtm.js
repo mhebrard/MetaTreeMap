@@ -521,6 +521,7 @@
 				ul.append("li").text("#S: Sample Number");
 				ul.append("li").text("#P: % By Sample");
 				ul.append("li").text("#V: % By View");
+				ul.append("li").text("\\\\: Break line");
 
 				//convert
 				//Modal
