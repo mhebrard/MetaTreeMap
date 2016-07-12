@@ -1614,40 +1614,77 @@
 			) {return d;}
 			
 		})
-		//guides
+
+		//number of line
+		var ls = config.options.pattern.split("\\\\"); //break = "\\"
+
+		//label group
 		var sel = d3.select(".mtm-treemap").select(".mtm-labels")
-			.selectAll("path").data(labelled,function(d){return d.id+d.data.sample;});
-			//create new
-			sel.enter().append("path")
-				.attr("id",function(d){return "map"+d.id+d.data.sample;})
-				.attr("d","M0,0L0,0")
-				.style("opacity",0)
-				.style("pointer-events","none")
-			//update all
-			sel.transition().duration(1500)
-				.attr("d",function(d) {return line(d);})
-			//delete
-			sel.exit().remove()
+			.selectAll(".mtm-label").data(labelled,function(d){return d.id+d.data.sample;});
+		//add
+		sel.enter().append("g").attr("class","mtm-label")
+		//delete
+		sel.exit().remove()
+
+		//guides
+		var sub = sel.selectAll("path").data(function(d){ return ls.map(function(l){return d;}); })
+		sub.enter().append("path")
+			.attr("id",function(d,i){return "map"+d.id+d.data.sample+i;})
+			.style("opacity",0)
+			.attr("d","M0,0L0,0")
+		//update
+		sub.transition().duration(1500)
+			.attr("d",function(d,i) {return line(d,i);})
+		//delete
+		sub.exit().remove()
+
+		//text
+		sub = sel.selectAll("text").data(function(d){ return ls.map(function(l,i){return [d,i];}); })
+		sub.enter().append("text")
+			.attr("text-anchor", "left")
+			.attr("dy","0.5ex")
+			.style("pointer-events","none")
+			.append("textPath")
+			.attr("xlink:href",function(t){return "#map"+t[0].id+t[0].data.sample+t[1];})
+		sub.selectAll("textPath").html(function(t){
+			var tag = ls[t[1]];
+			//replace
+			tag = tag.replace(/#N/g,t[0].name);
+			tag = tag.replace(/#I/g,t[0].id);
+			tag = tag.replace(/#H/g,f(t[0].data.hits));
+			tag = tag.replace(/#P/g,t[0].data.percent.toFixed(2));
+			tag = tag.replace(/#V/g,(t[0].value*100/node.value).toFixed(2));
+			tag = tag.replace(/#R/g,t[0].data.rank);
+			tag = tag.replace(/#S/g,t[0].data.sample);
+			return tag;
+			})
+		sub.exit().remove()
 		
-		function line(d) {
+		function line(d,i) {
 			var ax,ay,bx,by;
 			//rect width and heigth
 			var rw=kx * d.dx - 1;
 			var rh=ky * d.dy - 1;
 
 			if(rw<rh) {//vertical
-				ax=x(d.x+(d.dx/2));
-				ay=y(d.y)+mw;
-				bx=ax;
-				by=y(d.y+d.dy)-mw;
+				if(x(d.x+(d.dx/2))-(i*mh)>x(d.x)+mh){ //i-th line ok
+					ax=x(d.x+(d.dx/2))-i*mh;
+					ay=y(d.y)+mw;
+					bx=ax;
+					by=y(d.y+d.dy)-mw;
+				}
+				else {ax=ay=bx=by=0;}
 			}
 			else { //horizontal
-				ax=x(d.x)+mw;
-				ay=y(d.y+(d.dy/2));
-				bx=x(d.x+d.dx)-mw;
-				by=ay;				
+				if(y(d.y+(d.dy/2))+(i*mh)<y(d.y)+rh-mh){ //i-th line ok
+					ax=x(d.x)+mw;
+					ay=y(d.y+(d.dy/2))+i*mh;
+					bx=x(d.x+d.dx)-mw;
+					by=ay;				
+				}
+				else {ax=ay=bx=by=0;}
 			}
-			
+				
 			var path = d3.svg.line()
 			.x(function(t) {return t[0];})
 			.y(function(t) {return t[1];})
@@ -1655,31 +1692,7 @@
 			return path([[ax,ay],[bx,by]]);
 		}
 
-		//text
-		var sel = d3.select(".mtm-treemap").select(".mtm-labels")
-			.selectAll("text").data(labelled,function(d){return d.id+d.data.sample;});
-			//create new
-			sel.enter().append("text")
-				.attr("text-anchor", "left")
-				.attr("dy","0.5ex")
-				.style("pointer-events","none")
-				.append("textPath")
-				.attr("xlink:href",function(d){return "#map"+d.id+d.data.sample;})
-			//update all
-			sel.selectAll("textPath").html(function(d){
-				var tag = config.options.pattern;
-				//replace
-				tag = tag.replace(/#N/g,d.name);
-				tag = tag.replace(/#I/g,d.id);
-				tag = tag.replace(/#H/g,f(d.data.hits));
-				tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
-				tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
-				tag = tag.replace(/#R/g,d.data.rank);
-				tag = tag.replace(/#S/g,d.data.sample);
-				return tag;
-			})
-			//delete
-			sel.exit().remove();
+		
 	}
 
 	function updateSearch() {
