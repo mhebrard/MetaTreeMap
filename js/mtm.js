@@ -1,6 +1,6 @@
 !(function() {
 
-	var mtm = { version: "3.3" };
+	var mtm = { version: "3.4" };
 	mtm.verbose=true;
 
 	//VARIABLES//
@@ -504,23 +504,13 @@
 						+".mtm-menu .dropdown .form-control {display:inline-flex !important;}\n"
 						+".mtm-menu .dropdown .input-group {display:inline-flex !important;}\n"
 						+".mtm-menu .dropdown .input-group-addon {width:auto !important;}\n"
+						+".mtm-table td,th {padding:0px 0px 0px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}\n"
 						+"\t-->"
 					)
 				//divs
 				mods.append("div").attr("id","mtm-tip")
 				mods.append("div").attr("id","mtm-canvas").style("display","none")
 				mods.append("div").attr("id","mtm-samples").style("display","none")
-				//pattern
-				var ul = mods.append("div").attr("id","mtm-tags").attr("width","200px")
-					.style("display","none").append("ul").attr("class","list-unstyled")
-					
-				ul.append("li").text("#N: Taxon Name");
-				ul.append("li").text("#I: NCBI Taxonomy ID");
-				ul.append("li").text("#H: Number Of Hits");
-				ul.append("li").text("#R: Phylogenic Rank");
-				ul.append("li").text("#S: Sample Number");
-				ul.append("li").text("#P: % By Sample");
-				ul.append("li").text("#V: % By View");
 
 				//convert
 				//Modal
@@ -972,43 +962,7 @@
 		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
 		});
 	  	li = ul.append("li").attr("class","divider")
-		//Pattern
-		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","120px").text("Label Format")
-		block = li.append("div").attr("class","input-group")
-		block.append("input").attr("class","form-control").attr("id","mtm-bar-pattern")
-			.attr("type","text").style("width","120px")
-			.property("value",config.options.pattern)
-			.on("change",function() { 
-				//change all button
-				config.options.pattern=this.value;
-				//action
-				updatePaths(node); 
-			});
-			$('#mtm-bar-pattern').on({
-			  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
-			});
-		block.append("div").attr("class","input-group-btn")
-			.append("button").attr("type","button").attr("class","btn btn-default").attr("id","mtm-pattern")
-			.append("span").attr("class","glyphicon glyphicon-info-sign")
-		$('#mtm-pattern').on({
-		  "click":	function() {
-		  		$('#mtm-pattern').tooltip("hide");
-		  	 	$('#mtm-bar-labels')[0].closable=false;}
-		});
-		$("#mtm-pattern").popover({
-	        html : true, 
-	        content: function() { return $('#mtm-tags').html(); },
-	        title: "Formatting Tags:",
-	        container: "#mtm-barmenu"
-   		});
-   		$("#mtm-pattern").tooltip({ 
-	        placement: "bottom",
-	        container: "#mtm-barmenu",
-	        title: "Click to see a list allowed tags"
-   		});
-
-		//Font
+	  	//Font
 		li = ul.append("li").attr("class","form-inline")
 		li.append("label").style("width","120px").text("Font Size")
 		s = li.append("select").attr("class","form-control").attr("id","mtm-bar-font")
@@ -1022,10 +976,59 @@
 				//action
 				d3.selectAll(".mtm").style("font-size",config.options.font+"px")
 				d3.select("#mtm-tip").style("font-size",config.options.font+"px")
+				updatePaths(node);
 			});
 		$('#mtm-bar-font').on({
 		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
 		});
+		//Pattern
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","120px").text("Label Format")
+		li.append("input").attr("type","text").style("width","120px")
+			.attr("class","form-control").attr("id","mtm-bar-pattern")
+			.attr("value",config.options.pattern)
+			.on("change",function() { 
+				//change all button
+				config.options.pattern=this.value;
+				//action
+				updatePaths(node); 
+			});
+			$('#mtm-bar-pattern').on({
+			  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
+			});
+		//Tags
+		li = ul.append("li")
+		li.append("label").style("width","120px").text("Formatting Tags:")
+		li.append("label").text("#N:");
+		li.append("span").text("Taxon Name");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#I:");
+		li.append("span").text("NCBI Taxonomy ID");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#H:");
+		li.append("span").text("Number Of Hits");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#R:");
+		li.append("span").text("Phylogenic Rank");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#S:");
+		li.append("span").text("Sample Number");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#P:");
+		li.append("span").text("% By Sample");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#V:");
+		li.append("span").text("% By View");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("\\\\:");
+		li.append("span").text("Break line");
 
 		//Treemap
 		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-treemap")
@@ -1393,12 +1396,13 @@
 			.style("pointer-events","none")
 	}
 	
-	function table() {		
+	function table() {
 		//table//
+		console.log(config.table.height,config.table.width)
 		var tab=d3.select(".mtm-table").append("div")
 				.attr("class","mtm")
-				.style("height", config.table.height)
-				.style("width", config.table.width)
+				.style("height", config.table.height+"px")
+				.style("width", config.table.width+"px")
 				.style("overflow","auto")
 				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")			
 				.style("font-size",config.options.font+"px")
@@ -1410,25 +1414,23 @@
 		//thead
 		var thead = tab.append("div")
 			.style("background-color","#888")
-			.append("table")
+			.append("table").style("table-layout","fixed")
 			.append("tr")
 			.classed("mtm-header",true)
-			.style("font-size","14px")
-		thead.append("th").text("Node")
-		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID")
-		thead.append("th").style("width","60px").style("text-align","right").text("Hits")
-		thead.append("th").style("width","60px").style("text-align","right").text("%/View")
-		thead.append("th").style("width","90px").style("text-align","right").html("%/Sample&nbsp;")
-		thead.append("th").style("width","130px").style("text-align","left").text("Rank")
-		thead.append("th").style("width","15px").text("")//scroll bar
+		thead.append("th").style("width","40%").text("Node")
+		thead.append("th").style("text-align","right").text("Taxon_ID")
+		thead.append("th").style("text-align","right").text("Hits")
+		thead.append("th").style("text-align","right").text("%/View")
+		thead.append("th").style("text-align","right").html("%/Sample&nbsp;")
+		thead.append("th").style("text-align","left").text("Rank")
+		thead.append("th").style("width","20px").text("")//scroll bar
 
 		//tbody
 		var view = tab.append("div")
 			.style("height",(config.table.height-thead.node().offsetHeight)+"px")
-			.style("width", config.table.width+"px")
 			.style("overflow","auto")
 			.attr("class","mtm-scrollable")
-			.append("table")
+			.append("table").style("table-layout","fixed")
 			.classed("mtm-view",true)
 			.classed("mtm-labels",true)
 			.style("table-layout","fixed")		
@@ -1614,72 +1616,83 @@
 			) {return d;}
 			
 		})
-		//guides
+
+		//number of line
+		var ls = config.options.pattern.split("\\\\"); //break = "\\"
+
+		//label group
 		var sel = d3.select(".mtm-treemap").select(".mtm-labels")
-			.selectAll("path").data(labelled,function(d){return d.id+d.data.sample;});
-			//create new
-			sel.enter().append("path")
-				.attr("id",function(d){return "map"+d.id+d.data.sample;})
-				.attr("d","M0,0L0,0")
-				.style("opacity",0)
-				.style("pointer-events","none")
-			//update all
-			sel.transition().duration(1500)
-				.attr("d",function(d) {return line(d);})
-			//delete
-			sel.exit().remove()
+			.selectAll(".mtm-label").data(labelled,function(d){return d.id+d.data.sample;});
+		//add
+		sel.enter().append("g").attr("class","mtm-label")
+		//delete
+		sel.exit().remove()
+
+		//guides
+		var sub = sel.selectAll("path").data(function(d){ return ls.map(function(l){return d;}); })
+		sub.enter().append("path")
+			.attr("id",function(d,i){return "map"+d.id+d.data.sample+i;})
+			.style("opacity",0)
+			.attr("d","M0,0L0,0")
+		//update
+		sub.transition().duration(1500)
+			.attr("d",function(d,i) {return line(d,i);})
+		//delete
+		sub.exit().remove()
+
+		//text
+		sub = sel.selectAll("text").data(function(d){ return ls.map(function(l,i){return [d,i];}); })
+		sub.enter().append("text")
+			.attr("text-anchor", "left")
+			.attr("dy","0.5ex")
+			.style("pointer-events","none")
+			.append("textPath")
+			.attr("xlink:href",function(t){return "#map"+t[0].id+t[0].data.sample+t[1];})
+		sub.selectAll("textPath").html(function(t){
+			var tag = ls[t[1]];
+			//replace
+			tag = tag.replace(/#N/g,t[0].name);
+			tag = tag.replace(/#I/g,t[0].id);
+			tag = tag.replace(/#H/g,f(t[0].data.hits));
+			tag = tag.replace(/#P/g,t[0].data.percent.toFixed(2));
+			tag = tag.replace(/#V/g,(t[0].value*100/node.value).toFixed(2));
+			tag = tag.replace(/#R/g,t[0].data.rank);
+			tag = tag.replace(/#S/g,t[0].data.sample);
+			return tag;
+			})
+		sub.exit().remove()
 		
-		function line(d) {
+		function line(d,i) {
 			var ax,ay,bx,by;
 			//rect width and heigth
 			var rw=kx * d.dx - 1;
 			var rh=ky * d.dy - 1;
 
 			if(rw<rh) {//vertical
-				ax=x(d.x+(d.dx/2));
-				ay=y(d.y)+mw;
-				bx=ax;
-				by=y(d.y+d.dy)-mw;
+				if(x(d.x+(d.dx/2))-(i*mh)>x(d.x)+mh){ //i-th line ok
+					ax=x(d.x+(d.dx/2))-i*mh;
+					ay=y(d.y)+mw;
+					bx=ax;
+					by=y(d.y+d.dy)-mw;
+				}
+				else {ax=ay=bx=by=0;}
 			}
 			else { //horizontal
-				ax=x(d.x)+mw;
-				ay=y(d.y+(d.dy/2));
-				bx=x(d.x+d.dx)-mw;
-				by=ay;				
+				if(y(d.y+(d.dy/2))+(i*mh)<y(d.y)+rh-mh){ //i-th line ok
+					ax=x(d.x)+mw;
+					ay=y(d.y+(d.dy/2))+i*mh;
+					bx=x(d.x+d.dx)-mw;
+					by=ay;				
+				}
+				else {ax=ay=bx=by=0;}
 			}
-			
+				
 			var path = d3.svg.line()
 			.x(function(t) {return t[0];})
 			.y(function(t) {return t[1];})
 			.interpolate("linear");
 			return path([[ax,ay],[bx,by]]);
 		}
-
-		//text
-		var sel = d3.select(".mtm-treemap").select(".mtm-labels")
-			.selectAll("text").data(labelled,function(d){return d.id+d.data.sample;});
-			//create new
-			sel.enter().append("text")
-				.attr("text-anchor", "left")
-				.attr("dy","0.5ex")
-				.style("pointer-events","none")
-				.append("textPath")
-				.attr("xlink:href",function(d){return "#map"+d.id+d.data.sample;})
-			//update all
-			sel.selectAll("textPath").html(function(d){
-				var tag = config.options.pattern;
-				//replace
-				tag = tag.replace(/#N/g,d.name);
-				tag = tag.replace(/#I/g,d.id);
-				tag = tag.replace(/#H/g,f(d.data.hits));
-				tag = tag.replace(/#P/g,d.data.percent.toFixed(2));
-				tag = tag.replace(/#V/g,(d.value*100/node.value).toFixed(2));
-				tag = tag.replace(/#R/g,d.data.rank);
-				tag = tag.replace(/#S/g,d.data.sample);
-				return tag;
-			})
-			//delete
-			sel.exit().remove();
 	}
 
 	function updateSearch() {
@@ -1718,9 +1731,7 @@
 
 		//fill name
 		view.selectAll(".name").data(lines)
-			.style("white-space","nowrap")
-			.style("overflow","hidden")
-			.style("text-overflow","ellipsis")
+			.style("width","40%")
 			.style("cursor","pointer")
 			.append("span")
 				.style("padding-left",function(d){//max(depth,rank)
@@ -1735,7 +1746,7 @@
 					.text(function(d){return d.name;})
 		//fill id
 		view.selectAll(".id").data(lines)
-				.style("width","70px").style("text-align","right")
+				.style("text-align","right")
 				.append("span")
 				.filter(function(d){return +d.id>0})
 					.append("a")
@@ -1744,22 +1755,21 @@
 					.text(function(d){return d.id})
 		//fill hits
 		view.selectAll(".hits").data(lines)
-				.style("width","60px").style("text-align","right")
+				.style("text-align","right")
 				.append("span").text(function(d){return f(d.data.hits);})
 		//fill %
 		view.selectAll(".percent").data(lines)
-				.style("width","60px").style("text-align","right")
+				.style("text-align","right")
 				.append("span")
 				//.text() fill in zoom()
 		//fill sample
 		view.selectAll(".sample").data(lines)
-				.style("width","90px").style("text-align","right")
+				.style("text-align","right")
 				.append("span").html(function(d){
 					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
 				})
 		//fill rank
 		view.selectAll(".rank").data(lines)
-				.style("width","130px")
 			.append("span").text(function(d){return d.data.rank;})
 
 		//internal nodes
