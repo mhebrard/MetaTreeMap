@@ -1023,6 +1023,7 @@
 				//action
 				d3.selectAll(".mtm").style("font-size",config.options.font+"px")
 				d3.select("#mtm-tip").style("font-size",config.options.font+"px")
+				updatePaths(node);
 			});
 		$('#mtm-bar-font').on({
 		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
