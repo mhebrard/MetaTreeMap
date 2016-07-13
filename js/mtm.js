@@ -504,6 +504,7 @@
 						+".mtm-menu .dropdown .form-control {display:inline-flex !important;}\n"
 						+".mtm-menu .dropdown .input-group {display:inline-flex !important;}\n"
 						+".mtm-menu .dropdown .input-group-addon {width:auto !important;}\n"
+						+".mtm-table td,th {padding:0px 0px 0px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}\n"
 						+"\t-->"
 					)
 				//divs
@@ -1397,10 +1398,11 @@
 	
 	function table() {
 		//table//
+		console.log(config.table.height,config.table.width)
 		var tab=d3.select(".mtm-table").append("div")
 				.attr("class","mtm")
-				.style("height", config.table.height)
-				.style("width", config.table.width)
+				.style("height", config.table.height+"px")
+				.style("width", config.table.width+"px")
 				.style("overflow","auto")
 				.style("font-family","'Source Code Pro','Lucida Console',Monaco,monospace")			
 				.style("font-size",config.options.font+"px")
@@ -1412,25 +1414,23 @@
 		//thead
 		var thead = tab.append("div")
 			.style("background-color","#888")
-			.append("table")
+			.append("table").style("table-layout","fixed")
 			.append("tr")
 			.classed("mtm-header",true)
-			.style("font-size","14px")
-		thead.append("th").text("Node")
-		thead.append("th").style("width","70px").style("text-align","right").text("Taxon_ID")
-		thead.append("th").style("width","60px").style("text-align","right").text("Hits")
-		thead.append("th").style("width","60px").style("text-align","right").text("%/View")
-		thead.append("th").style("width","90px").style("text-align","right").html("%/Sample&nbsp;")
-		thead.append("th").style("width","130px").style("text-align","left").text("Rank")
-		thead.append("th").style("width","15px").text("")//scroll bar
+		thead.append("th").style("width","40%").text("Node")
+		thead.append("th").style("text-align","right").text("Taxon_ID")
+		thead.append("th").style("text-align","right").text("Hits")
+		thead.append("th").style("text-align","right").text("%/View")
+		thead.append("th").style("text-align","right").html("%/Sample&nbsp;")
+		thead.append("th").style("text-align","left").text("Rank")
+		thead.append("th").style("width","20px").text("")//scroll bar
 
 		//tbody
 		var view = tab.append("div")
 			.style("height",(config.table.height-thead.node().offsetHeight)+"px")
-			.style("width", config.table.width+"px")
 			.style("overflow","auto")
 			.attr("class","mtm-scrollable")
-			.append("table")
+			.append("table").style("table-layout","fixed")
 			.classed("mtm-view",true)
 			.classed("mtm-labels",true)
 			.style("table-layout","fixed")		
@@ -1731,9 +1731,7 @@
 
 		//fill name
 		view.selectAll(".name").data(lines)
-			.style("white-space","nowrap")
-			.style("overflow","hidden")
-			.style("text-overflow","ellipsis")
+			.style("width","40%")
 			.style("cursor","pointer")
 			.append("span")
 				.style("padding-left",function(d){//max(depth,rank)
@@ -1748,7 +1746,7 @@
 					.text(function(d){return d.name;})
 		//fill id
 		view.selectAll(".id").data(lines)
-				.style("width","70px").style("text-align","right")
+				.style("text-align","right")
 				.append("span")
 				.filter(function(d){return +d.id>0})
 					.append("a")
@@ -1757,22 +1755,21 @@
 					.text(function(d){return d.id})
 		//fill hits
 		view.selectAll(".hits").data(lines)
-				.style("width","60px").style("text-align","right")
+				.style("text-align","right")
 				.append("span").text(function(d){return f(d.data.hits);})
 		//fill %
 		view.selectAll(".percent").data(lines)
-				.style("width","60px").style("text-align","right")
+				.style("text-align","right")
 				.append("span")
 				//.text() fill in zoom()
 		//fill sample
 		view.selectAll(".sample").data(lines)
-				.style("width","90px").style("text-align","right")
+				.style("text-align","right")
 				.append("span").html(function(d){
 					return d.data.percent.toFixed(2)+"%/"+d.data.sample+"&nbsp;";
 				})
 		//fill rank
 		view.selectAll(".rank").data(lines)
-				.style("width","130px")
 			.append("span").text(function(d){return d.data.rank;})
 
 		//internal nodes
