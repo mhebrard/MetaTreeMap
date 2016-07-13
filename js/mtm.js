@@ -510,18 +510,6 @@
 				mods.append("div").attr("id","mtm-tip")
 				mods.append("div").attr("id","mtm-canvas").style("display","none")
 				mods.append("div").attr("id","mtm-samples").style("display","none")
-				//pattern
-				var ul = mods.append("div").attr("id","mtm-tags").attr("width","200px")
-					.style("display","none").append("ul").attr("class","list-unstyled")
-					
-				ul.append("li").text("#N: Taxon Name");
-				ul.append("li").text("#I: NCBI Taxonomy ID");
-				ul.append("li").text("#H: Number Of Hits");
-				ul.append("li").text("#R: Phylogenic Rank");
-				ul.append("li").text("#S: Sample Number");
-				ul.append("li").text("#P: % By Sample");
-				ul.append("li").text("#V: % By View");
-				ul.append("li").text("\\\\: Break line");
 
 				//convert
 				//Modal
@@ -973,43 +961,7 @@
 		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
 		});
 	  	li = ul.append("li").attr("class","divider")
-		//Pattern
-		li = ul.append("li").attr("class","form-inline")
-		li.append("label").style("width","120px").text("Label Format")
-		block = li.append("div").attr("class","input-group")
-		block.append("input").attr("class","form-control").attr("id","mtm-bar-pattern")
-			.attr("type","text").style("width","120px")
-			.property("value",config.options.pattern)
-			.on("change",function() { 
-				//change all button
-				config.options.pattern=this.value;
-				//action
-				updatePaths(node); 
-			});
-			$('#mtm-bar-pattern').on({
-			  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
-			});
-		block.append("div").attr("class","input-group-btn")
-			.append("button").attr("type","button").attr("class","btn btn-default").attr("id","mtm-pattern")
-			.append("span").attr("class","glyphicon glyphicon-info-sign")
-		$('#mtm-pattern').on({
-		  "click":	function() {
-		  		$('#mtm-pattern').tooltip("hide");
-		  	 	$('#mtm-bar-labels')[0].closable=false;}
-		});
-		$("#mtm-pattern").popover({
-	        html : true, 
-	        content: function() { return $('#mtm-tags').html(); },
-	        title: "Formatting Tags:",
-	        container: "#mtm-barmenu"
-   		});
-   		$("#mtm-pattern").tooltip({ 
-	        placement: "bottom",
-	        container: "#mtm-barmenu",
-	        title: "Click to see a list allowed tags"
-   		});
-
-		//Font
+	  	//Font
 		li = ul.append("li").attr("class","form-inline")
 		li.append("label").style("width","120px").text("Font Size")
 		s = li.append("select").attr("class","form-control").attr("id","mtm-bar-font")
@@ -1028,6 +980,54 @@
 		$('#mtm-bar-font').on({
 		  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
 		});
+		//Pattern
+		li = ul.append("li").attr("class","form-inline")
+		li.append("label").style("width","120px").text("Label Format")
+		li.append("input").attr("type","text").style("width","120px")
+			.attr("class","form-control").attr("id","mtm-bar-pattern")
+			.attr("value",config.options.pattern)
+			.on("change",function() { 
+				//change all button
+				config.options.pattern=this.value;
+				//action
+				updatePaths(node); 
+			});
+			$('#mtm-bar-pattern').on({
+			  "click":	function() { $('#mtm-bar-labels')[0].closable=false;}
+			});
+		//Tags
+		li = ul.append("li")
+		li.append("label").style("width","120px").text("Formatting Tags:")
+		li.append("label").text("#N:");
+		li.append("span").text("Taxon Name");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#I:");
+		li.append("span").text("NCBI Taxonomy ID");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#H:");
+		li.append("span").text("Number Of Hits");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#R:");
+		li.append("span").text("Phylogenic Rank");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#S:");
+		li.append("span").text("Sample Number");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#P:");
+		li.append("span").text("% By Sample");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("#V:");
+		li.append("span").text("% By View");
+		li = ul.append("li")
+		li.append("label").style("width","120px")
+		li.append("label").text("\\\\:");
+		li.append("span").text("Break line");
 
 		//Treemap
 		item = list.append("div").attr("class","dropdown mtm-dropdown").attr("id","mtm-bar-treemap")
@@ -1395,7 +1395,7 @@
 			.style("pointer-events","none")
 	}
 	
-	function table() {		
+	function table() {
 		//table//
 		var tab=d3.select(".mtm-table").append("div")
 				.attr("class","mtm")
@@ -1693,8 +1693,6 @@
 			.interpolate("linear");
 			return path([[ax,ay],[bx,by]]);
 		}
-
-		
 	}
 
 	function updateSearch() {
